@@ -5,12 +5,14 @@ Application configuration loaded from environment variables.
 """
 
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
     # Path to the processed data directory (mounted read-only in Docker)
-    data_dir: Path = Path(__file__).resolve().parents[4] / "data" / "processed"
+    data_dir: Path = Path(__file__).resolve().parents[3] / "data" / "processed"
 
     # API metadata
     app_title: str = "India Livability Intelligence System API"
@@ -25,10 +27,6 @@ class Settings(BaseSettings):
 
     # Set to True to print SQL / verbose logs
     debug: bool = False
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()

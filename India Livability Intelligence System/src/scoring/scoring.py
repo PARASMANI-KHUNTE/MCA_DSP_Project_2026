@@ -75,7 +75,8 @@ def normalize_series(
     direction: str,
 ) -> pd.Series:
     """Vectorized version of normalize_value for a Pandas Series."""
-    clipped = series.clip(lower=lo, upper=hi)
+    numeric_series = pd.to_numeric(series, errors="coerce")
+    clipped = numeric_series.clip(lower=lo, upper=hi)
     if direction == "higher_is_better":
         return 100.0 * (clipped - lo) / (hi - lo)
     elif direction == "lower_is_better":

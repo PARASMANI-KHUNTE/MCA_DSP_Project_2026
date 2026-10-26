@@ -35,7 +35,7 @@ _BNS_BREAK_YEAR = 2024
 
 # Candidate column names across different NCRB file formats
 _COL_CANDIDATES = {
-    "state":       ["state_ut", "state/ut", "state", "states/uts", "area_name"],
+    "state":       ["state_name", "state_ut", "state/ut", "state", "states/uts", "area_name"],
     "year":        ["year", "sl_no", "report_year"],
     "crime_total": ["total_ipc_crimes", "total_cognizable_crimes", "total_crimes",
                     "ipc_crimes_total", "crime_total"],

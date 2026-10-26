@@ -148,7 +148,8 @@ def interpolate_within_place(
         group.loc[orig_na, "is_imputed"] = True
         return group
 
-    return df.groupby(place_col, group_keys=False).apply(_fill)
+    filled_groups = [_fill(g.copy()) for _, g in df.groupby(place_col)]
+    return pd.concat(filled_groups, ignore_index=True) if filled_groups else df
 
 
 # ── Outlier detection ──────────────────────────────────────────────────────

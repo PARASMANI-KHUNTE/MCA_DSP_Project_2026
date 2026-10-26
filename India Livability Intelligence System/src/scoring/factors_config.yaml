@@ -5,29 +5,29 @@
 
 factors:
   air_quality:
-    column: pm25_mean
+    column: air_quality             # wide-table column: normalized PM2.5 (µg/m³)
     direction: lower_is_better      # lower PM2.5 = better air = higher score
     level: city
     trend: eligible                  # needs >= 5 valid yearly points, no unflagged series break
-    bounds: [10, 150]               # PLACEHOLDER: µg/m³; WHO guideline=5, NAAQS=60
+    bounds: [10, 150]               # µg/m³; WHO guideline=5, NAAQS=60
     source_id: air_kaggle
     notes: "Gap between 2020 and 2023. Flag covid_year for 2020. Two sources: kaggle and cpcb."
 
   safety:
-    column: crime_rate_per_lakh
+    column: safety                   # wide-table column: crime rate per lakh population
     direction: lower_is_better
     level: state                     # metro-city NCRB rates NOT mixed with state rates
     trend: eligible_with_break_flag  # IPC→BNS break in 2024 may invalidate straight-line fit
-    bounds: [100, 600]              # PLACEHOLDER: crimes per lakh population
+    bounds: [100, 600]              # crimes per lakh population
     source_id: safety_ncrb
     notes: "Crime rate reflects reporting practices as well as actual crime. Series break in 2024."
 
   health:
-    column: infant_mortality_rate
+    column: health                   # wide-table column: infant mortality rate per 1000 live births
     direction: lower_is_better      # lower IMR = better health = higher score
     level: state
     trend: eligible
-    bounds: [5, 50]                 # PLACEHOLDER: deaths per 1000 live births
+    bounds: [5, 50]                 # deaths per 1000 live births
     source_id: health_srs
     notes: "SRS data lags by ~3 years. Latest report covers 2022."
 

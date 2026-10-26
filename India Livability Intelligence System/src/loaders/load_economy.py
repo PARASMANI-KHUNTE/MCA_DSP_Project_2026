@@ -66,11 +66,11 @@ def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         # RBI files are often wide (years as columns) or long
         # Detect format: if 'state' and 'year' columns exist → long format
         cols_lower = [c.strip().lower() for c in df.columns]
-        if "state" in cols_lower or "state_ut" in cols_lower or "states/uts" in cols_lower:
+        if any(k in cols_lower for k in ("state", "state_name", "state_ut", "states/uts")):
             # Try long format
             state_col = next(
                 (df.columns[i] for i, c in enumerate(cols_lower)
-                 if c in ("state", "state_ut", "states/uts")), None
+                 if c in ("state", "state_name", "state_ut", "states/uts")), None
             )
             year_col = next(
                 (df.columns[i] for i, c in enumerate(cols_lower) if "year" in c), None
@@ -173,7 +173,7 @@ def load_plfs_unemployment(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         cols_lower = {c.strip().lower(): c for c in df.columns}
         state_col = next(
             (cols_lower[k] for k in cols_lower
-             if k in ("state", "state_ut", "states/uts", "state/ut")), None
+             if k in ("state", "state_name", "state_ut", "states/uts", "state/ut")), None
         )
         year_col = next(
             (cols_lower[k] for k in cols_lower if "year" in k), None

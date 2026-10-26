@@ -190,13 +190,30 @@ def load_all_cpcb(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
     Returns a combined DataFrame for all available years.
     """
     pdfs = sorted(raw_dir.glob("*.pdf"))
-    if not pdfs:
-        logger.error("No PDF files found in %s", raw_dir)
+    csvs = sorted(raw_dir.glob("*.csv"))
+
+    if not pdfs and not csvs:
+        logger.error("No PDF or CSV files found in %s", raw_dir)
         return pd.DataFrame()
 
     frames = []
+
+    # First load any CSV files
+    alias_map = load_alias_map()
+    for csv_path in csvs:
+        match = re.search(r"(20\d{2})", csv_path.stem)
+        year = int(match.group(1)) if match else 2023
+        try:
+            df = pd.read_csv(csv_path)
+            df = _clean_extracted(df, year)
+            if df is not None and not df.empty:
+                df = apply_name_standardization(df, "city", alias_map)
+                frames.append(df)
+        except Exception as e:
+            logger.error("Failed to load CPCB CSV %s: %s", csv_path.name, e)
+
+    # Next load any PDF files
     for pdf_path in pdfs:
-        # Extract year from filename
         match = re.search(r"(20\d{2})", pdf_path.stem)
         if not match:
             logger.warning("Cannot determine year from filename %s — skipping", pdf_path.name)

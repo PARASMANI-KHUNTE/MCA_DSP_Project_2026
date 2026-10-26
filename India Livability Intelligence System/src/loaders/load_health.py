@@ -25,7 +25,7 @@ from src.utils.helpers import (
 logger = logging.getLogger(__name__)
 
 _COL_CANDIDATES = {
-    "state":  ["state", "state_ut", "states/uts", "area"],
+    "state":  ["state_name", "state", "state_ut", "states/uts", "area"],
     "year":   ["year", "reference_year"],
     "imr":    ["imr", "infant_mortality_rate", "infant_mortality", "total_imr", "total"],
     "imr_r":  ["rural", "rural_imr"],

@@ -1,0 +1,14 @@
+{
+  "clustering": {
+    "k_chosen": 5,
+    "year": 2018,
+    "n_places": 42
+  },
+  "trends": {
+    "n_fitted": 54,
+    "n_insufficient": 190,
+    "improving": 28,
+    "declining": 21,
+    "stable": 5
+  }
+}

@@ -338,14 +338,33 @@ def stage_build_tidy(
     tidy = pd.DataFrame(rows)
     logger.info("Tidy table: %d rows, %d unique factors.", len(tidy), tidy["factor"].nunique())
 
-    # Add inherited flag: for cities, safety/health/economy inherit from state
-    city_ids = set(places[places["place_type"] == "city"]["place_id"].tolist())
+    # Cities inherit safety/health/economy from their state. Replicate the
+    # observed state rows at city level so city scores never fall back to
+    # invented defaults or silently drop a whole pillar.
+    city_master = places[places["place_type"] == "city"][["place_id", "state_name"]].rename(
+        columns={"place_id": "city_place_id"}
+    )
+    state_ids = set(places[places["place_type"] == "state"]["place_id"].tolist())
     state_factors = {FACTOR_SAFETY, FACTOR_HEALTH,
                      "per_capita_nsdp_constant", "unemployment_rate"}
-    tidy.loc[
-        tidy["place_id"].isin(city_ids) & tidy["factor"].isin(state_factors),
-        "is_inherited"
-    ] = True
+    state_rows = tidy[
+        tidy["place_id"].isin(state_ids) & tidy["factor"].isin(state_factors)
+    ].copy()
+
+    if not state_rows.empty:
+        state_names = places[places["place_type"] == "state"][["place_id", "state_name"]]
+        state_rows = state_rows.merge(state_names, on="place_id", how="left")
+        inherited = state_rows.merge(city_master, on="state_name", how="inner")
+        if not inherited.empty:
+            inherited["place_id"] = inherited["city_place_id"]
+            inherited["source_id"] = inherited["source_id"].astype(str) + "|inherited"
+            inherited["is_inherited"] = True
+            inherited = inherited.drop(columns=["city_place_id"])
+            tidy = pd.concat([tidy, inherited[tidy.columns]], ignore_index=True)
+            logger.info(
+                "Inherited %d state-level rows across %d cities.",
+                len(inherited), inherited["place_id"].nunique(),
+            )
 
     return tidy
 

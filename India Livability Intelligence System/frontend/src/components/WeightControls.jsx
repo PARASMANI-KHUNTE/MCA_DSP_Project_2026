@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Wind
 } from "lucide-react";
-import { PRESETS } from "../data/seedData";
+import { PRESETS } from "../data/methodologyData";
 
 const FACTORS = [
   { key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee", max: 100 },
@@ -65,8 +65,11 @@ export default function WeightControls({
             <Sliders size={16} />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Tune Your Priorities</h2>
-            <p className="text-[10px] text-slate-500">Scores update instantly</p>
+            <div className="flex items-center gap-1.5">
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">Step 1</span>
+              <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Set Priorities</h2>
+            </div>
+            <p className="text-[10px] text-slate-500">Pick a preset or drag sliders</p>
           </div>
         </div>
         <button
@@ -222,7 +225,7 @@ export default function WeightControls({
 
         {colorMode === "tier" && (
           <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-            Tier view uses K-Means livability clusters (k = 3).
+            Tier view groups live composite scores into three score bands; it is not a K-Means cluster assignment.
           </p>
         )}
       </div>

@@ -49,12 +49,11 @@ export default function CompareModal({
     leaders[factor.key] = winnerId;
   });
 
-  const overallLeader = places.reduce((best, place) =>
-    !best || place.overallScore > best.overallScore ? place : best
-  , null);
-  const runnerUp = places
-    .filter(place => place.id !== overallLeader?.id)
-    .sort((a, b) => b.overallScore - a.overallScore)[0];
+  const scoredPlaces = places
+    .filter(place => Number.isFinite(place.overallScore))
+    .sort((a, b) => b.overallScore - a.overallScore);
+  const overallLeader = scoredPlaces[0] || null;
+  const runnerUp = scoredPlaces[1] || null;
 
   const columnsClass = places.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
 
@@ -128,7 +127,7 @@ export default function CompareModal({
                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                       <span>{place.type === "city" ? place.state : `${place.region} region`}</span>
                       <span className="text-slate-700">·</span>
-                      <span>Rank #{place.rank}</span>
+                      <span>{place.rank ? `Rank #${place.rank}` : "Unranked"}</span>
                     </div>
                     <h3 className="mt-0.5 truncate text-base font-bold text-white">{place.name}</h3>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -149,7 +148,9 @@ export default function CompareModal({
                   <div className="mt-4 flex items-end justify-between border-t border-slate-800/80 pt-3">
                     <div>
                       <span className="text-[9px] uppercase tracking-wider text-slate-500">Composite</span>
-                      <div className="text-2xl font-black leading-none text-white">{place.overallScore}</div>
+                      <div className="text-2xl font-black leading-none text-white">
+                        {Number.isFinite(place.overallScore) ? place.overallScore : "—"}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: scoreColor }} />

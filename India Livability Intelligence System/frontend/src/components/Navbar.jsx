@@ -1,4 +1,5 @@
-import { Activity, BookOpen, CalendarRange, Compass, Map, Radio, RefreshCw } from "lucide-react";
+import { Activity, BookOpen, CalendarRange, Compass, HelpCircle, Map, Radio, RefreshCw } from "lucide-react";
+import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
 
 const TABS = [
   { id: "map", label: "Explorer", icon: Map },
@@ -6,7 +7,11 @@ const TABS = [
   { id: "methodology", label: "Method", icon: BookOpen }
 ];
 
-const YEARS = Array.from({ length: 20 }, (_, index) => 2015 + index);
+const FIRST_YEAR = OBSERVED_YEARS[0];
+const YEARS = Array.from(
+  { length: PROJECTION_END_YEAR - FIRST_YEAR + 1 },
+  (_, index) => FIRST_YEAR + index
+);
 
 export default function Navbar({
   activeTab,
@@ -14,9 +19,10 @@ export default function Navbar({
   selectedYear,
   onChangeYear,
   backendOnline,
-  onRetryBackend
+  onRetryBackend,
+  onOpenTour
 }) {
-  const isProjected = selectedYear > 2024;
+  const isProjected = selectedYear > BASELINE_YEAR;
 
   return (
     <>
@@ -40,7 +46,7 @@ export default function Navbar({
                 </span>
               </span>
               <span className="hidden text-[10px] text-slate-400 md:block">
-                Interactive index, map explorer and OLS projections
+                Real processed indicators and OLS projections
               </span>
             </span>
           </button>
@@ -81,11 +87,21 @@ export default function Navbar({
               >
                 {YEARS.map(year => (
                   <option key={year} value={year} className="bg-slate-900 text-slate-200">
-                    {year}{year > 2024 ? " (proj.)" : ""}
+                    {year}{year > BASELINE_YEAR ? " (proj.)" : ""}
                   </option>
                 ))}
               </select>
             </label>
+
+            <button
+              onClick={onOpenTour}
+              className="flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-300 shadow-sm shadow-emerald-500/10 transition-all hover:bg-emerald-500/20 hover:text-white"
+              title="Learn how to use the system"
+              aria-label="How to use the system"
+            >
+              <HelpCircle size={14} className="text-emerald-400" />
+              <span className="hidden sm:inline">How It Works</span>
+            </button>
 
             <button
               onClick={onRetryBackend}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Move, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { getScoreColor, getTierColor, SCORE_BANDS } from "../services/scoringService";
 import { INDIA_STATES, MAP_VIEWBOX, projectLatLng } from "../data/indiaMap";
@@ -35,10 +35,9 @@ const clampPan = (x, y, zoom) => {
   };
 };
 
-const getPinRadius = (city, compact, emphasized) => {
+const getPinRadius = (compact, emphasized) => {
   const base = compact ? 4.1 : 4.7;
-  const growth = Math.min(2.2, Math.sqrt((city.pop || 0) / 1000000) * (compact ? 0.45 : 0.55));
-  return base + growth + (emphasized ? 1.4 : 0);
+  return base + (emphasized ? 1.4 : 0);
 };
 
 const getLabelFont = (compact, emphasized) =>
@@ -67,7 +66,7 @@ export default function IndiaMap({
   const pinchRef = useRef(null);
   const didDragRef = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = containerRef.current;
     if (!node) return undefined;
 
@@ -101,7 +100,11 @@ export default function IndiaMap({
     () =>
       places
         .filter(place => place.type === "city")
-        .sort((a, b) => (b.pop || 0) - (a.pop || 0)),
+        .sort((a, b) => {
+          const aScore = Number.isFinite(a.overallScore) ? a.overallScore : -1;
+          const bScore = Number.isFinite(b.overallScore) ? b.overallScore : -1;
+          return bScore - aScore || a.name.localeCompare(b.name);
+        }),
     [places]
   );
 
@@ -138,7 +141,9 @@ export default function IndiaMap({
           city,
           index,
           emphasized,
-          priority: emphasized ? Number.POSITIVE_INFINITY : city.pop || 0
+          priority: emphasized
+            ? Number.POSITIVE_INFINITY
+            : Number.isFinite(city.overallScore) ? city.overallScore : -1
         };
       })
       .sort((a, b) => b.priority - a.priority || a.index - b.index);
@@ -150,7 +155,7 @@ export default function IndiaMap({
       if (!emphasized && count >= budget) return;
 
       const { x, y } = projectLatLng(city.lat, city.lng);
-      const radiusPx = getPinRadius(city, isCompact, emphasized);
+      const radiusPx = getPinRadius(isCompact, emphasized);
       const fontPx = getLabelFont(isCompact, emphasized);
       const gap = emphasized ? 5 : 4;
       const width = Math.max(20, city.name.length * fontPx * 0.58 + 4);
@@ -340,7 +345,7 @@ export default function IndiaMap({
     : [...SCORE_BANDS].reverse();
 
   const legendTitle = colorMode === "tier"
-    ? "K-Means tier"
+    ? "Score band"
     : colorMode === "factor"
       ? FACTOR_LABELS[activeFactor]
       : "Composite livability";
@@ -352,6 +357,10 @@ export default function IndiaMap({
     <div ref={containerRef} className="surface relative flex h-full w-full flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2.5 sm:p-3">
         <div className="pointer-events-auto flex max-w-[calc(100%-3.25rem)] items-center gap-1 rounded-xl border border-slate-700/70 bg-slate-900/90 p-1 shadow-lg backdrop-blur-md">
+          <span className="hidden items-center gap-1 rounded bg-cyan-500/20 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-300 sm:flex">
+            Step 2: Map
+          </span>
+          <span className="hidden h-4 w-px bg-slate-700 sm:block" />
           {VIEWS.map(view => (
             <button
               key={view.id}
@@ -532,7 +541,7 @@ export default function IndiaMap({
               const selected = selectedPlace?.id === city.id;
               const hovered = hoveredPlace?.id === city.id;
               const emphasized = selected || hovered;
-              const radiusPx = getPinRadius(city, compact, emphasized);
+              const radiusPx = getPinRadius(compact, emphasized);
               const radius = toScreenUnits(radiusPx);
               const label = labelPlan.get(city.id);
               const placement = label?.placement || "top";
@@ -619,7 +628,9 @@ export default function IndiaMap({
 
       {year !== 2024 && (
         <div className="pointer-events-none absolute left-2.5 top-14 z-10 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-200 backdrop-blur sm:left-3">
-          {year > 2024 ? "Projected" : "Backcast"} view · {year} · OLS slope
+          {year > 2024
+            ? `OLS projection · ${year}`
+            : `Latest observation ≤ ${year}`}
         </div>
       )}
 
@@ -670,10 +681,30 @@ export default function IndiaMap({
         </div>
       )}
 
-      <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-20 rounded-xl border border-slate-800/90 bg-slate-950/90 p-2.5 shadow-xl backdrop-blur-md sm:left-auto sm:right-3 sm:w-[196px]">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
+      <div
+        className={`pointer-events-none absolute z-20 rounded-xl border border-slate-800/90 bg-slate-950/90 shadow-xl backdrop-blur-md ${
+          compact
+            ? "bottom-2 left-2 right-2 p-2"
+            : "bottom-3 left-3 right-3 p-2.5 sm:left-auto sm:right-3 sm:w-[196px]"
+        }`}
+      >
+        <div className={`flex items-center justify-between gap-2 ${compact ? "mb-1" : "mb-1.5"}`}>
           <span className="truncate text-[10px] font-semibold text-slate-300">{legendTitle}</span>
-          <span className="shrink-0 text-[9px] text-slate-500">{year}</span>
+          {compact ? (
+            <span
+              className="flex shrink-0 items-center gap-1 text-[8px] text-slate-500"
+              title="Hatched states have no score"
+            >
+              <span
+                aria-hidden="true"
+                className="h-2 w-2 rounded-[2px] border border-slate-700"
+                style={{ background: "repeating-linear-gradient(45deg, #0b1220 0 2px, #243249 2px 3px)" }}
+              />
+              {year}
+            </span>
+          ) : (
+            <span className="shrink-0 text-[9px] text-slate-500">{year}</span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           {legendItems.map(item => (
@@ -685,12 +716,12 @@ export default function IndiaMap({
             />
           ))}
         </div>
-        <div className="mt-1 flex justify-between text-[9px] text-slate-500">
+        <div className={`flex justify-between text-[9px] text-slate-500 ${compact ? "mt-0.5" : "mt-1"}`}>
           {colorMode === "tier" ? (
             <>
-              <span>Tier 1</span>
-              <span>Tier 2</span>
-              <span>Tier 3</span>
+              <span>High</span>
+              <span>Moderate</span>
+              <span>Developing</span>
             </>
           ) : (
             <>
@@ -700,10 +731,15 @@ export default function IndiaMap({
             </>
           )}
         </div>
-        <div className="mt-1.5 flex items-center gap-1 border-t border-slate-800/80 pt-1.5 text-[9px] text-slate-500">
-          <span className="h-2 w-2.5 rounded-sm border border-slate-700" style={{ background: "repeating-linear-gradient(45deg, #0b1220 0 2px, #243249 2px 3px)" }} />
-          Hatched = no score
-        </div>
+        {!compact && (
+          <div className="mt-1.5 flex items-center gap-1 border-t border-slate-800/80 pt-1.5 text-[9px] text-slate-500">
+            <span
+              className="h-2 w-2.5 rounded-sm border border-slate-700"
+              style={{ background: "repeating-linear-gradient(45deg, #0b1220 0 2px, #243249 2px 3px)" }}
+            />
+            Hatched = no score
+          </div>
+        )}
       </div>
     </div>
   );

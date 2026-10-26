@@ -8,20 +8,13 @@ import {
   Scale,
   ShieldCheck
 } from "lucide-react";
-import { METHODOLOGY_DETAILS, PRESETS } from "../data/seedData";
-
-const SOURCES = [
-  "CPCB / Kaggle",
-  "NCRB Crime in India",
-  "SRS Registrar General",
-  "RBI EPWRF",
-  "Kaggle housing snapshot"
-];
+import { DATA_GAPS, METHODOLOGY_DETAILS, PRESETS } from "../data/methodologyData";
+import { DATA_COVERAGE } from "../services/scoringService";
 
 const PIPELINE = [
   {
     title: "Ingest",
-    body: "Published state and city tables are transcribed into a single comparable schema with explicit source tags."
+    body: "Published state and city tables are loaded into one comparable schema with explicit source IDs and years."
   },
   {
     title: "Normalize",
@@ -29,11 +22,11 @@ const PIPELINE = [
   },
   {
     title: "Weight",
-    body: "User or preset weights combine four to five pillars into a composite score; zero-weight pillars drop out."
+    body: "User or preset weights combine four to five pillars; zero-weight pillars drop out and all-zero weights leave places unranked."
   },
   {
     title: "Project",
-    body: "Ordinary least squares slopes extend each pillar, and 95% intervals widen with horizon distance."
+    body: "A composite OLS slope is fitted to 2015–2024 as-of scores. Future years are shown only when at least five yearly points exist."
   }
 ];
 
@@ -55,12 +48,16 @@ const LIMITATIONS = [
     body: "Rent affordability exists for six metros only. Comparisons that include cost of living are not exhaustive."
   },
   {
-    title: "Snapshot sources",
-    body: "Different agencies publish on different cadences. The baseline mix is the latest available, not a single survey wave."
+    title: "Mixed source years",
+    body: "Air has 2023–24 observations while state safety, health and economy end in 2022. Scores use the latest real value at or before each year and display that source year."
   },
   {
     title: "Ranks are ordinal",
     body: "A two-point gap is rarely meaningful. Use bands and confidence intervals rather than treating rank as precise."
+  },
+  {
+    title: "Tier colors are score bands",
+    body: "High, Moderate and Developing map colors are fixed composite-score thresholds, not K-Means cluster assignments."
   }
 ];
 
@@ -81,7 +78,13 @@ export default function MethodologyView() {
             appraisal of what this index can and cannot tell you.
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {["5 pillars", "0–100 normalization", "OLS projection", "95% intervals", "k = 3 clusters"].map(chip => (
+            {[
+              `${DATA_COVERAGE.counts.places} places`,
+              `${DATA_COVERAGE.counts.factorRows} factor rows`,
+              "0–100 normalization",
+              "latest-as-of years",
+              "OLS projection"
+            ].map(chip => (
               <span
                 key={chip}
                 className="rounded-full border border-slate-700/80 bg-slate-950/50 px-2 py-0.5 text-[9px] font-semibold text-slate-400"
@@ -106,8 +109,8 @@ export default function MethodologyView() {
               S = Σ (wᵢ × Scoreᵢ) / Σ wᵢ
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
-              Weighted factors are bounded in [0, 100]. If every weight is zero the engine falls back to equal
-              weighting instead of dividing by zero.
+              Weighted factors are bounded in [0, 100]. If every weight is zero, no composite is produced and
+              places stay unranked until at least one positive weight is set.
             </p>
           </div>
 
@@ -129,8 +132,8 @@ export default function MethodologyView() {
               Sᵧ = clip(S₂₀₂₄ + β × (y − 2024), 0, 100)
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
-              A separate OLS slope is estimated per pillar and applied to its baseline. The selected year
-              shifts the score, not the underlying source data.
+              One OLS slope is estimated from the place&apos;s 2015–2024 composite under the current weights.
+              The 2024 observed score is the projection anchor, and the underlying source values are never altered.
             </p>
           </div>
 
@@ -140,8 +143,8 @@ export default function MethodologyView() {
               CI₉₅ = Sᵧ ± 1.96 × SE × √(1 + h)
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
-              The band widens with horizon h. Wide intervals are a feature, not a bug: they warn against
-              over-reading long-range projections.
+              The approximate band widens with horizon and residual variance. Places with fewer than five
+              yearly points receive no projection instead of an invented confidence interval.
             </p>
           </div>
         </div>
@@ -187,12 +190,12 @@ export default function MethodologyView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {METHODOLOGY_DETAILS.bounds.map((item, index) => (
+              {METHODOLOGY_DETAILS.bounds.map(item => (
                 <tr key={item.factor} className="transition-colors hover:bg-slate-800/25">
                   <td className="px-2 py-2.5 font-semibold text-white">{item.factor}</td>
                   <td className="px-2 py-2.5 font-mono text-cyan-300">{item.bounds}</td>
                   <td className="px-2 py-2.5 text-slate-300">{item.direction}</td>
-                  <td className="px-2 py-2.5 text-slate-400">{SOURCES[index]}</td>
+                  <td className="px-2 py-2.5 text-slate-400">{item.source}</td>
                 </tr>
               ))}
             </tbody>
@@ -203,6 +206,29 @@ export default function MethodologyView() {
           <Info size={12} className="mt-0.5 shrink-0 text-cyan-400" />
           Bounds are fixed at design time. Scores are composable and reproducible, but they are relative to
           these anchors rather than absolute physical thresholds.
+        </div>
+      </div>
+
+      <div className="surface border-cyan-500/20 p-4 sm:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Database size={17} className="text-cyan-400" />
+          <div>
+            <h2 className="text-sm font-bold text-white">Known data gaps</h2>
+            <p className="text-[10px] text-slate-500">
+              {DATA_COVERAGE.counts.factorRows} factor rows · {DATA_COVERAGE.counts.inheritedRows} inherited city rows
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          {DATA_GAPS.map(gap => (
+            <div
+              key={gap}
+              className="flex items-start gap-2 rounded-xl border border-slate-800/80 bg-slate-950/40 p-3 text-[10px] leading-relaxed text-slate-400"
+            >
+              <Info size={12} className="mt-0.5 shrink-0 text-cyan-400" />
+              {gap}
+            </div>
+          ))}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 # Data Quality Report
 
-**Rows in tidy table:** 654
+**Rows in tidy table:** 1234
 
 **Factors present:** ['air_quality', 'cost_of_living', 'health', 'per_capita_nsdp_constant', 'safety', 'unemployment_rate']
 

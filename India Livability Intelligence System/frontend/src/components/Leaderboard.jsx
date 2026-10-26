@@ -25,7 +25,13 @@ function OutlookIcon({ outlook }) {
   if (outlook === "Declining") {
     return <ArrowDownRight size={12} className="text-rose-400" title="Declining outlook" />;
   }
-  return <Minus size={12} className="text-amber-400" title="Stable or uncertain" />;
+  return (
+    <Minus
+      size={12}
+      className="text-amber-400"
+      title={outlook === "Insufficient data" ? "Insufficient data for a trend" : "Stable or uncertain"}
+    />
+  );
 }
 
 export default function Leaderboard({
@@ -64,8 +70,11 @@ export default function Leaderboard({
             <Trophy size={16} />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Live Rankings</h2>
-            <p className="truncate text-[10px] text-slate-500">{year} weighted index</p>
+            <div className="flex items-center gap-1.5">
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-300">Step 3</span>
+              <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Live Rankings</h2>
+            </div>
+            <p className="truncate text-[10px] text-slate-500">{year} weighted index · click for details</p>
           </div>
         </div>
         <span className="shrink-0 rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400">
@@ -117,6 +126,7 @@ export default function Leaderboard({
         {filteredPlaces.map(place => {
           const isSelected = selectedPlaceId === place.id;
           const isComparing = compareIds.includes(place.id);
+          const hasScore = Number.isFinite(place.overallScore);
           const scoreColor = getScoreColor(place.overallScore);
 
           return (
@@ -131,7 +141,7 @@ export default function Leaderboard({
                   onSelectPlace(place);
                 }
               }}
-              aria-label={`Open details for ${place.name}, score ${place.overallScore}`}
+              aria-label={`Open details for ${place.name}, score ${hasScore ? place.overallScore : "unavailable"}`}
               className={`group relative flex flex-col gap-2 rounded-xl border p-3 transition-all ${
                 isSelected
                   ? "border-emerald-500/60 bg-slate-800/90 shadow-md ring-1 ring-emerald-500/20"
@@ -151,7 +161,7 @@ export default function Leaderboard({
                             : "bg-slate-800 text-slate-400"
                     }`}
                   >
-                    {place.rank}
+                    {place.rank ?? "—"}
                   </span>
 
                   <div className="flex min-w-0 flex-col">
@@ -189,7 +199,7 @@ export default function Leaderboard({
                     className="min-w-[38px] rounded-lg px-2 py-1 text-center text-[11px] font-black text-slate-950 shadow-sm"
                     style={{ backgroundColor: scoreColor }}
                   >
-                    {place.overallScore}
+                    {hasScore ? place.overallScore : "—"}
                   </span>
                 </div>
               </div>
@@ -197,7 +207,7 @@ export default function Leaderboard({
               <div className="h-0.5 w-full overflow-hidden rounded-full bg-slate-800/80">
                 <div
                   className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${place.overallScore}%`, backgroundColor: scoreColor }}
+                  style={{ width: `${hasScore ? place.overallScore : 0}%`, backgroundColor: scoreColor }}
                 />
               </div>
             </div>

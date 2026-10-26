@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -7,18 +7,17 @@ import {
   Coins,
   HeartPulse,
   Info,
+  Layers,
   MapPin,
   Minus,
   Scale,
   ShieldAlert,
   TrendingUp,
-  Users,
   Wind,
   X
 } from "lucide-react";
 import Modal from "./Modal";
 import { getScoreColor, getTierColor } from "../services/scoringService";
-import { getHistoricalAndProjection } from "../data/seedData";
 
 const FACTOR_CARDS = [
   { key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee" },
@@ -27,15 +26,6 @@ const FACTOR_CARDS = [
   { key: "economy", label: "Economy", source: "RBI · NSDP", icon: TrendingUp, color: "#fbbf24" },
   { key: "col", label: "Cost of Living", source: "6 metros · rent", icon: Coins, color: "#c084fc" }
 ];
-
-const NUMBER_FORMAT = new Intl.NumberFormat("en-IN");
-
-function formatPopulation(population) {
-  if (!population) return "—";
-  if (population >= 10000000) return `${(population / 10000000).toFixed(1)} Cr`;
-  if (population >= 100000) return `${(population / 100000).toFixed(1)} L`;
-  return NUMBER_FORMAT.format(population);
-}
 
 function OutlookBadge({ outlook }) {
   if (outlook === "Improving") {
@@ -49,6 +39,13 @@ function OutlookBadge({ outlook }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/25 bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-300">
         <ArrowDownRight size={11} /> Declining
+      </span>
+    );
+  }
+  if (outlook === "Insufficient data") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/25 bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+        <Minus size={11} /> Insufficient data
       </span>
     );
   }
@@ -71,14 +68,11 @@ export default function PlaceDetailModal({
 }) {
   const bodyRef = useRef(null);
 
-  const { history, projections } = useMemo(
-    () =>
-      getHistoricalAndProjection(place?.id || "IN-KA-BLR", {
-        baseScore: place?.baseScore,
-        slope: place?.slope
-      }),
-    [place?.id, place?.baseScore, place?.slope]
-  );
+  const history = place?.history || [];
+  const projections = place?.projections || [];
+  const plotHistory = history.filter(point => Number.isFinite(point.score));
+  const plotProjections = projections.filter(point => Number.isFinite(point.score));
+  const allPoints = [...plotHistory, ...plotProjections];
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: 0 });
@@ -98,11 +92,17 @@ export default function PlaceDetailModal({
     return Math.round((Number(weights?.[key] || 0) / totalWeight) * 100);
   };
 
-  const allPoints = [...history, ...projections];
   const selectedIndex = allPoints.findIndex(point => point.year === year);
   const selectedPoint = selectedIndex >= 0 ? allPoints[selectedIndex] : null;
-  const baselinePoint = allPoints.find(point => point.year === 2024);
-  const finalPoint = allPoints[allPoints.length - 1];
+  const baselineIndex = allPoints.findIndex(point => point.year === 2024);
+  const baselinePoint = baselineIndex >= 0 ? allPoints[baselineIndex] : null;
+  const finalPoint = plotProjections.length ? plotProjections[plotProjections.length - 1] : null;
+  const hasChart = plotHistory.length >= 2 || plotProjections.length > 0;
+  const hasProjection = plotHistory.length > 0 && plotProjections.length > 0;
+  const slopeAvailable = Number.isFinite(place.slope);
+  const pValueText = Number.isFinite(place.pVal)
+    ? place.pVal < 0.001 ? "<0.001" : place.pVal.toFixed(3)
+    : "—";
 
   const scoreColor = getScoreColor(place.overallScore);
   const tierColor = getTierColor(place.tier);
@@ -120,27 +120,38 @@ export default function PlaceDetailModal({
   const chartW = svgWidth - padLeft - padRight;
   const chartH = svgHeight - padTop - padBottom;
 
-  const getX = index => padLeft + (index / (allPoints.length - 1)) * chartW;
+  const denominator = Math.max(1, allPoints.length - 1);
+  const getX = index => padLeft + (index / denominator) * chartW;
   const getY = value => padTop + chartH - (value / 100) * chartH;
 
-  const historyPath = history
+  const historyPath = plotHistory
     .map((point, index) => `${index === 0 ? "M" : "L"} ${getX(index)} ${getY(point.score)}`)
     .join(" ");
 
-  const startIndex = history.length - 1;
-  const projectionPath = [
-    `M ${getX(startIndex)} ${getY(history[startIndex].score)}`,
-    ...projections.map((point, index) => `L ${getX(startIndex + 1 + index)} ${getY(point.score)}`)
-  ].join(" ");
+  const startIndex = plotHistory.length - 1;
+  const projectionPath = hasProjection
+    ? [
+        `M ${getX(startIndex)} ${getY(plotHistory[startIndex].score)}`,
+        ...plotProjections.map(
+          (point, index) => `L ${getX(startIndex + 1 + index)} ${getY(point.score)}`
+        )
+      ].join(" ")
+    : "";
 
-  const upperPath = projections
-    .map((point, index) => `${getX(startIndex + 1 + index)},${getY(point.upper)}`)
-    .join(" ");
-  const lowerPathReversed = [...projections]
-    .reverse()
-    .map((point, index) => `${getX(startIndex + projections.length - index)},${getY(point.lower)}`)
-    .join(" ");
-  const bandPolygon = `${getX(startIndex)},${getY(history[startIndex].score)} ${upperPath} ${lowerPathReversed} Z`;
+  const bandPath = hasProjection
+    ? [
+        `M ${getX(startIndex)} ${getY(plotHistory[startIndex].score)}`,
+        ...plotProjections.map(
+          (point, index) =>
+            `L ${getX(startIndex + 1 + index)} ${getY(point.upper)}`
+        ),
+        ...[...plotProjections].reverse().map(
+          (point, index) =>
+            `L ${getX(startIndex + plotProjections.length - index)} ${getY(point.lower)}`
+        ),
+        "Z"
+      ].join(" ")
+    : "";
 
   return (
     <Modal onClose={onClose} label={`${place.name} livability details`} className="max-w-3xl">
@@ -150,7 +161,7 @@ export default function PlaceDetailModal({
             className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl font-black shadow-lg"
             style={{ backgroundColor: scoreColor }}
           >
-            <span className="text-lg leading-none text-slate-950">{place.overallScore}</span>
+            <span className="text-lg leading-none text-slate-950">{place.overallScore ?? "—"}</span>
             <span className="mt-0.5 text-[8px] uppercase tracking-wide text-slate-950/70">{year}</span>
           </div>
 
@@ -171,14 +182,20 @@ export default function PlaceDetailModal({
                 {place.type === "city" ? `${place.state} · City` : `${place.region} · State`}
               </span>
               <span className="text-slate-700">·</span>
-              <span className="font-semibold text-emerald-400">Rank #{place.rank}</span>
+              <span className="font-semibold text-emerald-400">
+                {place.rank ? `Rank #${place.rank}` : "Unranked"}
+              </span>
               <span className="text-slate-700">·</span>
               <span>
-                OLS slope{" "}
-                <strong className={place.slope >= 0 ? "text-emerald-300" : "text-rose-300"}>
-                  {place.slope > 0 ? "+" : ""}{place.slope}
-                </strong>{" "}
-                pts/yr
+                {slopeAvailable ? (
+                  <>
+                    OLS slope{" "}
+                    <strong className={place.slope >= 0 ? "text-emerald-300" : "text-rose-300"}>
+                      {place.slope > 0 ? "+" : ""}{place.slope}
+                    </strong>{" "}
+                    pts/yr
+                  </>
+                ) : "Insufficient data for an OLS trend"}
               </span>
             </div>
           </div>
@@ -222,14 +239,14 @@ export default function PlaceDetailModal({
               <div className="mt-1 text-lg font-black text-rose-300">{finalPoint?.score ?? "—"}</div>
             </div>
             <div className="surface-inset p-2.5">
-              <span className="eyebrow">p-value</span>
-              <div className="mt-1 text-lg font-black text-slate-100">{place.pVal ?? "—"}</div>
+              <span className="eyebrow">Trend p-value</span>
+              <div className="mt-1 text-lg font-black text-slate-100">{pValueText}</div>
             </div>
             <div className="surface-inset col-span-2 p-2.5 sm:col-span-1">
-              <span className="eyebrow">Population</span>
+              <span className="eyebrow">Pillars available</span>
               <div className="mt-1 flex items-center gap-1.5 text-lg font-black text-slate-100">
-                <Users size={14} className="text-slate-500" />
-                {formatPopulation(place.pop)}
+                <Layers size={14} className="text-slate-500" />
+                {place.availablePillars ?? 0}/5
               </div>
             </div>
           </div>
@@ -246,11 +263,8 @@ export default function PlaceDetailModal({
                 const Icon = card.icon;
                 const value = place.factorScores?.[card.key];
                 const hasValue = value !== null && value !== undefined;
-                const sourceTag = card.key === "col"
-                  ? hasValue ? "6 metros" : "No data"
-                  : place.type === "city" && card.key === "air"
-                    ? "City"
-                    : "State";
+                const sourceYear = place.factorYears?.[card.key];
+                const sourceTag = sourceYear ?? "No data";
 
                 return (
                   <div key={card.key} className="surface-soft flex flex-col justify-between gap-2 p-2.5">
@@ -259,7 +273,10 @@ export default function PlaceDetailModal({
                         <Icon size={12} />
                         {card.label}
                       </span>
-                      <span className="rounded bg-slate-800/80 px-1 py-0.5 text-[8px] font-medium text-slate-400">
+                      <span
+                        className="rounded bg-slate-800/80 px-1 py-0.5 text-[8px] font-medium text-slate-400"
+                        title={sourceYear ? `Latest observation: ${sourceYear}` : "No observation available"}
+                      >
                         {sourceTag}
                       </span>
                     </div>
@@ -354,129 +371,158 @@ export default function PlaceDetailModal({
               </div>
             </div>
 
-            <div className="surface-inset p-2 sm:p-3">
-              <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full" role="img" aria-label={`Score history and ten year projection for ${place.name}`}>
-                {[20, 40, 60, 80, 100].map(value => (
-                  <g key={value}>
-                    <line
-                      x1={padLeft}
-                      y1={getY(value)}
-                      x2={svgWidth - padRight}
-                      y2={getY(value)}
-                      stroke="#1e293b"
-                      strokeDasharray="2,4"
-                    />
-                    <text x={padLeft - 8} y={getY(value) + 3} fill="#64748b" fontSize="8" textAnchor="end">
-                      {value}
-                    </text>
-                  </g>
-                ))}
+            {hasChart ? (
+              <div className="surface-inset p-2 sm:p-3">
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full" role="img" aria-label={`Score history and ten year projection for ${place.name}`}>
+                  {[20, 40, 60, 80, 100].map(value => (
+                    <g key={value}>
+                      <line
+                        x1={padLeft}
+                        y1={getY(value)}
+                        x2={svgWidth - padRight}
+                        y2={getY(value)}
+                        stroke="#1e293b"
+                        strokeDasharray="2,4"
+                      />
+                      <text
+                        x={padLeft - 8}
+                        y={getY(value) + 3}
+                        fill="#64748b"
+                        textAnchor="end"
+                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                      >
+                        {value}
+                      </text>
+                    </g>
+                  ))}
 
-                <line
-                  x1={getX(startIndex)}
-                  y1={padTop}
-                  x2={getX(startIndex)}
-                  y2={padTop + chartH}
-                  stroke="#475569"
-                  strokeDasharray="3,3"
-                />
-                <text x={getX(startIndex)} y={padTop - 6} fill="#94a3b8" fontSize="8" textAnchor="middle">
-                  Baseline 2024
-                </text>
+                  {baselineIndex >= 0 && (
+                    <>
+                      <line
+                        x1={getX(baselineIndex)}
+                        y1={padTop}
+                        x2={getX(baselineIndex)}
+                        y2={padTop + chartH}
+                        stroke="#475569"
+                        strokeDasharray="3,3"
+                      />
+                      <text
+                        x={getX(baselineIndex)}
+                        y={padTop - 6}
+                        fill="#94a3b8"
+                        textAnchor="middle"
+                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                      >
+                        Baseline 2024
+                      </text>
+                    </>
+                  )}
 
-                <polygon points={bandPolygon} fill="#f43f5e" fillOpacity="0.14" />
-                <path d={historyPath} fill="none" stroke="#38bdf8" strokeWidth="2.4" />
-                <path d={projectionPath} fill="none" stroke="#f43f5e" strokeWidth="2.4" strokeDasharray="4,4" />
+                  {hasProjection && (
+                    <>
+                      <path d={bandPath} fill="#f43f5e" fillOpacity="0.14" stroke="none" />
+                      <path d={projectionPath} fill="none" stroke="#f43f5e" strokeWidth="2.4" strokeDasharray="4,4" />
+                    </>
+                  )}
+                  {plotHistory.length > 1 && (
+                    <path d={historyPath} fill="none" stroke="#38bdf8" strokeWidth="2.4" />
+                  )}
 
-                {history.map((point, index) => (
-                  <circle
-                    key={point.year}
-                    cx={getX(index)}
-                    cy={getY(point.score)}
-                    r={point.isCovid ? 4 : 2.6}
-                    fill={point.isCovid ? "#eab308" : "#38bdf8"}
-                    stroke="#0f172a"
-                    strokeWidth="1.4"
-                  >
-                    <title>{`${point.year}: ${point.score}${point.isCovid ? " (COVID lockdown)" : ""}`}</title>
-                  </circle>
-                ))}
-
-                {projections.map((point, index) => (
-                  <circle
-                    key={point.year}
-                    cx={getX(startIndex + 1 + index)}
-                    cy={getY(point.score)}
-                    r="2.6"
-                    fill="#f43f5e"
-                    stroke="#0f172a"
-                    strokeWidth="1.4"
-                  >
-                    <title>{`${point.year}: ${point.score} (95% CI ${point.lower}–${point.upper})`}</title>
-                  </circle>
-                ))}
-
-                {selectedIndex >= 0 && (
-                  <g>
-                    <line
-                      x1={getX(selectedIndex)}
-                      y1={padTop}
-                      x2={getX(selectedIndex)}
-                      y2={padTop + chartH}
-                      stroke="#f8fafc"
-                      strokeOpacity="0.55"
-                      strokeWidth="1.2"
-                      strokeDasharray="4,3"
-                    />
+                  {plotHistory.map((point, index) => (
                     <circle
-                      cx={getX(selectedIndex)}
-                      cy={getY(allPoints[selectedIndex].score)}
-                      r="5.5"
-                      fill={year > 2024 ? "#fb7185" : "#38bdf8"}
-                      stroke="#ffffff"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x={getX(selectedIndex)}
-                      y={padTop + chartH + 16}
-                      fill="#f8fafc"
-                      fontSize="8"
-                      fontWeight="700"
-                      textAnchor="middle"
+                      key={point.year}
+                      cx={getX(index)}
+                      cy={getY(point.score)}
+                      r={point.isCovid ? 4 : 2.6}
+                      fill={point.isCovid ? "#eab308" : "#38bdf8"}
+                      stroke="#0f172a"
+                      strokeWidth="1.4"
                     >
-                      {year}
-                    </text>
-                  </g>
-                )}
+                      <title>{`${point.year}: ${point.score}${point.isCovid ? " (COVID lockdown)" : ""}`}</title>
+                    </circle>
+                  ))}
 
-                {[2015, 2020, 2024, 2029, 2034].map(labelYear => {
-                  if (labelYear === year) return null;
-                  const pointIndex = allPoints.findIndex(point => point.year === labelYear);
-                  if (pointIndex === -1) return null;
-                  return (
-                    <text
-                      key={labelYear}
-                      x={getX(pointIndex)}
-                      y={padTop + chartH + 16}
-                      fill="#64748b"
-                      fontSize="8"
-                      textAnchor="middle"
+                  {plotProjections.map((point, index) => (
+                    <circle
+                      key={point.year}
+                      cx={getX(startIndex + 1 + index)}
+                      cy={getY(point.score)}
+                      r="2.6"
+                      fill="#f43f5e"
+                      stroke="#0f172a"
+                      strokeWidth="1.4"
                     >
-                      {labelYear}
-                    </text>
-                  );
-                })}
-              </svg>
-            </div>
+                      <title>{`${point.year}: ${point.score} (approx. 95% interval ${point.lower}–${point.upper})`}</title>
+                    </circle>
+                  ))}
+
+                  {selectedIndex >= 0 && (
+                    <g>
+                      <line
+                        x1={getX(selectedIndex)}
+                        y1={padTop}
+                        x2={getX(selectedIndex)}
+                        y2={padTop + chartH}
+                        stroke="#f8fafc"
+                        strokeOpacity="0.55"
+                        strokeWidth="1.2"
+                        strokeDasharray="4,3"
+                      />
+                      <circle
+                        cx={getX(selectedIndex)}
+                        cy={getY(allPoints[selectedIndex].score)}
+                        r="5.5"
+                        fill={year > 2024 ? "#fb7185" : "#38bdf8"}
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={getX(selectedIndex)}
+                        y={padTop + chartH + 16}
+                        fill="#f8fafc"
+                        fontWeight="700"
+                        textAnchor="middle"
+                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                      >
+                        {year}
+                      </text>
+                    </g>
+                  )}
+
+                  {[2015, 2020, 2024, 2029, 2034].map(labelYear => {
+                    if (labelYear === year) return null;
+                    const pointIndex = allPoints.findIndex(point => point.year === labelYear);
+                    if (pointIndex === -1) return null;
+                    return (
+                      <text
+                        key={labelYear}
+                        x={getX(pointIndex)}
+                        y={padTop + chartH + 16}
+                        fill="#64748b"
+                        textAnchor="middle"
+                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                      >
+                        {labelYear}
+                      </text>
+                    );
+                  })}
+                </svg>
+              </div>
+            ) : (
+              <div className="surface-inset p-4 text-[11px] leading-relaxed text-slate-400">
+                No chartable history is available for this place under the current weights. Increase a pillar
+                with observed data or select a year covered by the source series.
+              </div>
+            )}
           </div>
 
           <div className="flex items-start gap-2 rounded-xl border border-amber-800/60 bg-amber-950/25 p-3 text-[10px] leading-relaxed text-amber-200/90">
             <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-400" />
             <div>
               <strong className="font-semibold text-amber-300">Statistical disclaimer:</strong>{" "}
-              Projections are OLS extensions from limited yearly data (2015–2024). They do not model policy shifts,
-              climate tipping points or future investment. Wide intervals are an honest reflection of uncertainty,
-              not a prediction of future conditions.
+              Scores for 2015–2024 use the latest real observation at or before each year. Values for 2025–2034
+              are OLS projections from those composite scores and are hidden when fewer than five yearly points
+              exist. They do not model policy shifts, climate tipping points or future investment.
             </div>
           </div>
         </div>

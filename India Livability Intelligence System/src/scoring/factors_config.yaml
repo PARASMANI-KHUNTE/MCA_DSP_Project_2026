@@ -46,7 +46,7 @@ factors:
     notes: "Normalize each indicator separately then average inside the factor. Only years where both exist."
 
   cost_of_living:                   # OPTIONAL — six cities only
-    column: avg_rent
+    column: cost_of_living
     direction: lower_is_better
     level: city
     trend: never                    # snapshot only — never project

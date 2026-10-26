@@ -8,10 +8,12 @@ import PlaceDetailModal from "./components/PlaceDetailModal";
 import CompareModal from "./components/CompareModal";
 import CompareBar from "./components/CompareBar";
 import Toast from "./components/Toast";
+import OnboardingTourModal from "./components/OnboardingTourModal";
+import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
-import { calculateScores } from "./services/scoringService";
-import { PRESETS } from "./data/seedData";
+import { BASELINE_YEAR, calculateScores } from "./services/scoringService";
+import { PRESETS } from "./data/methodologyData";
 
 const MOBILE_PANELS = [
   { id: "map", label: "Map", icon: Map },
@@ -21,7 +23,7 @@ const MOBILE_PANELS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("map");
-  const [selectedYear, setSelectedYear] = useState(2024);
+  const [selectedYear, setSelectedYear] = useState(BASELINE_YEAR);
   const [mobilePanel, setMobilePanel] = useState("map");
 
   const [weights, setWeights] = useState({
@@ -41,6 +43,7 @@ export default function App() {
   const [showCompareModal, setShowCompareModal] = useState(false);
 
   const [backendOnline, setBackendOnline] = useState(false);
+  const [showTourModal, setShowTourModal] = useState(false);
 
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -184,17 +187,23 @@ export default function App() {
         onChangeYear={setSelectedYear}
         backendOnline={backendOnline}
         onRetryBackend={handleRetryBackend}
+        onOpenTour={() => setShowTourModal(true)}
       />
 
       <main
         className={`relative z-10 mx-auto w-full max-w-[1720px] flex-1 px-3 pt-3 sm:px-5 sm:pt-4 lg:px-6 lg:pt-5 ${
           compareIds.length
-            ? "pb-[calc(10rem+env(safe-area-inset-bottom))] lg:pb-28"
+            ? "pb-[calc(8.5rem+env(safe-area-inset-bottom))] lg:pb-28"
             : "pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-8"
         }`}
       >
         {activeTab === "map" && (
           <div className="flex flex-col">
+            <QuickStartBanner
+              onOpenTour={() => setShowTourModal(true)}
+              onSelectPreset={handleSelectPreset}
+            />
+
             <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1 sm:mb-4 lg:hidden">
               {MOBILE_PANELS.map(panel => {
                 const Icon = panel.icon;
@@ -305,6 +314,11 @@ export default function App() {
           onAddMore={handleAddMorePlaces}
         />
       )}
+
+      <OnboardingTourModal
+        isOpen={showTourModal}
+        onClose={() => setShowTourModal(false)}
+      />
     </div>
   );
 }

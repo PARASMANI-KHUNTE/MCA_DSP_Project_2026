@@ -9,9 +9,17 @@
 🔗 _Link to be added after deployment_
 
 ## Key Findings
-- _To be filled after EDA_
-- _To be filled after EDA_
-- _To be filled after EDA_
+- **Regional Disparity (2022 cross-section, One-Way ANOVA $F = 7.23, p = 2.89 \times 10^{-5}$):** Mean composite scores range from **72.5 in the West** to **43.2 in the Central region** across 61 scored places. This is the latest year with complete state-level safety, health and economy coverage.
+- **Economic Output & Infant Mortality ($r = -0.63, p < 0.001, n = 122$):** Higher per-capita NSDP is strongly associated with lower infant mortality. The PM2.5–IMR overlap is smaller and **not statistically significant** ($r = 0.25, p = 0.121, n = 40$), so the app does not claim a significant air–health correlation.
+- **Observed Trends and OLS Outlooks:** Trend models fit observed 2015–2024 series and project to **2034** only when at least five yearly points exist. Across place-factor series, 28 improve, 21 decline, 5 are stable/uncertain, and 190 have insufficient data.
+- **Offline K-Means ($k=5$, silhouette $= 0.647$):** Cluster profiles span mean scores from 22.9 to 81.3. The interactive interface deliberately uses explicit score bands instead of cluster labels because the clustering output is retained as offline analysis.
+- **Data Gaps Are Explicit:** Air observations exist for 2015–2019 and 2023–2024; state safety, health and economy end in 2022; cost of living is a 2022 rent snapshot for six metros; population is not part of the processed dataset.
+
+## Generated Reports & Deliverables
+- 📄 **Academic Project Report:** [`reports/project_report.pdf`](reports/project_report.pdf) (10–15 pages, MCA capstone format)
+- 📊 **Presentation Slides:** [`reports/presentation_slides.pdf`](reports/presentation_slides.pdf) (5-minute viva presentation deck)
+- 📈 **Statistical Findings & Figures:** [`reports/findings.md`](reports/findings.md) & [`reports/figures/`](reports/figures/)
+- 🌐 **Interactive Dashboard:** Run locally on `http://localhost:5173/` (FastAPI backend on `http://localhost:8000/docs`)
 
 ## How to Run Locally
 

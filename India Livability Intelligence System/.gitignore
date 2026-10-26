@@ -1,0 +1,65 @@
+# India Livability Intelligence System — .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data — raw files (large, do not commit; tracked separately)
+data/raw/
+data/interim/
+
+# Processed data (commit small ones; gitignore large parquet)
+data/processed/*.parquet
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+frontend/.next/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Models (large files; store via Git LFS or DVC)
+models/*.pkl
+models/*.joblib

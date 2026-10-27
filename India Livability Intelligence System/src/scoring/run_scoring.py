@@ -47,12 +47,12 @@ def run() -> None:
     config = load_config(SCORING_CONFIG)
     logger.info("Loaded factors_wide: %d rows, %d columns.", len(factors_wide), len(factors_wide.columns))
 
-    # Default balanced weights (normalized later inside compute_scores)
+    # Default balanced weights (M5 specification: 35/25/25/15)
     default_weights = {
-        "air_quality": 0.30,
+        "air_quality": 0.35,
         "safety":      0.25,
         "health":      0.25,
-        "economy":     0.20,
+        "economy":     0.15,
     }
 
     # Compute scores for every year in the data

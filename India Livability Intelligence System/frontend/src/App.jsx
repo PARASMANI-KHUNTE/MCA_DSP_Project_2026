@@ -27,10 +27,10 @@ export default function App() {
   const [mobilePanel, setMobilePanel] = useState("map");
 
   const [weights, setWeights] = useState({
-    air: 30,
+    air: 35,
     safety: 25,
     health: 25,
-    economy: 20,
+    economy: 15,
     col: 0
   });
   const [selectedPresetId, setSelectedPresetId] = useState("balanced");

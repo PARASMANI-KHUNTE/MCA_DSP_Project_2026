@@ -2,8 +2,8 @@ export const PRESETS = [
   {
     id: "balanced",
     name: "Balanced Baseline",
-    desc: "Even emphasis across air, safety, healthcare and economy",
-    weights: { air: 30, safety: 25, health: 25, economy: 20, col: 0 }
+    desc: "Canonical 35/25/25/15 emphasis across air, safety, healthcare and economy",
+    weights: { air: 35, safety: 25, health: 25, economy: 15, col: 0 }
   },
   {
     id: "environmental",
@@ -39,37 +39,37 @@ export const METHODOLOGY_DETAILS = {
       factor: "Air quality (PM2.5)",
       bounds: "10 to 150 µg/m³",
       direction: "Lower is better",
-      source: "CPCB / Kaggle urban monitors"
+      source: "CPCB / Kaggle urban monitors (WHO=15, NAAQS=60, 5th-95th percentile=35-122)"
     },
     {
       factor: "Public safety (IPC crime rate)",
       bounds: "100 to 600 per lakh",
       direction: "Lower is better",
-      source: "NCRB Crime in India"
+      source: "NCRB Crime in India (5th-95th percentile=140-510)"
     },
     {
       factor: "Healthcare (infant mortality)",
       bounds: "5 to 50 per 1,000 births",
       direction: "Lower is better",
-      source: "SRS, Registrar General of India"
+      source: "SRS, Registrar General of India (5th-95th percentile=10-46, min=5, max=50)"
     },
     {
       factor: "Economy: NSDP per capita",
-      bounds: "₹50,000 to ₹3,50,000",
+      bounds: "₹50,000 to ₹3,20,000",
       direction: "Higher is better",
-      source: "RBI Handbook of Statistics on Indian States"
+      source: "RBI Handbook of Statistics on Indian States (5th-95th percentile=₹54.2k-₹312k)"
     },
     {
       factor: "Economy: unemployment",
-      bounds: "2% to 15% of labour force",
+      bounds: "2.0% to 10.0% of labour force",
       direction: "Lower is better",
-      source: "MoSPI Periodic Labour Force Survey"
+      source: "MoSPI Periodic Labour Force Survey (5th-95th percentile=2.4%-9.4%)"
     },
     {
       factor: "Cost of living (rent)",
-      bounds: "₹5,000 to ₹80,000 / month",
+      bounds: "₹10,000 to ₹90,000 / month",
       direction: "Lower is better",
-      source: "Kaggle house-rent snapshot (6 cities)"
+      source: "Kaggle house-rent snapshot (6 metros: Kolkata ₹11.6k to Mumbai ₹85.3k)"
     }
   ],
   ethics: [

@@ -55,7 +55,7 @@ def _find_col(df: pd.DataFrame, candidates: list[str]) -> str | None:
 def _extract_with_pdfplumber(pdf_path: Path, year: int) -> pd.DataFrame | None:
     """Try to extract the air quality table using pdfplumber."""
     try:
-        import pdfplumber
+        import pdfplumber  # type: ignore
     except ImportError:
         logger.warning("pdfplumber not installed — skipping")
         return None
@@ -81,7 +81,7 @@ def _extract_with_pdfplumber(pdf_path: Path, year: int) -> pd.DataFrame | None:
 def _extract_with_camelot(pdf_path: Path, year: int) -> pd.DataFrame | None:
     """Try to extract the air quality table using camelot."""
     try:
-        import camelot
+        import camelot  # type: ignore
     except ImportError:
         logger.warning("camelot not installed — skipping")
         return None

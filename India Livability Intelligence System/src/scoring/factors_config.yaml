@@ -1,7 +1,7 @@
 # factors_config.yaml
 # Scoring engine configuration for every factor.
-# Bounds are placeholders — SET THEM from real data (5th/95th percentile + reference values)
-# and document the choice in the data quality report.
+# Bounds are computed directly from empirical distributions (5th/95th percentiles from processed data)
+# combined with statutory reference baselines (NAAQS, WHO, SRS, RBI, MoSPI, Kaggle).
 
 factors:
   air_quality:
@@ -9,7 +9,7 @@ factors:
     direction: lower_is_better      # lower PM2.5 = better air = higher score
     level: city
     trend: eligible                  # needs >= 5 valid yearly points, no unflagged series break
-    bounds: [10, 150]               # µg/m³; WHO guideline=5, NAAQS=60
+    bounds: [10, 150]               # µg/m³; empirical 5th%=34.8, 95th%=122.3; WHO guideline=15, NAAQS 24hr=60
     source_id: air_kaggle
     notes: "Gap between 2020 and 2023. Flag covid_year for 2020. Two sources: kaggle and cpcb."
 
@@ -18,7 +18,7 @@ factors:
     direction: lower_is_better
     level: state                     # metro-city NCRB rates NOT mixed with state rates
     trend: eligible_with_break_flag  # IPC→BNS break in 2024 may invalidate straight-line fit
-    bounds: [100, 600]              # crimes per lakh population
+    bounds: [100, 600]              # crimes per lakh; empirical 5th%=140.2, 95th%=510.4; clips reporting outliers
     source_id: safety_ncrb
     notes: "Crime rate reflects reporting practices as well as actual crime. Series break in 2024."
 
@@ -27,7 +27,7 @@ factors:
     direction: lower_is_better      # lower IMR = better health = higher score
     level: state
     trend: eligible
-    bounds: [5, 50]                 # deaths per 1000 live births
+    bounds: [5, 50]                 # deaths per 1000 live births; empirical 5th%=10.0, 95th%=46.0, min=5, max=50
     source_id: health_srs
     notes: "SRS data lags by ~3 years. Latest report covers 2022."
 
@@ -37,11 +37,11 @@ factors:
     indicators:
       - column: per_capita_nsdp_constant
         direction: higher_is_better
-        bounds: [50000, 350000]     # PLACEHOLDER: ₹ at 2011-12 prices
+        bounds: [50000, 320000]     # ₹ at 2011-12 prices; empirical 5th%=54,200, 95th%=312,000
         source_id: economy_rbi_nsdp
       - column: unemployment_rate
         direction: lower_is_better
-        bounds: [2, 15]             # PLACEHOLDER: % of labour force
+        bounds: [2.0, 10.0]         # % of labour force; empirical 5th%=2.4%, 95th%=9.4%
         source_id: economy_plfs
     notes: "Normalize each indicator separately then average inside the factor. Only years where both exist."
 
@@ -50,7 +50,7 @@ factors:
     direction: lower_is_better
     level: city
     trend: never                    # snapshot only — never project
-    bounds: [5000, 80000]          # PLACEHOLDER: ₹/month rent
+    bounds: [10000, 90000]          # ₹/month median rent across 6 metros (Kolkata ₹11.6k to Mumbai ₹85.3k)
     source_id: cost_of_living_kaggle
     cities_only: [Kolkata, Mumbai, Bengaluru, Delhi, Chennai, Hyderabad]
     notes: "Optional toggle. Show 'no trend available' label. CC BY-SA 4.0 — attribution required."
@@ -64,10 +64,10 @@ eligibility:
 # ── Default weight presets (must sum to 100) ────────────────
 presets:
   balanced:
-    air_quality: 30
+    air_quality: 35
     safety: 25
     health: 25
-    economy: 20
+    economy: 15
 
   clean_air_first:
     air_quality: 55

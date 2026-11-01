@@ -47,7 +47,7 @@ notebooks:
 	@echo "✅ All notebooks executed."
 
 api:
-	cd backend && uvicorn app.main:app --reload --port 8000
+	uvicorn backend.app.main:app --reload --port 8000
 
 web:
 	cd frontend && $(NPM) run dev

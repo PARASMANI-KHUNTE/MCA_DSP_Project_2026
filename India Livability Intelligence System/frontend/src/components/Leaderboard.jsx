@@ -66,15 +66,15 @@ export default function Leaderboard({
     <div className="surface flex h-full w-full flex-col overflow-hidden p-4">
       <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
-            <Trophy size={16} />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-300 ring-1 ring-amber-400/30">
+            <Trophy size={17} />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-300">Step 3</span>
+              <span className="rounded bg-gradient-to-r from-amber-500/30 to-orange-500/30 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-200">Step 3</span>
               <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Live Rankings</h2>
             </div>
-            <p className="truncate text-[10px] text-slate-500">{year} weighted index · click for details</p>
+            <p className="truncate text-[10px] text-slate-500">{year} weighted index · Click for details</p>
           </div>
         </div>
         <span className="shrink-0 rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400">
@@ -87,10 +87,10 @@ export default function Leaderboard({
           <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
-            placeholder="Search city, state or region..."
+            placeholder="Search by city, state, or region..."
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-9 text-base text-slate-200 placeholder:text-slate-600 transition-colors focus:border-emerald-500/60 focus:outline-none sm:text-xs"
+            className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-9 text-base text-slate-200 placeholder:text-slate-500 transition-all focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:text-xs"
             aria-label="Search places"
           />
           {searchTerm && (

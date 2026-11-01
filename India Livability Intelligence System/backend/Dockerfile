@@ -1,21 +1,28 @@
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10
+
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Only the API runtime deps are installed here. All have prebuilt wheels,
+# so no apt-get / build-essential step (and its network fragility) is needed.
+# The pip cache is mounted so interrupted downloads resume on rebuild.
+COPY backend/requirements.txt ./backend/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r backend/requirements.txt
 
-# Install python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy source and data
+# Application code
 COPY backend/ ./backend/
 COPY src/ ./src/
+
+# Data required at startup
 COPY data/processed/ ./data/processed/
+COPY data/raw/source_register.csv ./data/raw/source_register.csv
+COPY models/ ./models/
 
 EXPOSE 8000
 

@@ -61,20 +61,20 @@ export default function WeightControls({
     <div className="surface flex w-full flex-col gap-5 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
-            <Sliders size={16} />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 text-emerald-300 ring-1 ring-emerald-400/30">
+            <Sliders size={17} />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">Step 1</span>
+              <span className="rounded bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">Step 1</span>
               <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Set Priorities</h2>
             </div>
-            <p className="text-[10px] text-slate-500">Pick a preset or drag sliders</p>
+            <p className="text-[10px] text-slate-500">Pick a preset or fine-tune weights</p>
           </div>
         </div>
         <button
           onClick={onReset}
-          className="flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition-colors hover:bg-slate-800/70 hover:text-emerald-300"
+          className="flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition-all hover:bg-slate-800/70 hover:text-emerald-300 hover:scale-[1.02]"
           title="Reset to balanced default"
         >
           <RotateCcw size={12} />

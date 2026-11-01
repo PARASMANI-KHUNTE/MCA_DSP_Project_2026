@@ -33,25 +33,26 @@ export default function Navbar({
             className="group flex min-w-0 items-center gap-2.5 text-left"
             aria-label="Go to explorer"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 text-slate-950 shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-105">
-              <Compass size={19} className="animate-pulse-slow" />
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-400 via-cyan-400 to-blue-400 text-slate-950 shadow-lg shadow-emerald-500/25 transition-all group-hover:scale-110 group-hover:shadow-emerald-400/40">
+              <Compass size={20} className="animate-pulse-slow" />
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
             </span>
             <span className="min-w-0">
               <span className="flex items-center gap-2">
                 <span className="truncate text-[13px] font-black tracking-tight text-white sm:text-base">
                   India Livability Intelligence
                 </span>
-                <span className="hidden shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300 sm:inline-flex">
+                <span className="hidden shrink-0 rounded-full border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 px-2 py-0.5 text-[9px] font-black tracking-[0.18em] text-emerald-200 sm:inline-flex">
                   DSP 2026
                 </span>
               </span>
               <span className="hidden text-[10px] text-slate-400 md:block">
-                Real processed indicators and OLS projections
+                Data-driven index • Live map • Trend projections
               </span>
             </span>
           </button>
 
-          <nav className="hidden items-center gap-1 rounded-xl border border-slate-800/80 bg-slate-900/70 p-1 lg:flex">
+          <nav className="hidden items-center gap-1 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-1 shadow-lg shadow-black/20 lg:flex">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -60,13 +61,13 @@ export default function Navbar({
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  className={`group flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
                     active
-                      ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
-                      : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
+                      ? "bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 shadow-md shadow-emerald-500/25"
+                      : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
                   }`}
                 >
-                  <Icon size={13} />
+                  <Icon size={14} className={active ? "" : "group-hover:scale-110 transition-transform"} />
                   {tab.label}
                 </button>
               );
@@ -95,11 +96,11 @@ export default function Navbar({
 
             <button
               onClick={onOpenTour}
-              className="flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-300 shadow-sm shadow-emerald-500/10 transition-all hover:bg-emerald-500/20 hover:text-white"
+              className="group flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 px-2.5 py-1.5 text-xs font-bold text-emerald-200 shadow-sm shadow-emerald-500/15 transition-all hover:scale-[1.02] hover:border-emerald-300/60 hover:from-emerald-500/25 hover:to-cyan-500/25 hover:text-white"
               title="Learn how to use the system"
               aria-label="How to use the system"
             >
-              <HelpCircle size={14} className="text-emerald-400" />
+              <HelpCircle size={14} className="text-emerald-300 transition-transform group-hover:rotate-12" />
               <span className="hidden sm:inline">How It Works</span>
             </button>
 

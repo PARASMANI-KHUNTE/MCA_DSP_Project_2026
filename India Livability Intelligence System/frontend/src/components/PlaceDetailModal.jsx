@@ -202,17 +202,17 @@ export default function PlaceDetailModal({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onToggleCompare(place)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition-all ${
-              isComparing
-                ? "border-emerald-400/60 bg-emerald-500 text-slate-950"
-                : "border-slate-700 bg-slate-800/70 text-slate-300 hover:bg-slate-700"
-            }`}
-          >
-            <Scale size={13} />
-            {isComparing ? "In compare tray" : "Compare"}
-          </button>
+            <button
+              onClick={() => onToggleCompare(place)}
+              className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition-all hover:scale-[1.02] ${
+                isComparing
+                  ? "border-emerald-400/70 bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 shadow-md shadow-emerald-500/25"
+                  : "border-slate-700 bg-slate-800/70 text-slate-300 hover:border-emerald-500/50 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              <Scale size={13} />
+              {isComparing ? "In Compare Tray" : "Add to Compare"}
+            </button>
           <button
             onClick={onClose}
             className="icon-btn h-8 w-8"

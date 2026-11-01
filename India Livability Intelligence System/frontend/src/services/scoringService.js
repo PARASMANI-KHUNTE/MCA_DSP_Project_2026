@@ -16,14 +16,23 @@ export const PROJECTION_YEARS = Array.from(
 const MIN_TREND_POINTS = 5;
 const P_VALUE_THRESHOLD = 0.05;
 
+// Red → orange → yellow → lime → green.  Low scores are bad, high scores are good.
 export const SCORE_BANDS = [
-  { min: 80, color: "#10b981", label: "Elite" },
-  { min: 70, color: "#06b6d4", label: "High" },
-  { min: 60, color: "#3b82f6", label: "Good" },
-  { min: 50, color: "#f59e0b", label: "Moderate" },
+  { min: 80, color: "#059669", label: "Elite" },
+  { min: 70, color: "#22c55e", label: "High" },
+  { min: 60, color: "#84cc16", label: "Good" },
+  { min: 50, color: "#eab308", label: "Moderate" },
   { min: 40, color: "#f97316", label: "Developing" },
-  { min: 0, color: "#ef4444", label: "Critical" }
+  { min: 0, color: "#dc2626", label: "Critical" }
 ];
+
+// Low-to-high ordering of the same bands, used by legends and gradients.
+export const SCORE_BANDS_ASC = [...SCORE_BANDS].sort((a, b) => a.min - b.min);
+
+// Smooth red → green gradient mirroring the band thresholds.
+export const SCORE_GRADIENT_CSS = `linear-gradient(90deg, ${SCORE_BANDS_ASC.map(
+  band => `${band.color} ${band.min}%`
+).join(", ")})`;
 
 const FACTOR_KEYS = ["air", "safety", "health", "economy", "col"];
 
@@ -358,7 +367,7 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
 
 export function getScoreColor(score) {
   if (score === null || score === undefined || !Number.isFinite(Number(score))) return "#64748b";
-  const numeric = Number(score);
+  const numeric = clamp(Number(score), 0, 100);
   const band = SCORE_BANDS.find(item => numeric >= item.min);
   return band ? band.color : "#64748b";
 }
@@ -372,9 +381,9 @@ export function getScoreLabel(score) {
 
 export function getTierColor(tier) {
   if (!tier) return "#94a3b8";
-  if (tier.includes("Tier 1")) return "#10b981";
-  if (tier.includes("Tier 2")) return "#3b82f6";
-  if (tier.includes("Tier 3")) return "#f59e0b";
+  if (tier.includes("Tier 1")) return "#22c55e";
+  if (tier.includes("Tier 2")) return "#eab308";
+  if (tier.includes("Tier 3")) return "#f97316";
   return "#94a3b8";
 }
 

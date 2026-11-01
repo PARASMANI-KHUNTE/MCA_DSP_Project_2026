@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Move, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
-import { getScoreColor, getTierColor, SCORE_BANDS } from "../services/scoringService";
+import { getScoreColor, getTierColor, SCORE_BANDS_ASC } from "../services/scoringService";
 import { INDIA_STATES, MAP_VIEWBOX, projectLatLng } from "../data/indiaMap";
 
 const MIN_ZOOM = 0.85;
@@ -223,10 +223,6 @@ export default function IndiaMap({
 
   const getColorForPlace = place => {
     if (!place) return "#1e293b";
-    if (colorMode === "tier") return getTierColor(place.tier);
-    if (colorMode === "factor" && activeFactor !== "overall") {
-      return getScoreColor(place.factorScores?.[activeFactor]);
-    }
     return getScoreColor(place.overallScore);
   };
 
@@ -338,11 +334,14 @@ export default function IndiaMap({
 
   const legendItems = colorMode === "tier"
     ? [
-        { label: "Tier 1", color: getTierColor("Tier 1: High Livability") },
+        { label: "Tier 3", color: getTierColor("Tier 3: Developing Livability") },
         { label: "Tier 2", color: getTierColor("Tier 2: Moderate Livability") },
-        { label: "Tier 3", color: getTierColor("Tier 3: Developing Livability") }
+        { label: "Tier 1", color: getTierColor("Tier 1: High Livability") }
       ]
-    : [...SCORE_BANDS].reverse();
+    : SCORE_BANDS_ASC.map((band, index, bands) => ({
+        ...band,
+        max: index + 1 < bands.length ? bands[index + 1].min : 100
+      }));
 
   const legendTitle = colorMode === "tier"
     ? "Score band"
@@ -487,7 +486,7 @@ export default function IndiaMap({
                 d={state.d}
                 fill={placeData ? color : "url(#state-no-data)"}
                 fillRule="evenodd"
-                fillOpacity={dimmed ? 0.14 : selected ? 0.94 : hovered ? 0.82 : 0.6}
+                fillOpacity={dimmed ? 0.16 : selected ? 0.98 : hovered ? 0.9 : 0.74}
                 stroke={selected ? "#f8fafc" : hovered ? "#94a3b8" : "#334155"}
                 strokeWidth={selected ? 2.2 : hovered ? 1.5 : 0.9}
                 strokeLinejoin="round"
@@ -706,22 +705,35 @@ export default function IndiaMap({
             <span className="shrink-0 text-[9px] text-slate-500">{year}</span>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="mb-1 flex items-center justify-between text-[8px] font-bold uppercase tracking-wider">
+          {colorMode === "tier" ? (
+            <>
+              <span className="text-orange-400">Developing</span>
+              <span className="text-emerald-400">High</span>
+            </>
+          ) : (
+            <>
+              <span className="text-red-400">Worse ←</span>
+              <span className="text-emerald-400">→ Better</span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-px overflow-hidden rounded-full ring-1 ring-inset ring-slate-950/50">
           {legendItems.map(item => (
             <span
               key={item.label}
-              className="h-2.5 flex-1 rounded-sm"
+              className="h-3 flex-1"
               style={{ backgroundColor: item.color }}
-              title={item.min !== undefined ? `${item.label} (${item.min}+)` : item.label}
+              title={item.max !== undefined ? `${item.label}: ${item.min}–${item.max}` : item.label}
             />
           ))}
         </div>
-        <div className={`flex justify-between text-[9px] text-slate-500 ${compact ? "mt-0.5" : "mt-1"}`}>
+        <div className={`flex justify-between text-[9px] font-medium text-slate-500 ${compact ? "mt-0.5" : "mt-1"}`}>
           {colorMode === "tier" ? (
             <>
-              <span>High</span>
-              <span>Moderate</span>
-              <span>Developing</span>
+              <span>Tier 3</span>
+              <span>Tier 2</span>
+              <span>Tier 1</span>
             </>
           ) : (
             <>

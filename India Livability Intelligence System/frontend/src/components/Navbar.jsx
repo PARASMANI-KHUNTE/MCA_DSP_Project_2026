@@ -63,7 +63,7 @@ export default function Navbar({
                   aria-current={active ? "page" : undefined}
                   className={`group flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
                     active
-                      ? "bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 shadow-md shadow-emerald-500/25"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md shadow-emerald-500/25"
                       : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
                   }`}
                 >
@@ -96,7 +96,7 @@ export default function Navbar({
 
             <button
               onClick={onOpenTour}
-              className="group flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 px-2.5 py-1.5 text-xs font-bold text-emerald-200 shadow-sm shadow-emerald-500/15 transition-all hover:scale-[1.02] hover:border-emerald-300/60 hover:from-emerald-500/25 hover:to-cyan-500/25 hover:text-white"
+              className="group flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-green-500/15 px-2.5 py-1.5 text-xs font-bold text-emerald-200 shadow-sm shadow-emerald-500/15 transition-all hover:scale-[1.02] hover:border-emerald-300/60 hover:from-emerald-500/25 hover:to-green-500/25 hover:text-white"
               title="Learn how to use the system"
               aria-label="How to use the system"
             >

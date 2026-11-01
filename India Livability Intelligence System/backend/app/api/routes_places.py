@@ -37,6 +37,22 @@ def _coerce(val, typ=float):
         return None
 
 
+def _opt_str(val):
+    """Return a string or None, treating pandas NaN/NaT as missing."""
+    if val is None:
+        return None
+    try:
+        if pd.isna(val):
+            return None
+    except (TypeError, ValueError):
+        pass
+    return str(val)
+
+
+def _str(val):
+    return _opt_str(val) or ""
+
+
 @router.get("/places", response_model=list[PlaceOut], summary="List all places")
 def list_places(store: DataStore = Depends(get_store)):
     """Return all known places (states and cities) with coordinates."""
@@ -46,13 +62,13 @@ def list_places(store: DataStore = Depends(get_store)):
     result = []
     for _, row in places.iterrows():
         result.append(PlaceOut(
-            place_id=row["place_id"],
-            place_name=row["place_name"],
-            place_type=row["place_type"],
-            state_name=row["state_name"],
+            place_id=_str(row.get("place_id")),
+            place_name=_str(row.get("place_name")),
+            place_type=_str(row.get("place_type")),
+            state_name=_str(row.get("state_name")),
             latitude=_coerce(row.get("latitude")),
             longitude=_coerce(row.get("longitude")),
-            region=row.get("region"),
+            region=_opt_str(row.get("region")),
         ))
     return result
 
@@ -83,16 +99,16 @@ def place_detail(place_id: str, store: DataStore = Depends(get_store)):
                     is_imputed=bool(frow.get("is_imputed", False)),
                     is_inherited=bool(frow.get("is_inherited", False)),
                     series_break=bool(frow.get("series_break", False)),
-                    gap_flag=str(frow.get("gap_flag", "")),
+                    gap_flag=_str(frow.get("gap_flag")),
                 ))
             factor_history[str(factor)] = points
 
     return PlaceDetailOut(
-        place_id=row["place_id"],
-        place_name=row["place_name"],
-        place_type=row["place_type"],
-        state_name=row["state_name"],
-        region=row.get("region"),
+        place_id=_str(row.get("place_id")),
+        place_name=_str(row.get("place_name")),
+        place_type=_str(row.get("place_type")),
+        state_name=_str(row.get("state_name")),
+        region=_opt_str(row.get("region")),
         latitude=_coerce(row.get("latitude")),
         longitude=_coerce(row.get("longitude")),
         factor_history=factor_history,
@@ -140,12 +156,12 @@ def list_clusters(store: DataStore = Depends(get_store)):
     places_map = store.places.set_index("place_id")["place_name"].to_dict()
     result = []
     for _, row in clusters.iterrows():
-        pid = row.get("place_id", "")
+        pid = _str(row.get("place_id"))
         result.append(ClusterOut(
             place_id=pid,
-            place_name=places_map.get(pid, pid),
+            place_name=_str(places_map.get(pid, pid)),
             cluster_id=int(_coerce(row.get("cluster_id"), int) or 0),
-            tier_label=str(row.get("tier_label", "")),
+            tier_label=_str(row.get("tier_label")),
         ))
     return result
 
@@ -159,13 +175,13 @@ def list_sources(store: DataStore = Depends(get_store)):
     result = []
     for _, row in sources.iterrows():
         result.append(SourceOut(
-            source_id=str(row.get("source_id", "")),
-            name=str(row.get("name", "")),
-            publisher=str(row.get("publisher", "")),
-            url=row.get("url"),
-            license=row.get("license"),
-            downloaded_on=row.get("downloaded_on"),
-            level=row.get("level"),
-            notes=row.get("notes"),
+            source_id=_str(row.get("source_id")),
+            name=_str(row.get("name")),
+            publisher=_str(row.get("publisher")),
+            url=_opt_str(row.get("url")),
+            license=_opt_str(row.get("license")),
+            downloaded_on=_opt_str(row.get("downloaded_on")),
+            level=_opt_str(row.get("level")),
+            notes=_opt_str(row.get("notes")),
         ))
     return result

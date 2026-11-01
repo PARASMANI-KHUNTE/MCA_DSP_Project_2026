@@ -29,7 +29,9 @@ git clone <repo-url>
 cd "India Livability Intelligence System"
 python -m venv .venv
 .venv\Scripts\activate        # Windows
-pip install -r requirements.txt
+pip install -r requirements.txt        # full data/notebook stack
+# API-only (much smaller, no notebook/PDF/geospatial deps):
+# pip install -r backend/requirements.txt
 ```
 
 ### 2. Add raw data

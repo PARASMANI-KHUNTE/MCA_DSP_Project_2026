@@ -11,6 +11,7 @@ import {
   Wind
 } from "lucide-react";
 import { PRESETS } from "../data/methodologyData";
+import { getScoreColor, SCORE_GRADIENT_CSS } from "../services/scoringService";
 
 const FACTORS = [
   { key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee", max: 100 },
@@ -21,9 +22,7 @@ const FACTORS = [
 ];
 
 const COLOR_MODES = [
-  { id: "overall", label: "Composite" },
-  { id: "factor", label: "Pillar" },
-  { id: "tier", label: "Tier" }
+  { id: "overall", label: "Bad → Good" }
 ];
 
 const MAP_FACTORS = [
@@ -97,7 +96,7 @@ export default function WeightControls({
                 aria-pressed={selected}
                 className={`group relative flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-all ${
                   selected
-                    ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm shadow-emerald-500/10"
+                    ? "border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-green-500/20 shadow-sm shadow-emerald-500/20"
                     : "border-slate-800/80 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/60"
                 }`}
               >
@@ -109,7 +108,7 @@ export default function WeightControls({
                   )}
                 </span>
                 <span className="min-w-0">
-                  <span className={`block text-xs font-semibold ${selected ? "text-emerald-200" : "text-slate-200"}`}>
+                  <span className={`block text-xs font-semibold ${selected ? "text-emerald-300" : "text-slate-200"}`}>
                     {preset.name}
                   </span>
                   <span className="mt-0.5 block truncate text-[10px] text-slate-500">{preset.desc}</span>
@@ -132,10 +131,18 @@ export default function WeightControls({
           </span>
         </div>
 
+        <div className="mb-3 flex items-center justify-between text-[9px] font-medium">
+          <span className="text-red-400">Low ←</span>
+          <span className="text-slate-500">slider range</span>
+          <span className="text-emerald-400">→ High</span>
+        </div>
+
         <div className="flex flex-col gap-3.5">
           {FACTORS.map(factor => {
             const Icon = factor.icon;
             const value = Number(weights[factor.key] || 0);
+            const sliderPct = factor.max ? Math.round((value / factor.max) * 100) : 0;
+            const sliderColor = getScoreColor(sliderPct);
             return (
               <div key={factor.key} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-2 text-xs">
@@ -146,7 +153,10 @@ export default function WeightControls({
                       {factor.source}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] font-bold" style={{ color: factor.color }}>
+                  <span
+                    className="shrink-0 font-mono text-[11px] font-bold"
+                    style={{ color: getScoreColor(normalizedPct(value)) }}
+                  >
                     {normalizedPct(value)}%
                   </span>
                 </div>
@@ -159,7 +169,7 @@ export default function WeightControls({
                   onChange={event => onChangeWeight(factor.key, Number(event.target.value))}
                   aria-label={`${factor.label} weight`}
                   className="my-1"
-                  style={{ "--slider-accent": factor.color }}
+                  style={{ "--slider-accent": sliderColor, "--slider-track": SCORE_GRADIENT_CSS }}
                 />
               </div>
             );
@@ -181,53 +191,39 @@ export default function WeightControls({
 
       <div className="border-t border-slate-800/70 pt-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="eyebrow">Map color by</span>
-          <span className="text-[9px] text-slate-500">Choropleth + pins</span>
+          <span className="eyebrow">Map color</span>
+          <span className="text-[9px] text-slate-500">Red = bad · Yellow = mid · Green = good</span>
         </div>
-        <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
+        <div className="mb-2 px-0.5">
+          <div
+            className="h-2.5 rounded-full ring-1 ring-inset ring-slate-950/60"
+            style={{ background: SCORE_GRADIENT_CSS }}
+            role="img"
+            aria-label="Score color range from red (bad) through yellow (moderate) to green (good)"
+          />
+          <div className="mt-1 flex justify-between text-[9px] font-medium text-slate-500">
+            <span className="text-red-400">Worse ← 0</span>
+            <span>50</span>
+            <span className="text-emerald-400">100 → Better</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
           {COLOR_MODES.map(mode => (
             <button
               key={mode.id}
-              onClick={() => {
-                onChangeColorMode(mode.id);
-                if (mode.id === "factor" && activeFactor === "overall") onChangeActiveFactor("air");
-              }}
+              onClick={() => onChangeColorMode(mode.id)}
               aria-pressed={colorMode === mode.id}
               className={`min-h-9 rounded-lg px-1 py-2 text-[11px] font-semibold transition-all ${
                 colorMode === mode.id
-                  ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+                  ? "text-slate-950 shadow-md shadow-emerald-500/25"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
               }`}
+              style={colorMode === mode.id ? { backgroundImage: SCORE_GRADIENT_CSS } : undefined}
             >
               {mode.label}
             </button>
           ))}
         </div>
-
-        {colorMode === "factor" && (
-          <div className="mt-2 grid grid-cols-5 gap-1">
-            {MAP_FACTORS.map(factor => (
-              <button
-                key={factor.id}
-                onClick={() => onChangeActiveFactor(factor.id)}
-                aria-pressed={activeFactor === factor.id}
-                className={`min-h-8 rounded-md border px-0.5 py-1.5 text-[10px] font-semibold transition-colors ${
-                  activeFactor === factor.id
-                    ? "border-cyan-400/60 bg-cyan-500/15 text-cyan-200"
-                    : "border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300"
-                }`}
-              >
-                {factor.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {colorMode === "tier" && (
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-            Tier view groups live composite scores into three score bands; it is not a K-Means cluster assignment.
-          </p>
-        )}
       </div>
     </div>
   );

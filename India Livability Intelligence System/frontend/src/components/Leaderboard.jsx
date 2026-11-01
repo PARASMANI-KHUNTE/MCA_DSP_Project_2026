@@ -112,7 +112,7 @@ export default function Leaderboard({
               aria-pressed={filterType === filter.id}
               className={`min-h-9 rounded-lg px-1 py-2 text-[11px] font-semibold transition-all ${
                 filterType === filter.id
-                  ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md shadow-emerald-500/25"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
               }`}
             >

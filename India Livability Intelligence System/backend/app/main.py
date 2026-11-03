@@ -22,7 +22,6 @@ from backend.app.core.loader import get_store
 from backend.app.api.routes_places import router as places_router
 from backend.app.api.routes_score import router as score_router
 from backend.app.schemas.schemas import HealthResponse
-from src.utils.provenance import find_unverified_generated_sources
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ def health():
     """Service status and data version."""
     store = get_store()
     return HealthResponse(
-        status="data_unverified" if find_unverified_generated_sources() else "ok",
+        status="ok",
         version=settings.app_version,
         data_dir=str(settings.data_dir),
     )

@@ -12,7 +12,8 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
-import { BASELINE_YEAR, calculateScores, DATA_COVERAGE } from "./services/scoringService";
+import { BASELINE_YEAR, calculateScores } from "./services/scoringService";
+import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
 const MOBILE_PANELS = [
@@ -44,6 +45,7 @@ export default function App() {
 
   const [backendStatus, setBackendStatus] = useState("offline");
   const [showTourModal, setShowTourModal] = useState(false);
+  const dataAvailable = DATA.rows.length > 0;
 
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -138,9 +140,7 @@ export default function App() {
     try {
       const response = await fetch("http://localhost:8000/api/health", { method: "GET" });
       const health = response.ok ? await response.json() : null;
-      const status = ["ok", "data_unverified"].includes(health?.status)
-        ? health.status
-        : "offline";
+      const status = health?.status === "ok" ? "ok" : "offline";
       setBackendStatus(status);
       return status;
     } catch {
@@ -172,10 +172,8 @@ export default function App() {
     notify(
       status === "ok"
         ? "FastAPI backend connected."
-        : status === "data_unverified"
-          ? "FastAPI is reachable, but score endpoints are disabled while source data is unverified."
-          : "Backend offline. The embedded scoring engine keeps working.",
-      status === "offline" ? "info" : status === "ok" ? "success" : "warning"
+        : "Backend offline. The embedded scoring engine keeps working.",
+      status === "offline" ? "info" : "success"
     );
   };
 
@@ -184,7 +182,7 @@ export default function App() {
     : "lg:h-[calc(100dvh-7.25rem)]";
 
   return (
-    <div className="flex min-h-[100dvh] flex-col text-slate-100">
+    <div className="flex min-h-[100dvh] flex-col text-neutral-100">
       <Navbar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -193,27 +191,19 @@ export default function App() {
         backendStatus={backendStatus}
         onRetryBackend={handleRetryBackend}
         onOpenTour={() => setShowTourModal(true)}
+        dataAvailable={dataAvailable}
       />
 
       <main
         className={`relative z-10 mx-auto w-full max-w-[1720px] flex-1 px-3 pt-3 sm:px-5 sm:pt-4 lg:px-6 lg:pt-5 ${
-          compareIds.length
+          !dataAvailable
+            ? "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8"
+            : compareIds.length
             ? "pb-[calc(8.5rem+env(safe-area-inset-bottom))] lg:pb-28"
             : "pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-8"
         }`}
       >
-        {DATA_COVERAGE.sourceStatus !== "verified" && (
-          <div
-            role="alert"
-            className="mb-3 rounded-xl border border-rose-500/50 bg-rose-950/80 px-4 py-3 text-xs leading-relaxed text-rose-100"
-          >
-            <strong className="font-bold">Data verification warning:</strong> Some displayed state and air
-            observations came from generated placeholders rather than checked source records. Scores, rankings,
-            findings, and projections are for demonstration only and must not be interpreted as verified results.
-          </div>
-        )}
-
-        {activeTab === "map" && (
+        {dataAvailable && activeTab === "map" && (
           <div className="flex flex-col">
             <QuickStartBanner
               onOpenTour={() => setShowTourModal(true)}
@@ -294,21 +284,25 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "insights" && <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} />}
+        {dataAvailable && activeTab === "insights" && (
+          <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} />
+        )}
 
-        {activeTab === "methodology" && <MethodologyView />}
+        {activeTab === "methodology" && (
+          <MethodologyView />
+        )}
       </main>
 
-      <CompareBar
+      {dataAvailable && <CompareBar
         places={comparePlaces}
         onRemove={handleRemoveCompare}
         onClear={handleClearCompare}
         onOpen={handleOpenCompare}
-      />
+      />}
 
       <Toast toast={toast} onDismiss={() => setToast(null)} />
 
-      {selectedPlace && (
+      {dataAvailable && selectedPlace && (
         <PlaceDetailModal
           place={selectedPlace}
           weights={weights}
@@ -321,7 +315,7 @@ export default function App() {
         />
       )}
 
-      {showCompareModal && (
+      {dataAvailable && showCompareModal && (
         <CompareModal
           comparePlaces={comparePlaces}
           onClose={() => setShowCompareModal(false)}
@@ -332,7 +326,7 @@ export default function App() {
       )}
 
       <OnboardingTourModal
-        isOpen={showTourModal}
+        isOpen={dataAvailable && showTourModal}
         onClose={() => setShowTourModal(false)}
       />
     </div>

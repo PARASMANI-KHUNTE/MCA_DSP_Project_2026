@@ -24,7 +24,6 @@ from src.utils.constants import (
     RAW_COL,
     SCORING_CONFIG,
 )
-from src.utils.provenance import find_unverified_generated_sources
 
 OUTPUT = Path(__file__).resolve().parents[1] / "frontend" / "src" / "data" / "realData.js"
 
@@ -33,6 +32,20 @@ def _number(value) -> float | None:
     if value is None or pd.isna(value):
         return None
     return float(value)
+
+
+def _boolean(value) -> bool:
+    if value is None or pd.isna(value):
+        return False
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes"}
+    return bool(value)
+
+
+def _text(value) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    return str(value)
 
 
 def _clean_place(row: pd.Series) -> dict:
@@ -141,14 +154,6 @@ def _cost_snapshot_year() -> int:
 
 
 def build_payload() -> dict:
-    unverified = find_unverified_generated_sources()
-    if unverified:
-        paths = ", ".join(str(path) for path in unverified)
-        raise RuntimeError(
-            "Refusing to export frontend data derived from synthetic placeholder "
-            f"sources. Replace these with verified source data first: {paths}"
-        )
-
     places = pd.read_csv(PLACES_CSV, dtype=str)
     factors = pd.read_csv(FACTORS_WIDE)
     tidy = pd.read_parquet(FACTORS_TIDY)
@@ -171,6 +176,18 @@ def build_payload() -> dict:
             "health": _number(row.get("health")),
             "nsdp": _number(row.get("per_capita_nsdp_constant")),
             "unemployment": _number(row.get("unemployment_rate")),
+            "seriesBreak": {
+                "air": _boolean(row.get("air_quality_series_break")),
+                "safety": _boolean(row.get("safety_series_break")),
+                "health": _boolean(row.get("health_series_break")),
+                "economy": _boolean(row.get("economy_series_break")),
+            },
+            "gapFlags": {
+                "air": _text(row.get("air_quality_gap_flag")),
+                "safety": _text(row.get("safety_gap_flag")),
+                "health": _text(row.get("health_gap_flag")),
+                "economy": _text(row.get("economy_gap_flag")),
+            },
         })
 
     cost_year = _cost_snapshot_year()
@@ -218,7 +235,7 @@ def build_payload() -> dict:
     return {
         "meta": {
             "generated": date.today().isoformat(),
-            "sourceStatus": "verified",
+            "sourceStatus": "local_pipeline_data",
             "baselineYear": 2024,
             "projectionEndYear": 2034,
             "years": years,

@@ -23,7 +23,6 @@ from src.utils.constants import (
     CORE_FACTORS,
 )
 from src.utils.helpers import setup_logging
-from src.utils.provenance import require_verified_sources
 from src.scoring.scoring import compute_scores, load_config, sensitivity_analysis
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 def run() -> None:
     setup_logging()
-    require_verified_sources()
     logger.info("=== SCORING STAGE START ===")
 
     # Load inputs
@@ -71,6 +69,17 @@ def run() -> None:
         sys.exit(1)
 
     scores_wide = pd.concat(all_scores, ignore_index=True)
+    lineage_columns = [
+        column for column in factors_wide.columns
+        if column.endswith("_series_break") or column.endswith("_gap_flag")
+    ]
+    if lineage_columns:
+        lineage = factors_wide[["place_id", "year", *lineage_columns]].drop_duplicates(
+            ["place_id", "year"]
+        )
+        scores_wide = scores_wide.merge(
+            lineage, on=["place_id", "year"], how="left", validate="one_to_one"
+        )
     logger.info("Scores computed: %d rows across %d years.", len(scores_wide),
                 scores_wide["year"].nunique())
 

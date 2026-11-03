@@ -42,6 +42,9 @@ def js_normalize(value: float | None, lo: float, hi: float, direction: str) -> f
 
 def js_composite_score(factor_scores: dict[str, float | None], weights: dict[str, float]) -> float | None:
     """Mirrors compositeScore(placeId, year, weights) in scoringService.js."""
+    selected = [key for key, weight in weights.items() if float(weight) > 0]
+    if any(factor_scores.get(key) is None for key in selected):
+        return None
     weighted_sum = 0.0
     active_weight = 0.0
     for key, score in factor_scores.items():
@@ -71,7 +74,7 @@ class TestNormalizationParity:
 
 
 class TestCompositeScoringParity:
-    """Verify weighted composite aggregation and partial-data re-weighting parity."""
+    """Verify weighted aggregation and comparable-coverage behavior."""
 
     def test_complete_data_parity(self):
         factor_scores = {
@@ -91,8 +94,8 @@ class TestCompositeScoringParity:
 
         assert round(py_result, 1) == js_result
 
-    def test_partial_data_reweighting_parity(self):
-        """When air quality is missing (None / NaN), remaining factors must re-normalize."""
+    def test_missing_selected_factor_produces_no_comparable_score(self):
+        """A place missing a selected factor is excluded instead of reweighted."""
         factor_scores = {
             "air": None,
             "safety": 65.0,
@@ -104,12 +107,7 @@ class TestCompositeScoringParity:
         # Frontend calculation
         js_result = js_composite_score(factor_scores, weights)
 
-        # Backend Python equivalent
-        available = {k: v for k, v in factor_scores.items() if v is not None}
-        sub_total_w = sum(weights[k] for k in available)
-        py_result = sum((weights[k] / sub_total_w) * available[k] for k in available)
-
-        assert round(py_result, 1) == js_result
+        assert js_result is None
 
     def test_zero_weight_factor_ignored(self):
         factor_scores = {"air": 10.0, "safety": 90.0}

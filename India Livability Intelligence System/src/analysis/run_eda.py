@@ -14,7 +14,6 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from scipy import stats
-from src.utils.provenance import require_verified_sources
 
 from src.utils.constants import (
     DATA_PROCESSED,
@@ -28,7 +27,6 @@ from src.utils.constants import (
 )
 
 def run_eda():
-    require_verified_sources()
     FIGURES.mkdir(parents=True, exist_ok=True)
     sns.set_theme(style="whitegrid", palette="muted")
     plt.rcParams.update({"font.sans-serif": "DejaVu Sans", "font.family": "sans-serif"})

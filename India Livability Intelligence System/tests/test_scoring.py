@@ -169,11 +169,14 @@ class TestComputeScores:
         assert result.iloc[0]["place_id"] == "PLACE_0"
 
     def test_missing_factor_sets_partial_data(self):
-        """When a factor column is missing, partial_data should be True."""
+        """A place missing a selected factor is flagged and excluded from ranking."""
         df = _make_factors_wide().drop(columns=["pm25_mean"])
         cfg = _make_config()
         result = compute_scores(df, cfg, {"air_quality": 0.5, "safety": 0.5}, year=2023)
         assert result["partial_data"].all()
+        assert result["score"].isna().all()
+        assert result["rank"].isna().all()
+        assert result["missing_factors"].apply(lambda missing: "air_quality" in missing).all()
 
     def test_determinism(self):
         """Same inputs always produce same outputs."""

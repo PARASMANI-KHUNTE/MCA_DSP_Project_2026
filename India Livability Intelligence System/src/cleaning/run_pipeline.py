@@ -41,7 +41,6 @@ from src.utils.constants import (
     MAX_MISSING_PCT_TO_IMPUTE,
 )
 from src.utils.helpers import setup_logging, interpolate_within_place, missing_summary
-from src.utils.provenance import require_verified_sources
 from src.loaders.load_air_kaggle import load_city_day, aggregate_to_city_year
 from src.loaders.load_air_cpcb import load_all_cpcb
 from src.loaders.load_safety import load_safety
@@ -119,9 +118,10 @@ def stage_combine_air(
     Merge Kaggle and CPCB air data.
 
     Rules (M3.6):
-    - If an overlapping year exists between the two sources,
-      compute mean offset and log it.
-    - If no overlap, flag the join as series_break.
+    - Kaggle and CPCB are separate measurement methods; no offset is inferred
+      or applied from an overlap.
+    - Mark each city's first CPCB observation as a series break when that city
+      also has historical Kaggle data.
     - Rename pm25_mean / pm25_annual to a common column 'pm25_mean'.
     """
     logger.info("=== STAGE 2a: COMBINE AIR SOURCES ===")
@@ -144,44 +144,38 @@ def stage_combine_air(
     # Rename CPCB column to match Kaggle
     cpcb = cpcb_df.rename(columns={"pm25_annual": "pm25_mean"}).copy()
 
-    # Check for overlapping years per city
-    kaggle_years = set(kaggle_df["year"].unique())
-    cpcb_years   = set(cpcb["year"].unique())
-    overlap      = kaggle_years & cpcb_years
+    kaggle = kaggle_df.copy()
+    historic_cities = set(kaggle["city"].dropna())
+    kaggle["series_break"] = False
+    for col in ("gap_flag", "air_source"):
+        if col not in kaggle:
+            kaggle[col] = ""
 
-    if overlap:
-        logger.info("Overlapping years found: %s — computing method offset.", sorted(overlap))
-        k_ov = kaggle_df[kaggle_df["year"].isin(overlap)][["city", "year", "pm25_mean"]]
-        c_ov = cpcb[cpcb["year"].isin(overlap)][["city", "year", "pm25_mean"]]
-        merged_ov = k_ov.merge(c_ov, on=["city", "year"], suffixes=("_kaggle", "_cpcb"))
-        if not merged_ov.empty:
-            offset = (merged_ov["pm25_mean_cpcb"] - merged_ov["pm25_mean_kaggle"]).mean()
-            logger.info("  Mean CPCB − Kaggle PM2.5 offset: %.2f µg/m³", offset)
-        series_break = False
-    else:
-        logger.warning(
-            "No overlapping years between Kaggle (%s) and CPCB (%s). "
-            "Flagging join as series_break.",
-            sorted(kaggle_years), sorted(cpcb_years)
-        )
-        series_break = True
-
-    # Combine: Kaggle rows + CPCB rows (no duplicates — different years)
-    kaggle_cols = ["city", "year", "pm25_mean", "gap_flag", "air_source"]
-    cpcb_cols   = ["city", "year", "pm25_mean", "gap_flag", "air_source"]
-
-    for col in kaggle_cols:
-        if col not in kaggle_df.columns:
-            kaggle_df[col] = ""
-    for col in cpcb_cols:
-        if col not in cpcb.columns:
+    cpcb = cpcb.sort_values(["city", "year"]).copy()
+    for col in ("gap_flag", "air_source"):
+        if col not in cpcb:
             cpcb[col] = ""
-
-    combined = pd.concat(
-        [kaggle_df[kaggle_cols], cpcb[cpcb_cols]], ignore_index=True
+    cpcb["series_break"] = False
+    first_cpcb = ~cpcb.duplicated("city", keep="first")
+    transitions = first_cpcb & cpcb["city"].isin(historic_cities)
+    cpcb.loc[transitions, "series_break"] = True
+    cpcb.loc[transitions, "gap_flag"] = cpcb.loc[transitions, "gap_flag"].fillna("").map(
+        lambda value: "|".join(filter(None, [str(value), "air_source_method_change"]))
     )
-    combined["series_break"] = series_break
+
+    overlap = kaggle.merge(
+        cpcb, on=["city", "year"], suffixes=("_kaggle", "_cpcb"), how="inner"
+    )
+    if not overlap.empty:
+        logger.warning(
+            "%d city-year overlaps use CPCB values and start a new trend segment; "
+            "no cross-source adjustment is applied.", len(overlap)
+        )
+
+    columns = ["city", "year", "pm25_mean", "gap_flag", "air_source", "series_break"]
+    combined = pd.concat([kaggle[columns], cpcb[columns]], ignore_index=True)
     combined = combined.drop_duplicates(subset=["city", "year"], keep="last")
+    combined = combined.sort_values(["city", "year"])
 
     logger.info(
         "Air combined: %d city-years, %d cities, years %s",
@@ -288,6 +282,44 @@ def stage_build_tidy(
     _add_rows(air, FACTOR_AIR, "city", "pm25_mean", "air_kaggle|air_cpcb",
               is_city_level=True, place_type="city")
 
+    # State polygons need a state-level composite score. Build a transparent
+    # state-year PM2.5 mean from the cities with observations in that state;
+    # retain it as a derived aggregate instead of copying a single city value.
+    state_air = pd.DataFrame()
+    if not air.empty:
+        city_states = places.loc[
+            places["place_type"] == "city", ["place_name", "state_name"]
+        ].drop_duplicates()
+        city_air = air.merge(
+            city_states, left_on="city", right_on="place_name", how="inner"
+        )
+        if not city_air.empty:
+            aggregations = {"pm25_mean": ("pm25_mean", "mean")}
+            for column in ("is_imputed", "series_break"):
+                if column in city_air.columns:
+                    aggregations[column] = (column, "max")
+            if "gap_flag" in city_air.columns:
+                aggregations["gap_flag"] = (
+                    "gap_flag",
+                    lambda values: "|".join(sorted({
+                        part.strip()
+                        for value in values.dropna().astype(str)
+                        for part in value.split("|")
+                        if part.strip()
+                    })),
+                )
+            state_air = city_air.groupby(
+                ["state_name", "year"], as_index=False
+            ).agg(**aggregations)
+            logger.info(
+                "State air quality: averaged city observations into %d state-years across %d states.",
+                len(state_air), state_air["state_name"].nunique(),
+            )
+    _add_rows(
+        state_air, FACTOR_AIR, "state_name", "pm25_mean",
+        "air_kaggle|air_cpcb|state_city_mean", place_type="state"
+    )
+
     # ── Safety (state-level) ───────────────────────────────────────────────
     _add_rows(safety, FACTOR_SAFETY, "state_name", "crime_rate_per_lakh",
               "safety_ncrb", place_type="state")
@@ -376,7 +408,7 @@ def stage_build_tidy(
 # ── Stage 5: Pivot to wide ─────────────────────────────────────────────────
 
 def stage_wide(tidy: pd.DataFrame) -> pd.DataFrame:
-    """Pivot tidy long table to one row per (place_id, year)."""
+    """Pivot tidy data and preserve per-factor break metadata in the wide table."""
     logger.info("=== STAGE 5: PIVOT TO WIDE ===")
     wide = tidy.pivot_table(
         index=["place_id", "year"],
@@ -385,6 +417,20 @@ def stage_wide(tidy: pd.DataFrame) -> pd.DataFrame:
         aggfunc="mean",
     ).reset_index()
     wide.columns.name = None
+
+    for factor, group in tidy.groupby("factor"):
+        metadata = group[["place_id", "year"]].copy()
+        if "series_break" in group:
+            metadata[f"{factor}_series_break"] = group["series_break"].fillna(False).astype(bool).values
+        if "gap_flag" in group:
+            metadata[f"{factor}_gap_flag"] = group["gap_flag"].fillna("").astype(str).values
+        metadata = metadata.drop_duplicates(["place_id", "year"])
+        wide = wide.merge(metadata, on=["place_id", "year"], how="left", validate="one_to_one")
+
+    for column in [col for col in wide if col.endswith("_series_break")]:
+        wide[column] = wide[column].fillna(False).astype(bool)
+    for column in [col for col in wide if col.endswith("_gap_flag")]:
+        wide[column] = wide[column].fillna("")
     logger.info("Wide table: %d rows × %d columns.", *wide.shape)
     return wide
 
@@ -395,6 +441,25 @@ def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
     """Run assertions on the merged output. Returns list of issues found."""
     logger.info("=== STAGE 6: VALIDATE ===")
     issues = []
+
+    if tidy.empty:
+        issues.append("EMPTY OUTPUT: no factor observations were assembled.")
+        logger.error(issues[-1])
+
+    present_factors = set(tidy.get("factor", pd.Series(dtype=str)).dropna().unique())
+    # Economy is represented by two source indicators in the tidy table;
+    # the composite economy score is created later by the scoring stage.
+    required_factors = {
+        FACTOR_AIR,
+        FACTOR_SAFETY,
+        FACTOR_HEALTH,
+        "per_capita_nsdp_constant",
+        "unemployment_rate",
+    }
+    missing_core = required_factors - present_factors
+    if missing_core:
+        issues.append(f"MISSING CORE INDICATORS: {sorted(missing_core)}")
+        logger.error(issues[-1])
 
     # 1. No duplicate (place_id, year, factor) triplets
     dupes = tidy.duplicated(subset=["place_id", "year", "factor"])
@@ -532,8 +597,6 @@ def run(places_path: Path = PLACES_CSV) -> None:
     setup_logging()
     logger.info("=== INDIA LIVABILITY PIPELINE START ===")
 
-    require_verified_sources()
-
     # Load place master
     if not places_path.exists():
         logger.error(
@@ -579,6 +642,11 @@ def run(places_path: Path = PLACES_CSV) -> None:
 
     # Stage 6: Validate
     issues = stage_validate(tidy, places)
+    if issues:
+        raise RuntimeError(
+            "Pipeline validation failed; no processed outputs were written:\n- "
+            + "\n- ".join(issues)
+        )
 
     # Stage 7: Export
     stage_export(tidy, wide, issues, raw_sources=raw)

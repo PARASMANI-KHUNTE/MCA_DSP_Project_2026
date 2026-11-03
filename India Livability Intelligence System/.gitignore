@@ -29,6 +29,7 @@ data/raw/
 data/raw/*
 !data/raw/source_register.csv
 !data/raw/name_aliases.csv
+!data/raw/source_validation_manifest.csv
 data/interim/
 
 # Processed data (commit small ones; gitignore large parquet)

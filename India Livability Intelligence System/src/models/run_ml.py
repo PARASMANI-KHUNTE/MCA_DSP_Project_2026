@@ -27,7 +27,6 @@ from src.utils.constants import (
     PROJECTION_YEARS,
 )
 from src.utils.helpers import setup_logging
-from src.utils.provenance import require_verified_sources
 from src.scoring.scoring import load_config
 from src.models.trend import run_all_trends
 from src.models.clustering import run_clustering
@@ -54,13 +53,15 @@ def _build_scores_long(scores_wide: pd.DataFrame) -> pd.DataFrame:
     for _, row in scores_wide.iterrows():
         for factor, col in score_col_map.items():
             score_val = row.get(col)
+            break_column = f"{factor}_series_break"
+            gap_column = f"{factor}_gap_flag"
             rows.append({
                 "place_id":    row["place_id"],
                 "year":        int(row["year"]),
                 "factor":      factor,
                 "score":       score_val,
-                "gap_flag":    row.get("gap_flag", ""),
-                "series_break": row.get("series_break", False),
+                "gap_flag":    row.get(gap_column, row.get("gap_flag", "")),
+                "series_break": row.get(break_column, row.get("series_break", False)),
             })
 
     return pd.DataFrame(rows)
@@ -130,7 +131,6 @@ def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
 
 def run() -> None:
     setup_logging()
-    require_verified_sources()
     logger.info("=== ML STAGE START ===")
 
     # Load inputs

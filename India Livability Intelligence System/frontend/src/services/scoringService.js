@@ -16,14 +16,14 @@ export const PROJECTION_YEARS = Array.from(
 const MIN_TREND_POINTS = 5;
 const P_VALUE_THRESHOLD = 0.05;
 
-// Color-vision-safer purple/blue/teal/yellow scale. Low scores are worse.
+// A restrained status scale: lower scores are red, higher scores are green.
 export const SCORE_BANDS = [
-  { min: 80, color: "#fde725", label: "Elite" },
-  { min: 70, color: "#5ec962", label: "High" },
-  { min: 60, color: "#21918c", label: "Good" },
-  { min: 50, color: "#3b528b", label: "Moderate" },
-  { min: 40, color: "#31688e", label: "Developing" },
-  { min: 0, color: "#440154", label: "Critical" }
+  { min: 80, color: "#15803d", label: "Very high" },
+  { min: 70, color: "#22c55e", label: "High" },
+  { min: 60, color: "#737373", label: "Moderate" },
+  { min: 50, color: "#ca8a04", label: "Watch" },
+  { min: 40, color: "#ea580c", label: "Low" },
+  { min: 0, color: "#b91c1c", label: "Very low" }
 ];
 
 // Low-to-high ordering of the same bands, used by legends and gradients.
@@ -32,7 +32,7 @@ export const SCORE_BANDS_ASC = [...SCORE_BANDS].sort((a, b) => a.min - b.min);
 // Smooth perceptually ordered gradient mirroring the band thresholds.
 export const SCORE_GRADIENT_CSS = `linear-gradient(90deg, ${SCORE_BANDS_ASC.map(
   band => `${band.color} ${band.min}%`
-).join(", ")})`;
+).join(", ")}, #14532d 100%)`;
 
 const FACTOR_KEYS = ["air", "safety", "health", "economy", "col"];
 
@@ -78,6 +78,8 @@ function latestObservedValues(placeId, year) {
     nsdp: null,
     unemployment: null
   };
+  const seriesBreaks = { air: false, safety: false, health: false, economy: false };
+  const gapFlags = { air: "", safety: "", health: "", economy: "" };
 
   rows.forEach(row => {
     if (row.year > year) return;
@@ -87,13 +89,19 @@ function latestObservedValues(placeId, year) {
         years[key] = row.year;
       }
     }
+    if (row.year === year) {
+      Object.keys(seriesBreaks).forEach(key => {
+        if (row.seriesBreak?.[key]) seriesBreaks[key] = true;
+        if (row.gapFlags?.[key]) gapFlags[key] = row.gapFlags[key];
+      });
+    }
   });
 
-  return { values, years };
+  return { values, years, seriesBreaks, gapFlags };
 }
 
 function factorScoresAt(placeId, year) {
-  const { values, years } = latestObservedValues(placeId, year);
+  const { values, years, seriesBreaks, gapFlags } = latestObservedValues(placeId, year);
   const economyDefinitions = FACTOR_DEFS.economy.indicators;
   const economyScores = [];
 
@@ -115,7 +123,7 @@ function factorScoresAt(placeId, year) {
       air: normalize(values.air, FACTOR_DEFS.air),
       safety: normalize(values.safety, FACTOR_DEFS.safety),
       health: normalize(values.health, FACTOR_DEFS.health),
-      economy: economyScores.length
+      economy: economyScores.length === economyDefinitions.length && years.nsdp === years.unemployment
         ? Number((economyScores.reduce((total, score) => total + score, 0) / economyScores.length).toFixed(1))
         : null,
       col: normalize(costValue, FACTOR_DEFS.col)
@@ -126,12 +134,16 @@ function factorScoresAt(placeId, year) {
       health: years.health,
       economy: economyYear,
       col: costYear
-    }
+    },
+    seriesBreaks,
+    gapFlags
   };
 }
 
 function compositeScore(placeId, year, weights) {
-  const { factorScores, factorYears } = factorScoresAt(placeId, year);
+  const { factorScores, factorYears, seriesBreaks, gapFlags } = factorScoresAt(placeId, year);
+  const selectedFactors = FACTOR_KEYS.filter(key => Number(weights?.[key] || 0) > 0);
+  const missingFactors = selectedFactors.filter(key => factorScores[key] === null);
   let weightedSum = 0;
   let activeWeight = 0;
 
@@ -146,7 +158,13 @@ function compositeScore(placeId, year, weights) {
 
   return {
     year,
-    score: activeWeight > 0 ? Number((weightedSum / activeWeight).toFixed(1)) : null,
+    score: missingFactors.length === 0 && activeWeight > 0
+      ? Number((weightedSum / activeWeight).toFixed(1))
+      : null,
+    missingFactors,
+    trendEligible: selectedFactors.every(key => factorYears[key] === year),
+    seriesBreak: selectedFactors.some(key => seriesBreaks[key]),
+    gapFlag: selectedFactors.map(key => gapFlags[key]).filter(Boolean).join("|"),
     factorScores,
     factorYears
   };
@@ -225,7 +243,14 @@ function twoSidedStudentP(value, degreesOfFreedom) {
 }
 
 function fitTrend(history) {
-  const points = history.filter(point => Number.isFinite(point.score));
+  const lastBreak = history.reduce(
+    (latest, point, index) => point.seriesBreak ? index : latest,
+    -1
+  );
+  const latestSegment = history.slice(lastBreak >= 0 ? lastBreak : 0);
+  const points = latestSegment.filter(
+    point => Number.isFinite(point.score) && point.trendEligible
+  );
   if (points.length < MIN_TREND_POINTS) return null;
 
   const n = points.length;
@@ -278,10 +303,9 @@ function tCritical95(degreesOfFreedom) {
   return table[degreesOfFreedom] ?? 1.96;
 }
 
-function projectPoint(trend, baselineScore, targetYear) {
-  if (!trend || !Number.isFinite(baselineScore)) return null;
-  const horizon = targetYear - BASELINE_YEAR;
-  const fitted = baselineScore + trend.slope * horizon;
+function projectPoint(trend, targetYear) {
+  if (!trend) return null;
+  const fitted = trend.intercept + trend.slope * targetYear;
   const critical = tCritical95(Math.max(1, trend.n - 2));
   const standardError =
     trend.sigma *
@@ -314,12 +338,12 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
     const baselinePoint = history.find(point => point.year === BASELINE_YEAR) || null;
     const observedPoint = history.find(point => point.year === year) || null;
     const selectedPoint =
-      year > BASELINE_YEAR ? projectPoint(trend, baselinePoint?.score, year) : observedPoint;
+      year > BASELINE_YEAR ? projectPoint(trend, year) : observedPoint;
     const factorPoint =
       year > BASELINE_YEAR || !observedPoint ? baselinePoint : observedPoint;
     const projections = trend
       ? PROJECTION_YEARS.map(projectionYear =>
-          projectPoint(trend, baselinePoint?.score, projectionYear)
+          projectPoint(trend, projectionYear)
         ).filter(Boolean)
       : [];
 
@@ -370,6 +394,24 @@ export function getScoreColor(score) {
   const numeric = clamp(Number(score), 0, 100);
   const band = SCORE_BANDS.find(item => numeric >= item.min);
   return band ? band.color : "#64748b";
+}
+
+export function getContinuousScoreColor(score) {
+  if (score === null || score === undefined || !Number.isFinite(Number(score))) return "#64748b";
+  const numeric = clamp(Number(score), 0, 100);
+  const stops = [...SCORE_BANDS_ASC, { min: 100, color: "#14532d" }];
+  const upperIndex = stops.findIndex(stop => stop.min >= numeric);
+  if (upperIndex <= 0) return stops[0].color;
+
+  const lower = stops[upperIndex - 1];
+  const upper = stops[upperIndex];
+  const position = (numeric - lower.min) / (upper.min - lower.min);
+  const lowerRgb = lower.color.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16));
+  const upperRgb = upper.color.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16));
+  const channels = lowerRgb.map((value, index) =>
+    Math.round(value + (upperRgb[index] - value) * position)
+  );
+  return `#${channels.map(value => value.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export function getScoreLabel(score) {

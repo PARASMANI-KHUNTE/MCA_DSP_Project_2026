@@ -113,8 +113,10 @@ def _load_single_file(path: Path, year: int | None = None) -> pd.DataFrame:
     df = _compute_crime_rate(df)
 
     # Flag series break for BNS transition year
+    # Mark only the first year of the BNS-era segment. Trend fitting uses this
+    # as a boundary and does not combine the IPC and BNS segments.
     df["series_break"] = df["year"].apply(
-        lambda y: y is not None and int(y) >= _BNS_BREAK_YEAR
+        lambda y: y is not None and int(y) == _BNS_BREAK_YEAR
     )
 
     return df[["state_name", "year", "crime_rate_per_lakh", "series_break"]].copy()

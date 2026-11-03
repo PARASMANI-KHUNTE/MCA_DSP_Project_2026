@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Check,
   Coins,
@@ -14,11 +15,26 @@ import { PRESETS } from "../data/methodologyData";
 import { getScoreColor, SCORE_GRADIENT_CSS } from "../services/scoringService";
 
 const FACTORS = [
-  { key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee", max: 100 },
-  { key: "safety", label: "Public Safety", source: "NCRB", icon: ShieldAlert, color: "#fb7185", max: 100 },
-  { key: "health", label: "Healthcare", source: "SRS · IMR", icon: HeartPulse, color: "#34d399", max: 100 },
-  { key: "economy", label: "Economy & Jobs", source: "RBI · NSDP", icon: TrendingUp, color: "#fbbf24", max: 100 },
-  { key: "col", label: "Cost of Living", source: "6 metros · rent", icon: Coins, color: "#c084fc", max: 50 }
+  {
+    key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee", max: 100,
+    colorMeaning: "Green means a higher air score and lower PM2.5; red means a lower score and higher PM2.5."
+  },
+  {
+    key: "safety", label: "Public Safety", source: "NCRB", icon: ShieldAlert, color: "#fb7185", max: 100,
+    colorMeaning: "Green means a higher safety score and a lower recorded crime rate; red means a lower score and a higher recorded rate."
+  },
+  {
+    key: "health", label: "Healthcare", source: "SRS · IMR", icon: HeartPulse, color: "#34d399", max: 100,
+    colorMeaning: "Green means a higher health score and lower infant mortality; red means a lower score and higher infant mortality."
+  },
+  {
+    key: "economy", label: "Economy & Jobs", source: "RBI · NSDP", icon: TrendingUp, color: "#fbbf24", max: 100,
+    colorMeaning: "Green means a higher economy score, combining higher per-capita NSDP with lower unemployment; red means a lower combined score."
+  },
+  {
+    key: "col", label: "Cost of Living", source: "6 metros · rent", icon: Coins, color: "#c084fc", max: 50,
+    colorMeaning: "Green means a higher affordability score and lower rent; red means a lower score and higher rent. Data covers six cities in one snapshot."
+  }
 ];
 
 const COLOR_MODES = [
@@ -46,6 +62,7 @@ export default function WeightControls({
   onChangeActiveFactor,
   selectedPresetId
 }) {
+  const [openInfoId, setOpenInfoId] = useState(null);
   const totalWeight =
     Number(weights.air || 0) +
     Number(weights.safety || 0) +
@@ -154,6 +171,17 @@ export default function WeightControls({
                     <span className="hidden truncate text-[9px] font-normal text-slate-500 sm:inline">
                       {factor.source}
                     </span>
+                    <button
+                      type="button"
+                      aria-label={`Explain ${factor.label} score colors`}
+                      aria-expanded={openInfoId === factor.key}
+                      aria-controls={`factor-info-${factor.key}`}
+                      title={`Explain ${factor.label} score colors`}
+                      onClick={() => setOpenInfoId(current => current === factor.key ? null : factor.key)}
+                      className="ml-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-300"
+                    >
+                      <Info size={12} aria-hidden="true" />
+                    </button>
                   </span>
                   <span
                     className="shrink-0 font-mono text-[11px] font-bold"
@@ -173,6 +201,14 @@ export default function WeightControls({
                   className="my-1"
                   style={{ "--slider-accent": sliderColor, "--slider-track": SCORE_GRADIENT_CSS }}
                 />
+                {openInfoId === factor.key && (
+                  <p
+                    id={`factor-info-${factor.key}`}
+                    className="rounded-lg border border-slate-800 bg-slate-950/80 px-2.5 py-2 text-[10px] leading-relaxed text-slate-300"
+                  >
+                    {factor.colorMeaning}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -194,7 +230,7 @@ export default function WeightControls({
       <div className="border-t border-slate-800/70 pt-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="eyebrow">Map color</span>
-          <span className="text-[9px] text-slate-500">Purple = low · Blue/teal = mid · Yellow = high</span>
+          <span className="text-[9px] text-slate-500">Red = low · Gray = mid · Green = high</span>
         </div>
         <div className="mb-2 px-0.5">
           <div

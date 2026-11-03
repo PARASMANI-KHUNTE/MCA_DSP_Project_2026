@@ -3,13 +3,17 @@
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
-**Version:** 1.3 (provenance and local startup update, 3 November 2026)
+**Version:** 1.5 (local-data pipeline workflow, 3 November 2026)
 
-> **Implementation status update, 3 November 2026.** A code/data audit found that state crime, health, economy, and 2023–2024 CPCB CSVs currently in `data/raw/` exactly match hard-coded values from the retired `src/loaders/populate_official_data.py`. These files are unverified placeholders, not source-derived observations. The pipeline and frontend exporter now block those exact files. All scores, statistical findings, clusters, trends, and the embedded dashboard data derived from them are invalid for empirical interpretation until real source records replace them and the analyses are regenerated. The 32-state/UT and 29-city place master is a candidate inventory; city inclusion remains subject to a fresh coverage check.
+> **Implementation status update, 3 November 2026.** At the user's direction, the active workflow processes the datasets currently present in `data/raw/` without a source-review gate. The cleaning, scoring, trend/clustering, EDA, and frontend-export stages have been run; the API serves scores, and the frontend uses the regenerated data bundle. Technical pipeline checks validate structure and transformations, not agreement with a publisher's release. Review the current data coverage and interpretation notes in `reports/data_provenance_notice.md`.
 
 > **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
 
 > **Revision 1.3 summary.** Docker and Docker Compose configuration was removed. The Windows project now uses `start.ps1` to launch the local frontend; the FastAPI service remains optional and is started separately. CI/CD is not configured.
+
+> **Revision 1.4 summary (historical).** Added a file-checksum source validation manifest and human review gate. That runtime gate has since been removed by revision 1.5. Scores require every positively weighted factor to be present for each ranked place; trend fitting uses only the latest segment after a flagged source break.
+
+> **Accuracy limitation.** The source manifest enforces a documented review process but cannot automatically establish that a public source's values were extracted correctly. Independent source-to-data checks are still required before marking an input verified.
 
 ---
 
@@ -73,7 +77,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 
 **In scope**
 - Candidate inventory currently contains 32 states/UTs and 29 cities. The final analytical scope is not frozen: include states with verified core-source records and cities only after the M2.1.2 coverage rule passes on source-derived air observations.
-- **Four core factors:** air quality (city level), safety, health and economy (state level; economy combines income and unemployment).
+- **Four core factors:** air quality (city level and state-year means derived from covered cities), safety, health and economy (state level; economy combines income and unemployment).
 - **One optional snapshot factor:** cost of living (rent) for six cities only, scored but never trended.
 - Years differ by factor. Air quality is expected to cover 2015 to 2019 and 2023 to 2024 (with a gap); state factors cover roughly 7 to 14 yearly points. The real numbers are set by the coverage check.
 - Linear regression trend projection and K-Means clustering.
@@ -198,7 +202,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 ## 1.5 Assumptions and constraints
 
 - Only openly available datasets are used.
-- Many factors exist only at the state level, so city scores combine city-level air quality with state-level factors (see M5).
+- Many factors exist only at the state level, so city scores combine city-level air quality with state-level factors. State air scores summarize available city observations (see M5).
 - Yearly data points are few, so projections are naive trends.
 - Only air quality has city-level data over time. Safety, health and economy are state-level. Cost of living is a six-city snapshot.
 - Air data has a gap (the Kaggle series ends in 2020 and later CPCB tables are separate PDFs), and 2020 is a COVID-distorted year.
@@ -311,6 +315,8 @@ flowchart TD
 ```
 
 ## 3.2 Stage details
+
+The pipeline reads the available local source files and performs structural checks on loaded and merged data. It does not require `data/raw/source_validation_manifest.csv` to run. The source register remains available for attribution and lineage notes; structural checks do not independently compare extracted values with publisher releases.
 
 | Stage | What happens | Pandas tools |
 |---|---|---|
@@ -533,7 +539,7 @@ For place `p` in year `t`, with user weights `w_i` summing to 1:
 Score(p, t) = Σ ( w_i × score_i(p, t) )
 ```
 
-If a factor is unavailable for a place, **re-normalize the remaining weights** so they still sum to 1, and flag the place as `partial_data = true` with the list of missing factors.
+Normalize the user's selected positive weights once for the comparison. If any selected factor is unavailable for a place, mark that place `partial_data = true`, list the missing factors, and do not assign it a composite score or rank in that comparison. Do not re-normalize different factor subsets per place, because that makes their scores incomparable.
 
 ## 5.4 City versus state score
 
@@ -614,13 +620,13 @@ Using statsmodels OLS gives slope p-values and prediction intervals directly. Wi
 
 | Factor | Typical points | Trend allowed? | Note |
 |---|---|---|---|
-| Air quality | About 5 (2015 to 2019) plus 2 (2023 to 2024), with a gap | Yes, with the gap and COVID flags | Fit on actual years; show a wide interval across the gap |
+| Air quality | About 5 (2015 to 2019) plus 2 (2023 to 2024), with a gap | Only within one comparable source segment | Do not fit one line across Kaggle/CPCB method changes without a validated bridge; require 5 complete same-year points in the latest segment |
 | Safety | Up to the 2024 release | Only with a series-break flag | A break in 2024 may invalidate a straight line |
 | Health | Several years to 2022 | Yes | Data ends earlier than other factors |
 | Economy | Long NSDP series; about 7 PLFS points | Yes, limited by the PLFS overlap | The factor trend uses only years where both indicators exist |
 | Cost of living | One snapshot | **No** | Show "no trend available" |
 
-If a place has fewer than 5 valid points for a factor, or fewer than 5 for the overall score, the outlook label is **Insufficient data** and no projection is drawn. The overall-score trend is computed only from years in which all core factors exist for that place, so it may be short.
+If a place has fewer than 5 valid points for a factor, or fewer than 5 for the overall score, the outlook label is **Insufficient data** and no projection is drawn. Fit only the latest segment after a flagged series break. The overall-score trend is computed only from years in which all selected factors have observations in that same year, so it may be short.
 
 ## 6.2 Multiple linear regression (drivers)
 
@@ -1079,7 +1085,7 @@ Mention this in the report as a design consideration; do not build it.
 | Normalization at lower bound, upper bound and beyond | 0 or 100 as appropriate, clipped |
 | Direction inversion | Lower pollution gives a higher score |
 | Weights sum to 1 | Normalization of arbitrary weights works |
-| Missing factor | Weights re-normalized and `partial_data` set |
+| Missing selected factor | `partial_data` set; no composite score or rank is assigned |
 | All weight on one factor | Ranking equals ranking by that factor |
 | Determinism | Same inputs always give the same output |
 

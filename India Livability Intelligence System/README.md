@@ -7,27 +7,23 @@ An MCA data science project that explores livability across Indian states/UTs an
 
 ## Project status
 
-- **Data verification blocker:** several state-level and CPCB raw tables currently match hard-coded placeholders from the retired `populate_official_data.py` generator. The data pipeline and frontend-data exporter now refuse those exact files; existing processed tables and the embedded demo bundle are marked unverified and must not be presented as real findings until source-derived data replaces them.
+- **Current workflow:** the project processes the datasets present in `data/raw/`, generates scores, trends, clustering and analysis outputs, and exports the processed data used by the dashboard. The pipeline does not wait for source-review approval. Its outputs reflect the supplied files and configured methodology; a successful run checks pipeline behavior, not whether a source publication was independently audited.
 - The dashboard covers **61 places**: 32 states/UTs and 29 cities.
 - Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
 - The dashboard has embedded data and computes scores in the browser. The FastAPI backend is available for API use, but is not required to run the dashboard.
 - There is no hosted demo linked at present.
 
-## Findings
+## Findings status
 
-- The 2022 composite-score cross-section covers 61 places. Regional means range from **72.5 (West)** to **43.2 (Central)**; one-way ANOVA: **F = 7.23, p = 2.89 × 10⁻⁵**.
-- Per-capita NSDP and infant mortality are negatively associated (**r = −0.63, p < 0.001, n = 122**). The PM2.5–infant mortality association is not statistically significant (**r = 0.25, p = 0.121, n = 40**).
-- The offline trend analysis classifies 28 place-factor series as improving, 21 declining, 5 stable/uncertain, and 190 as having insufficient data. Trend fits require at least five yearly observations; projections are exploratory, not predictions.
-- Offline K-Means analysis uses k = 5 (silhouette = 0.647). The dashboard displays explicit score bands rather than those cluster assignments.
-
-See [reports/findings.md](reports/findings.md), [reports/project_report.md](reports/project_report.md), [reports/presentation_slides.md](reports/presentation_slides.md), and [reports/application_guide.md](reports/application_guide.md) for the current written deliverables. PDF versions and `reports/figures/` are not currently included.
+Scores, rankings, trends, clustering and statistical findings are generated from the active local datasets. Interpret them with the coverage and indicator limitations below; they describe the data supplied to this project.
 
 ## Data coverage and limitations
 
 - City PM2.5 observations cover 2015–2019 and 2023–2024; there are no processed observations for 2021–2022.
+- State air scores use the mean PM2.5 value across available observed cities in each state and year; states without a covered city may remain unscored.
 - State safety, health, and economy observations end in 2022. City scores inherit those state values and expose their source years.
 - Cost of living is a 2022 rent snapshot for six cities, not a time series. Population is not in the processed data, so map markers use a fixed visual scale.
-- City scores for safety, health, and economy represent their associated state-level observations. Air quality is city-level.
+- City scores for safety, health, and economy represent their associated state-level observations. State air scores summarize the cities with available observations.
 - Linear trend projections are based on limited and sometimes discontinuous histories. See the application guide for the scoring rules and additional caveats.
 
 ## Run the dashboard
@@ -64,16 +60,21 @@ pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload --port 8000
 ```
 
-The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It reads the processed tables and scoring configuration. The frontend is configured to try the API at `http://localhost:8000/api` for score synchronization and falls back to its embedded scoring data if the API is unavailable.
+The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It reads the processed tables and scoring configuration and serves score, place, trend, and cluster endpoints. The frontend uses the generated embedded bundle and calculates interactive scores in the browser; API score synchronization is not wired into the UI.
 
 ## Data pipeline and analysis
 
-The full Python stack is listed in the root `requirements.txt`. Raw source files are expected under `data/raw/` as described by [`data/raw/source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`. At present, `make data` and `python -m src.export_frontend_data` stop if the known placeholder records are still present. Replace them with verified publisher data and update the source register before regenerating outputs.
+The full Python stack is listed in the root `requirements.txt`. Raw datasets and their attribution records are under `data/raw/`; see [`source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`. Pipeline commands process the files available locally without a source-manifest gate. A successful schema/pipeline run does not independently verify the cited publications.
+
+New downloads under `data/raw/newData/` were inventoried but have not been admitted as active pipeline inputs. Some are duplicate or use different indicator definitions, and other files need additional source/reuse review. See the [new-data source audit](reports/new_data_source_audit.md) and [integration plan](reports/new_data_integration_plan.md) before using them.
 
 ```bash
 pip install -r requirements.txt
-make data       # regenerate processed tables from raw source files
-make notebooks  # execute analysis notebooks in order
+make data                              # clean and merge raw source files
+python -m src.scoring.run_scoring      # compute scores
+python -m src.models.run_ml            # trends, model metrics, clusters
+python -m src.analysis.run_eda         # statistics, findings, figures
+python -m src.export_frontend_data     # refresh frontend/src/data/realData.js
 ```
 
 `make notebooks` executes notebooks `00_coverage_check` through `05_ml_trend_clustering`; the coverage notebook may rebuild the place master. The pipeline writes processed tables and updates `reports/data_quality_report.md`.

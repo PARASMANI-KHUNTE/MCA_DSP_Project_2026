@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Move, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
-import { getScoreColor, getTierColor, SCORE_BANDS_ASC } from "../services/scoringService";
+import { getContinuousScoreColor, getTierColor } from "../services/scoringService";
 import { INDIA_STATES, MAP_VIEWBOX, projectLatLng } from "../data/indiaMap";
 
 const MIN_ZOOM = 0.85;
@@ -223,10 +223,13 @@ export default function IndiaMap({
 
   const getColorForPlace = place => {
     if (!place) return "#1e293b";
-    if (colorMode === "factor") {
-      return getScoreColor(place.factorScores?.[activeFactor]);
+    if (colorMode === "tier") {
+      return getTierColor(place.tier);
     }
-    return getScoreColor(place.overallScore);
+    if (colorMode === "factor") {
+      return getContinuousScoreColor(place.factorScores?.[activeFactor]);
+    }
+    return getContinuousScoreColor(place.overallScore);
   };
 
   const adjustZoom = delta => {
@@ -341,10 +344,16 @@ export default function IndiaMap({
         { label: "Tier 2", color: getTierColor("Tier 2: Moderate Livability") },
         { label: "Tier 1", color: getTierColor("Tier 1: High Livability") }
       ]
-    : SCORE_BANDS_ASC.map((band, index, bands) => ({
-        ...band,
-        max: index + 1 < bands.length ? bands[index + 1].min : 100
-      }));
+    : Array.from({ length: 20 }, (_, index) => {
+        const min = index * 5;
+        const max = min + 5;
+        return {
+          label: `${min}–${max}`,
+          min,
+          max,
+          color: getContinuousScoreColor(min + 2.5)
+        };
+      });
 
   const legendTitle = colorMode === "tier"
     ? "Score band"

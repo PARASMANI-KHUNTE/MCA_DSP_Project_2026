@@ -111,7 +111,8 @@ def score_factor(
             sub_scores.append(normalize_series(df[col], lo, hi, direction))
         if not sub_scores:
             return pd.Series(np.nan, index=df.index)
-        return pd.concat(sub_scores, axis=1).mean(axis=1)
+        indicator_scores = pd.concat(sub_scores, axis=1)
+        return indicator_scores.mean(axis=1).where(indicator_scores.notna().all(axis=1))
 
     col = factor_cfg["column"]
     lo, hi = factor_cfg["bounds"]
@@ -138,7 +139,9 @@ def compute_scores(
     Parameters
     ----------
     factors_wide : pd.DataFrame
-        One row per (place_id, year) with factor columns.
+        One row per (place_id, year) with factor columns. For a requested
+        year, each factor uses that place's latest non-null observation at
+        or before the requested year.
     config : dict
         Loaded from factors_config.yaml (via load_config()).
     weights : dict[str, float]
@@ -157,23 +160,36 @@ def compute_scores(
     """
     df = factors_wide.copy()
 
-    # Filter year
-    if year is not None:
-        df = df[df["year"] == year]
-        if df.empty:
-            raise ValueError(f"No data for year {year}.")
-    else:
-        year = int(df["year"].max())
-        df = df[df["year"] == year]
+    # Build a latest-as-of snapshot. Indicators often update in different
+    # years; exact-year filtering would discard valid older observations and
+    # leave otherwise comparable places unscored.
+    numeric_years = pd.to_numeric(df["year"], errors="coerce")
+    if year is None:
+        year = int(numeric_years.max())
+    df = df.loc[numeric_years <= year].copy()
+    if df.empty:
+        raise ValueError(f"No data available on or before year {year}.")
+    df["year"] = pd.to_numeric(df["year"], errors="coerce")
+    df = (
+        df.sort_values("year")
+        .groupby("place_id", as_index=False, sort=False)
+        .last()
+    )
+    df["year"] = year
 
     factors_cfg = config.get("factors", {})
 
     # Normalize weights
-    valid_factors = [f for f in weights if f in factors_cfg]
-    if not valid_factors:
-        raise ValueError("No valid factors in weights dict.")
-
-    raw_weights = {f: float(weights[f]) for f in valid_factors}
+    configured_weights = {
+        factor: float(weight) for factor, weight in weights.items()
+        if factor in factors_cfg
+    }
+    raw_weights = configured_weights
+    if any(not np.isfinite(weight) or weight < 0 for weight in raw_weights.values()):
+        raise ValueError("Weights must be finite and non-negative.")
+    raw_weights = {factor: weight for factor, weight in raw_weights.items() if weight > 0}
+    if not raw_weights:
+        raise ValueError("No positive configured weights were supplied.")
     total_w = sum(raw_weights.values())
     if total_w <= 0:
         raise ValueError("Weights must be positive and sum to > 0.")
@@ -191,7 +207,8 @@ def compute_scores(
         results[col_name] = score_factor(df, factor, fcfg).values
         factor_score_cols.append((factor, col_name))
 
-    # Weighted sum — re-normalize weights where a factor is NaN for a place
+    # Only compare places with every positively weighted factor available.
+    # Reweighting different subsets would make ranks incomparable.
     scores = []
     partial_data_flags = []
     missing_factors_list = []
@@ -203,21 +220,19 @@ def compute_scores(
         ]
         missing = [f for f, col in factor_score_cols if pd.isna(row[col])]
 
-        if not available:
+        if missing:
             scores.append(np.nan)
             partial_data_flags.append(True)
-            missing_factors_list.append(list(norm_weights.keys()))
+            missing_factors_list.append(missing)
             continue
 
-        # Re-normalize weights for available factors
-        avail_w_total = sum(norm_weights[f] for f, _ in available)
         local_score = sum(
-            norm_weights[f] / avail_w_total * row[col]
+            norm_weights[f] * row[col]
             for f, col in available
         )
         scores.append(local_score)
-        partial_data_flags.append(len(missing) > 0)
-        missing_factors_list.append(missing)
+        partial_data_flags.append(False)
+        missing_factors_list.append([])
 
     results["score"] = scores
     results["partial_data"] = partial_data_flags

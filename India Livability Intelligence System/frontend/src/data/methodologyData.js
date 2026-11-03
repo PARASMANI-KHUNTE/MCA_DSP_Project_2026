@@ -79,7 +79,7 @@ export const METHODOLOGY_DETAILS = {
     }
   ],
   ethics: [
-    "Transparency: every displayed score is derived from published CPCB, NCRB, SRS, RBI, MoSPI or Kaggle source tables.",
+    "Transparency: scores are calculated from the local indicator tables using the displayed formulas and bounds.",
     "No synthetic fallbacks: missing observations stay missing and are shown as unavailable rather than replaced with invented values.",
     "Inheritance is labelled: city safety, health and economy come from the surrounding state when city-level series do not exist.",
     "Uncertainty is explicit: only observed years are scored directly; 2025–2034 values are OLS projections with approximate 95% intervals.",
@@ -88,6 +88,7 @@ export const METHODOLOGY_DETAILS = {
 };
 
 export const DATA_GAPS = [
+  "State air scores are the annual mean of available city PM2.5 observations in that state; states without city coverage have no complete composite score.",
   "Air quality has no processed observations for 2021 or 2022; the 2015–2019 Kaggle series and the 2023–2024 CPCB series are not joined as one continuous trend.",
   "State safety, health and economy series end in 2022. Scores for 2023 and 2024 reuse those latest observations and label their source year.",
   "Cost of living is a single 2022 rent snapshot for six metros, so it is never trended and applies only to those six cities.",

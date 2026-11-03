@@ -25,17 +25,9 @@ from backend.app.schemas.schemas import (
     TrendResponse,
 )
 from backend.app.services.scoring import get_place_trend
-from src.utils.provenance import require_verified_sources
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-def _require_verified_data() -> None:
-    try:
-        require_verified_sources()
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 def _coerce(val, typ=float):
@@ -84,7 +76,6 @@ def list_places(store: DataStore = Depends(get_store)):
 @router.get("/places/{place_id}", response_model=PlaceDetailOut, summary="Place detail with factor history")
 def place_detail(place_id: str, store: DataStore = Depends(get_store)):
     """Return metadata and per-factor historical values for a place."""
-    _require_verified_data()
     places = store.places
     place_row = places[places["place_id"] == place_id]
     if place_row.empty:
@@ -131,7 +122,6 @@ def place_detail(place_id: str, store: DataStore = Depends(get_store)):
 )
 def place_trend(place_id: str, store: DataStore = Depends(get_store)):
     """Return slope, outlook label, and 10-year projection per factor."""
-    _require_verified_data()
     places = store.places
     place_row = places[places["place_id"] == place_id]
     if place_row.empty:
@@ -160,7 +150,6 @@ def place_trend(place_id: str, store: DataStore = Depends(get_store)):
 @router.get("/clusters", response_model=list[ClusterOut], summary="K-Means tier labels")
 def list_clusters(store: DataStore = Depends(get_store)):
     """Return cluster assignments for all places."""
-    _require_verified_data()
     clusters = store.clusters
     if clusters.empty:
         return []

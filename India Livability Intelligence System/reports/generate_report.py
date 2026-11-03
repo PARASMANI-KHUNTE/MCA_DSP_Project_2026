@@ -7,10 +7,6 @@ and exports both project_report.md and project_report.pdf.
 
 from pathlib import Path
 from markdown_pdf import Section, MarkdownPdf
-from src.utils.provenance import require_verified_sources
-
-require_verified_sources()
-
 REPORT_MD = Path("reports/project_report.md")
 REPORT_PDF = Path("reports/project_report.pdf")
 

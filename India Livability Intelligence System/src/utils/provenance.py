@@ -1,8 +1,9 @@
-"""Detect known synthetic raw tables previously emitted as official data."""
+"""Fail closed unless analytical inputs have a reviewed source manifest."""
 
 from __future__ import annotations
 
 import hashlib
+import csv
 from pathlib import Path
 
 from src.utils.constants import ROOT
@@ -20,6 +21,35 @@ UNVERIFIED_GENERATED_SHA256 = {
     "data/raw/air_cpcb/cpcb_aqs_2024.csv": "ae13b2257f6c2bccc5332fbbb2d03900088824750bc3821e1b6c9450e284b926",
 }
 
+VALIDATION_MANIFEST = "data/raw/source_validation_manifest.csv"
+MANIFEST_REQUIRED_COLUMNS = {
+    "relative_path",
+    "sha256",
+    "source_id",
+    "factor",
+    "source_url",
+    "release",
+    "retrieved_on",
+    "license_status",
+    "indicator_definition",
+    "unit",
+    "geography",
+    "period",
+    "extraction_notes",
+    "validation_status",
+    "spot_check_status",
+}
+REQUIRED_FACTORS = {"air_quality", "safety", "health", "economy"}
+SUPPORTED_RAW_SUFFIXES = {".csv", ".xls", ".xlsx", ".pdf"}
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
 
 def find_unverified_generated_sources(root: Path = ROOT) -> list[Path]:
     """Return raw files whose content exactly matches known generated placeholders."""
@@ -28,20 +58,123 @@ def find_unverified_generated_sources(root: Path = ROOT) -> list[Path]:
         path = root / relative_path
         if not path.is_file():
             continue
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        digest = _sha256(path)
         if digest == expected_digest:
             matches.append(path)
     return matches
 
 
-def require_verified_sources() -> None:
-    """Stop analysis/export while known placeholder source files are present."""
-    matches = find_unverified_generated_sources()
-    if matches:
-        paths = "\n".join(f"  - {path}" for path in matches)
+def _pipeline_input_files(root: Path) -> list[Path]:
+    """Find files consumed by the project loaders, excluding aliases/registers."""
+    inputs: set[Path] = set()
+    city_day = root / "data/raw/air_kaggle/city_day.csv"
+    if city_day.is_file():
+        inputs.add(city_day)
+
+    for folder in ("air_cpcb", "safety", "health", "economy", "cost_of_living"):
+        directory = root / "data/raw" / folder
+        if directory.is_dir():
+            inputs.update(
+                path for path in directory.iterdir()
+                if path.is_file() and path.suffix.lower() in SUPPORTED_RAW_SUFFIXES
+            )
+    return sorted(inputs)
+
+
+def find_unverified_sources(root: Path = ROOT) -> list[str]:
+    """Return reasons any loader input is not explicitly source-validated.
+
+    The manifest is a human review record, not proof by itself. Its exact file
+    checksum prevents a reviewed decision from silently carrying over to a
+    different file; reviewers must independently verify source values.
+    """
+    blockers: list[str] = []
+    known_placeholders = find_unverified_generated_sources(root)
+    blockers.extend(f"known generated placeholder: {path.relative_to(root).as_posix()}" for path in known_placeholders)
+
+    inputs = _pipeline_input_files(root)
+    if not inputs:
+        blockers.append("no source data files found for the required pipeline factors")
+
+    manifest_path = root / VALIDATION_MANIFEST
+    if not manifest_path.is_file():
+        blockers.append(f"missing source validation manifest: {VALIDATION_MANIFEST}")
+        return blockers
+
+    try:
+        with manifest_path.open("r", encoding="utf-8-sig", newline="") as stream:
+            reader = csv.DictReader(stream)
+            columns = set(reader.fieldnames or [])
+            missing_columns = MANIFEST_REQUIRED_COLUMNS - columns
+            if missing_columns:
+                blockers.append("manifest missing columns: " + ", ".join(sorted(missing_columns)))
+                return blockers
+            rows = list(reader)
+    except (OSError, csv.Error) as exc:
+        return blockers + [f"could not read source validation manifest: {exc}"]
+
+    by_path: dict[str, list[dict[str, str]]] = {}
+    verified_factors: set[str] = set()
+    for row in rows:
+        relative = (row.get("relative_path") or "").replace("\\", "/").strip()
+        if relative:
+            by_path.setdefault(relative, []).append(row)
+
+    input_relatives = {path.relative_to(root).as_posix() for path in inputs}
+    for path in inputs:
+        relative = path.relative_to(root).as_posix()
+        records = by_path.get(relative, [])
+        if len(records) != 1:
+            blockers.append(f"{relative}: expected one manifest record, found {len(records)}")
+            continue
+
+        row = records[0]
+        row_valid = True
+        if (row.get("sha256") or "").strip().lower() != _sha256(path):
+            blockers.append(f"{relative}: manifest checksum does not match the file")
+            row_valid = False
+        required_values = (
+            "source_id", "factor", "source_url", "release", "retrieved_on",
+            "license_status", "indicator_definition", "unit", "geography",
+            "period", "extraction_notes",
+        )
+        missing_values = [name for name in required_values if not (row.get(name) or "").strip()]
+        if missing_values:
+            blockers.append(f"{relative}: missing review details: {', '.join(missing_values)}")
+            row_valid = False
+        if (row.get("license_status") or "").strip().lower() != "approved":
+            blockers.append(f"{relative}: reuse/license review is not approved")
+            row_valid = False
+        if (row.get("validation_status") or "").strip().lower() != "verified":
+            blockers.append(f"{relative}: source validation is not verified")
+            row_valid = False
+        if (row.get("spot_check_status") or "").strip().lower() != "passed":
+            blockers.append(f"{relative}: source spot-check has not passed")
+            row_valid = False
+        if row_valid and row.get("factor", "").strip() in REQUIRED_FACTORS:
+            verified_factors.add(row["factor"].strip())
+
+    for relative in sorted(set(by_path) - input_relatives):
+        blockers.append(f"{relative}: manifest record has no matching loader input")
+
+    for factor in sorted(REQUIRED_FACTORS - verified_factors):
+        blockers.append(f"no reviewed source file is available for required factor: {factor}")
+
+    for relative, records in by_path.items():
+        if len(records) > 1:
+            blockers.append(f"{relative}: duplicate manifest records")
+
+    return sorted(set(blockers))
+
+
+def require_verified_sources(root: Path = ROOT) -> None:
+    """Stop analysis/export until every contributing source passes review."""
+    blockers = find_unverified_sources(root)
+    if blockers:
+        reasons = "\n".join(f"  - {reason}" for reason in blockers)
         raise RuntimeError(
-            "Refusing to use analytical outputs derived from known synthetic "
-            "placeholder source files. Replace them with verified records first:\n" + paths
+            "Refusing to create or serve analytical outputs from unverified "
+            "source files. Resolve every source-validation issue first:\n" + reasons
         )
 
 

@@ -1,0 +1,42 @@
+# New Data Source Audit
+
+**Reviewed:** 3 November 2026  
+**Plan:** [`new_data_integration_plan.md`](new_data_integration_plan.md)  
+**Decision:** No files from `data/raw/newData` have been activated in the analytical pipeline. Several are useful candidates, but none currently supplies a fully verified, definition-compatible replacement for all blocked core inputs.
+
+## Inventory
+
+| File in `data/raw/newData` | Size | SHA-256 |
+|---|---:|---|
+| `Air qulaity/archive.zip` | 76,469,579 | `4ce4e048e6698b277b6d8f14d830c1f7434769416302dcdbab4f0826ee750ff9` |
+| `cost of living/archive.zip` | 30,565 | `9f03efcf965567381d3f2ac7b2d50349d3bd09128ac1207a37ca81ea884193d7` |
+| `economic dataset/archive (1).zip` | 53,683 | `8ce8c31fdf4a477c4564617eef12240f948837948691e5f81272343282e44aea` |
+| `economic dataset/Unemployment in India.csv` | 47,043 | `e7a4cc847297edc033610082a6b333f0fe56e9e74d01384da474bd13ec5d5891` |
+| `Health/archive (1).zip` | 7,887 | `5d71bf1981ffe2db448054389eea80c4f9c57c2d0f4b07fb9905799e5b0216f0` |
+| `Public saftey/archive.zip` | 54,036,756 | `bf2678e9de7658996379347b4fd6b06d2518749a2370c4c1cf104e2ded084670` |
+
+The ZIP files were inspected without extracting or modifying them. The CSV inside the air archive has SHA-256 `0d84b21c3e4878bbad8df362f2ab05f61ad959538dddf5918e714077ed3c1847`, exactly matching the existing `data/raw/air_kaggle/city_day.csv`.
+
+## Source and pipeline decisions
+
+| Candidate | What the files contain | Source/reuse review | Pipeline decision |
+|---|---|---|---|
+| Air quality | Kaggle `city_day.csv`, plus city/station day/hour tables and station metadata. | Kaggle's public API identifies [Air Quality Data in India (2015–2020)](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india), uploader Vopani, CC0, last updated 28 July 2020. The archive's `city_day.csv` is identical to the project's current file. The downloaded duplicate adds no new data, and sample values have not been independently reconciled against CPCB records. | Do not copy the duplicate into the active raw folder. Keep the existing air input blocked until the required source-value check is documented; record the Kaggle release/license evidence in the manifest as part of that review. |
+| Cost of living | `india_col_salary_longitudinal_2010_2024.csv`: 735 city-year rows, 49 cities, 2010–2024; 20 cities tagged `numbeo` and 29 tagged `plfs_modeled` per year. | The identified Kaggle dataset is [India cost of living vs salary 2010–2024 per city](https://www.kaggle.com/datasets/franekwodarczyk/india-cost-of-living-vs-salary-2010-2024), licensed MIT by the uploader. Its description says only 20 cities have direct 2024 Numbeo anchors and the other 29 are modeled using PLFS/state and city-tier multipliers; pre-2017 wages are extrapolations. [Numbeo's terms](https://www.numbeo.com/common/terms_of_use.jsp) permit academic reuse with attribution, but distinguish original and third-party data and give no accuracy warranty. | Do not use the file as an all-city observed cost measure or as a direct replacement for the project's current rent input. It may be reconsidered as an explicitly labeled, academic-use-only estimate after the exact source rows and attribution are checked. Keep modeled values separate from observations. |
+| Economy workbooks | Four XLSX files: GDP growth by sector, sector composition, service-sector decomposition, and statewise weights 1993–2019. | The archives contain no source register, release citation, license, or publisher metadata. Searches by included file names did not identify an authoritative matching release. Their titles alone do not establish that they measure constant-price per-capita NSDP or the project's intended unemployment indicator. | Exclude pending exact source/release identification, reuse terms, workbook inspection, and field/unit/geography reconciliation. |
+| Unemployment | Monthly state/area rows with estimated unemployment rate, employment, and labour-force participation. | Matches Kaggle's [Unemployment in India](https://www.kaggle.com/datasets/gokulrajkmv/unemployment-in-india), whose description says the source is CMIE. Kaggle labels the license “Other (specified in description)” without granting clear reuse terms. It is monthly CMIE data, not the project's defined MoSPI PLFS usual-status (age 15+) estimate. | Do not treat it as PLFS or feed it into the existing economy factor. Require reuse permission and a deliberate indicator-definition change before possible use. |
+| Health | RHS tables for 2005, 2019, and 2020; 2020 vacancies/shortfalls; population density and area tables. | Matches [Rural Health Statistics — India — 2005, 2019, 2020](https://www.kaggle.com/datasets/vineethakkinapalli/rural-health-statistics-india2005-2019-2020), declared CC0 and described as derived from MoHFW reports. The [official MoHFW RHS publication](https://www.mohfw.gov.in/sites/default/files/rhs20-21_2.pdf) and [PIB release](https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1843842&lang=2&reg=48) confirm RHS describes health infrastructure and human resources. | This is a distinct health-system capacity measure, not infant mortality. Sparse snapshots and changing state/UT boundaries make it unsuitable as a silent replacement for SRS IMR or as a yearly trend series. It could support a separate, clearly named health-infrastructure view after row-level comparison to the official reports and denominator/boundary review. |
+| Public safety | CrimeBase documents, a large state-year crime table, NCRB documents catalogue, dictionaries, and profile. | Identified as [CrimeBase](https://github.com/chandranshB/CrimeBase) and its [Kaggle dataset](https://www.kaggle.com/datasets/chandranshbinjola/crimebase). Its source documentation cites NCRB and other public publishers and describes sum/reconciliation checks. The Kaggle listing is “Other (specified in description)”; CrimeBase says the underlying data remain publisher-copyrighted. The supplied `crime_state_year.csv` has state/year/scope/crime-head/metric/value and QC fields, but no `rate` or `population` metric. | Strong candidate for a source-linked reported-case table, but it cannot directly replace `crime_rate_per_lakh`. Deriving rates requires an exact, source-checked state population denominator and careful definition of the IPC/SLL scope. Do not add crime counts to the current score or call them crime rates. |
+
+## Accuracy and scope notes
+
+- “Publicly downloadable” and “verified source” are different checks. Kaggle's own documentation treats the uploader's selected license as dataset metadata; it does not establish the underlying source's rights or verify every value.
+- The currently planned health indicator is infant mortality. RHS counts health facilities and staff; these values cannot be substituted without changing the construct and score interpretation.
+- The existing safety score is a rate per lakh population. CrimeBase's state panel provides reported counts in rows, not the denominator needed to calculate that rate. The dictionary also warns that crime scopes overlap and must not be summed together.
+- The existing unemployment definition expects annual/survey-period PLFS state estimates. Monthly CMIE observations are a different series and must not be averaged or renamed into PLFS values without an approved methodology.
+- The optional cost dataset contains both observed-source labels and modeled city rows. Numbeo terms require attribution for academic reuse and state that site data may not be accurate; the Kaggle MIT declaration does not by itself prove the rights to third-party source content.
+- `data/raw/newData` remains an intake/archive folder and is not scanned as an active loader input. The current source-validation gate and existing processed outputs remain unchanged; no new scores or empirical claims were generated.
+
+## Recommended next step
+
+Keep the current score blocked until each required indicator has a rights-cleared, definition-compatible input with a completed checksum record and source-level spot checks. Decide separately whether to add RHS health-system capacity as a new descriptive factor. For safety, acquire or verify a state population denominator matching CrimeBase's years and geography before deriving any per-lakh rate. For economics, obtain the original workbook source citation/license and compare extracted values to it. For city cost estimates, either use only independently verified observed values with attribution or omit the modeled values from comparisons.

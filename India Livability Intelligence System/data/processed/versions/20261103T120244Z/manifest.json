@@ -1,0 +1,12 @@
+{
+  "version": "20261103T120244Z",
+  "created_at_utc": "2026-11-03T12:02:44.776825+00:00",
+  "rows": {
+    "factors_tidy": 1312,
+    "factors_wide": 539
+  },
+  "files": {
+    "factors_tidy.parquet": "507cb06780e8cd7d6ecf90045efa24a1b61170cfd4f7bcde8dc4d99aae93c277",
+    "factors_wide.csv": "c92270c7955bc911c239afe84f1ecf27ec4ce17906be6a88d25085bb68ebc2f8"
+  }
+}

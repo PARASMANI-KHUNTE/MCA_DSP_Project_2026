@@ -1,14 +1,52 @@
 {
   "clustering": {
-    "k_chosen": 5,
-    "year": 2018,
-    "n_places": 42
+    "status": "complete",
+    "k_chosen": 2,
+    "year": 2024,
+    "n_places": 48
   },
   "trends": {
-    "n_fitted": 54,
-    "n_insufficient": 190,
-    "improving": 28,
-    "declining": 21,
+    "n_fitted": 183,
+    "n_insufficient": 61,
+    "improving": 122,
+    "declining": 56,
     "stable": 5
+  },
+  "holdout_evaluation": {
+    "target": "air_quality_score",
+    "unit_of_evaluation": "pooled city-year predictions",
+    "split_years": {
+      "train": "2015-2018",
+      "validation": "2019",
+      "test": "2023-2024"
+    },
+    "validation": {
+      "ols": {
+        "n": 14,
+        "mse": 107.81262104015887,
+        "rmse": 10.38328565725507,
+        "r2": 0.7612688693371749
+      },
+      "naive_last_value": {
+        "n": 14,
+        "mse": 71.85578270892947,
+        "rmse": 8.476779029143644,
+        "r2": 0.8408886447127997
+      }
+    },
+    "test": {
+      "ols": {
+        "n": 28,
+        "mse": 437.44000045598204,
+        "rmse": 20.915066350742997,
+        "r2": -0.19968712316800152
+      },
+      "naive_last_value": {
+        "n": 28,
+        "mse": 226.96868727548016,
+        "rmse": 15.065479988220758,
+        "r2": 0.3775342648068183
+      }
+    }
   }
 }

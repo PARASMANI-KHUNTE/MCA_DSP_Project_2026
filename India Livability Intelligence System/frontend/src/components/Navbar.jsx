@@ -20,47 +20,44 @@ export default function Navbar({
   onChangeYear,
   backendStatus,
   onRetryBackend,
-  onOpenTour
+  onOpenTour,
+  dataAvailable
 }) {
   const isProjected = selectedYear > BASELINE_YEAR;
-  const backendOnline = backendStatus === "ok" || backendStatus === "data_unverified";
-  const dataUnverified = backendStatus === "data_unverified";
-  const backendLabel = dataUnverified ? "API Data Unverified" : backendOnline ? "API Live" : "Local Engine";
-  const backendDescription = dataUnverified
-    ? "FastAPI is reachable, but source data is unverified and score endpoints are disabled. Click to re-check."
-    : backendOnline
+  const backendOnline = backendStatus === "ok";
+  const backendLabel = backendOnline ? "API Live" : "Local Engine";
+  const backendDescription = backendOnline
       ? "FastAPI backend connected. Click to re-check."
       : "Running on the embedded scoring engine. Click to retry the API.";
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-neutral-950/95 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1720px] items-center justify-between gap-2 px-3 py-2.5 sm:gap-4 sm:px-5 sm:py-3 lg:px-6">
           <button
             onClick={() => onSelectTab("map")}
             className="group flex min-w-0 items-center gap-2.5 text-left"
             aria-label="Go to explorer"
           >
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-400 via-cyan-400 to-blue-400 text-slate-950 shadow-lg shadow-emerald-500/25 transition-all group-hover:scale-110 group-hover:shadow-emerald-400/40">
-              <Compass size={20} className="animate-pulse-slow" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-700 bg-neutral-900 text-neutral-100 transition-colors group-hover:bg-neutral-800">
+              <Compass size={19} />
             </span>
             <span className="min-w-0">
               <span className="flex items-center gap-2">
-                <span className="truncate text-[13px] font-black tracking-tight text-white sm:text-base">
+                <span className="truncate text-[13px] font-semibold tracking-tight text-white sm:text-base">
                   India Livability Intelligence
                 </span>
-                <span className="hidden shrink-0 rounded-full border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 px-2 py-0.5 text-[9px] font-black tracking-[0.18em] text-emerald-200 sm:inline-flex">
+                <span className="hidden shrink-0 rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[9px] font-semibold tracking-[0.12em] text-neutral-300 sm:inline-flex">
                   DSP 2026
                 </span>
               </span>
-              <span className="hidden text-[10px] text-slate-400 md:block">
-                Data-driven index • Live map • Trend projections
+              <span className="hidden text-[10px] text-neutral-400 md:block">
+                {dataAvailable ? "Data science pipeline • Place comparisons • Trends" : "Preparing local data"}
               </span>
             </span>
           </button>
 
-          <nav className="hidden items-center gap-1 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-1 shadow-lg shadow-black/20 lg:flex">
+          <nav className="hidden items-center gap-1 rounded-xl border border-neutral-800 bg-neutral-900 p-1 lg:flex" aria-label="Primary">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -69,10 +66,10 @@ export default function Navbar({
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
                   aria-current={active ? "page" : undefined}
-                  className={`group flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+                    className={`group flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium transition-colors ${
                     active
-                      ? "bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md shadow-emerald-500/25"
-                      : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
+                      ? "bg-neutral-700 text-white"
+                      : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
                   }`}
                 >
                   <Icon size={14} className={active ? "" : "group-hover:scale-110 transition-transform"} />
@@ -83,26 +80,26 @@ export default function Navbar({
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <label className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/70 px-2 py-1.5 sm:px-2.5">
+            {dataAvailable && <label className="flex min-h-9 items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1.5 sm:px-2.5">
               <CalendarRange size={13} className={isProjected ? "text-amber-300" : "text-slate-500"} />
               <span className="hidden text-[10px] font-semibold text-slate-500 sm:inline">Year</span>
               <select
                 value={selectedYear}
                 onChange={event => onChangeYear(Number(event.target.value))}
                 aria-label="Select analysis year"
-                className={`cursor-pointer bg-transparent text-base font-bold focus:outline-none sm:text-xs ${
-                  isProjected ? "text-amber-300" : "text-slate-200"
+                className={`cursor-pointer bg-transparent text-base font-semibold focus:outline-none sm:text-xs ${
+                  isProjected ? "text-amber-300" : "text-neutral-200"
                 }`}
               >
                 {YEARS.map(year => (
-                  <option key={year} value={year} className="bg-slate-900 text-slate-200">
+                  <option key={year} value={year} className="bg-neutral-900 text-neutral-200">
                     {year}{year > BASELINE_YEAR ? " (proj.)" : ""}
                   </option>
                 ))}
               </select>
-            </label>
+            </label>}
 
-            <button
+            {dataAvailable && <button
               onClick={onOpenTour}
               className="group flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-green-500/15 px-2.5 py-1.5 text-xs font-bold text-emerald-200 shadow-sm shadow-emerald-500/15 transition-all hover:scale-[1.02] hover:border-emerald-300/60 hover:from-emerald-500/25 hover:to-green-500/25 hover:text-white"
               title="Learn how to use the system"
@@ -110,37 +107,36 @@ export default function Navbar({
             >
               <HelpCircle size={14} className="text-emerald-300 transition-transform group-hover:rotate-12" />
               <span className="hidden sm:inline">How It Works</span>
-            </button>
+            </button>}
 
-            <button
+            {dataAvailable && <button
               onClick={onRetryBackend}
+              data-api-state={backendStatus}
               className={`flex items-center gap-1.5 rounded-xl border px-2 py-1.5 text-[10px] font-semibold transition-colors sm:px-2.5 ${
-                dataUnverified
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                  : backendOnline
+                backendOnline
                   ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                  : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                  : "border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
               }`}
               title={backendDescription}
               aria-label={backendDescription}
             >
               <Radio
                 size={12}
-                className={dataUnverified ? "text-amber-300" : backendOnline ? "animate-pulse text-emerald-400" : "text-slate-500"}
+                className={backendOnline ? "animate-pulse text-emerald-400" : "text-slate-500"}
               />
               <span className="hidden md:inline">{backendLabel}</span>
               <RefreshCw size={10} className="hidden text-slate-500 md:inline" />
-            </button>
+            </button>}
           </div>
         </div>
       </header>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-800 bg-neutral-950/98 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Primary"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-3 px-2">
+        <div className={`mx-auto grid max-w-lg px-2 ${dataAvailable ? "grid-cols-3" : "grid-cols-2"}`}>
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -150,10 +146,10 @@ export default function Navbar({
                 onClick={() => onSelectTab(tab.id)}
                 aria-current={active ? "page" : undefined}
                 className={`relative flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2.5 text-[11px] font-semibold transition-colors ${
-                  active ? "text-emerald-300" : "text-slate-500 hover:text-slate-300"
+                  active ? "text-white" : "text-neutral-500 hover:text-neutral-300"
                 }`}
               >
-                <span className={`absolute top-0 h-0.5 w-8 rounded-full transition-all ${active ? "bg-emerald-400" : "bg-transparent"}`} />
+                <span className={`absolute top-0 h-0.5 w-8 rounded-full transition-all ${active ? "bg-neutral-200" : "bg-transparent"}`} />
                 <Icon size={18} />
                 {tab.label}
               </button>

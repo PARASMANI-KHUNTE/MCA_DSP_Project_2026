@@ -175,12 +175,27 @@ def run_all_trends(
         fcfg = factors_cfg.get(factor, {})
         trend_setting = fcfg.get("trend", "eligible")
 
-        series_break_flag = bool(grp["series_break"].any()) if "series_break" in grp.columns else False
-        gap_flag = "|".join(grp["gap_flag"].dropna().unique()) if "gap_flag" in grp.columns else ""
+        grp = grp.sort_values("year").copy()
+        has_breaks = "series_break" in grp.columns and grp["series_break"].fillna(False).astype(bool).any()
+        if "series_break" in grp.columns:
+            # A true flag marks the first observation in a new comparable
+            # segment. Fit/projection uses only the latest segment.
+            segment = grp["series_break"].fillna(False).astype(bool).cumsum()
+            latest_segment = segment.max()
+            fit_grp = grp.loc[segment == latest_segment].copy()
+        else:
+            fit_grp = grp
+
+        series_break_flag = bool(has_breaks)
+        gap_flag = "|".join(
+            fit_grp["gap_flag"].dropna().astype(str).unique()
+        ) if "gap_flag" in fit_grp.columns else ""
+        if has_breaks:
+            gap_flag = "|".join(filter(None, [gap_flag, "historical_series_break"]))
 
         result = fit_trend(
-            years=grp["year"].values,
-            scores=grp["score"].values,
+            years=fit_grp["year"].values,
+            scores=fit_grp["score"].values,
             place_id=place_id,
             factor=factor,
             series_break_flag=series_break_flag,

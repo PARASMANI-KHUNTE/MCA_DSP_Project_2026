@@ -18,6 +18,12 @@ import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
 import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
+import { PRESETS } from "./data/methodologyData";
+
+const COMPOSITE_DEFAULT = PRESETS.find(preset => preset.id === "balanced") || {
+  id: "balanced",
+  weights: { air: 35, safety: 25, health: 25, economy: 15, col: 0 }
+};
 
 const MOBILE_PANELS = [
   { id: "map", label: "Map", icon: Map },
@@ -30,16 +36,21 @@ export default function App() {
   const [selectedYear, setSelectedYear] = useState(BASELINE_YEAR);
   const [mobilePanel, setMobilePanel] = useState("map");
 
-  const [weights, setWeights] = useState({
-    air: DATA_COVERAGE.availableFactors?.includes("air") ? 100 : 0,
-    safety: 0,
-    health: 0,
-    economy: 0,
-    col: 0
-  });
-  const [selectedPresetId, setSelectedPresetId] = useState(
-    DATA_COVERAGE.availableFactors?.includes("air") ? "air_only" : "col_only"
+  const [weights, setWeights] = useState(() =>
+    DATA_COVERAGE.compositeAvailable
+      ? { ...COMPOSITE_DEFAULT.weights }
+      : {
+          air: DATA_COVERAGE.availableFactors?.includes("air") ? 100 : 0,
+          safety: 0,
+          health: 0,
+          economy: 0,
+          col: 0
+        }
   );
+  const [selectedPresetId, setSelectedPresetId] = useState(() => {
+    if (DATA_COVERAGE.compositeAvailable) return COMPOSITE_DEFAULT.id;
+    return DATA_COVERAGE.availableFactors?.includes("air") ? "air_only" : "col_only";
+  });
 
   const initialFactor = DATA_COVERAGE.availableFactors?.[0] || "air";
   const [colorMode, setColorMode] = useState(DATA_COVERAGE.compositeAvailable ? "overall" : "factor");
@@ -111,6 +122,11 @@ export default function App() {
   };
 
   const handleReset = () => {
+    if (DATA_COVERAGE.compositeAvailable) {
+      setSelectedPresetId(COMPOSITE_DEFAULT.id);
+      setWeights({ ...COMPOSITE_DEFAULT.weights });
+      return;
+    }
     const defaultFactor = DATA_COVERAGE.availableFactors?.includes("air") ? "air" : DATA_COVERAGE.availableFactors?.[0];
     const resetWeights = { air: 0, safety: 0, health: 0, economy: 0, col: 0 };
     if (defaultFactor) resetWeights[defaultFactor] = 100;

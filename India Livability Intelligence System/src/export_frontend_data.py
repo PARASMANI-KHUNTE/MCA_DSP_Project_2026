@@ -92,7 +92,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": safety["direction"],
             "bounds": safety["bounds"],
             "level": safety["level"],
-            "source": "No active input; former generated table quarantined",
+            "source": "NCRB Table 1A.3; local extraction unverified",
             "sourceId": safety.get("source_id"),
             "unit": "per lakh",
             "trend": safety.get("trend"),
@@ -105,7 +105,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": health["direction"],
             "bounds": health["bounds"],
             "level": health["level"],
-            "source": "No active input; former generated table quarantined",
+            "source": "SRS Bulletin 2022 Table 1; local extraction unverified",
             "sourceId": health.get("source_id"),
             "unit": "per 1,000 births",
             "trend": health.get("trend"),
@@ -116,7 +116,7 @@ def _factor_definitions(config: dict) -> dict:
             "shortLabel": "Econ",
             "direction": "mixed",
             "level": economy["level"],
-            "source": "No active input; former generated tables quarantined",
+            "source": "RBI NSDP Table 20 + MoSPI PLFS 2023-24; local extraction unverified",
             "trend": economy.get("trend"),
             "indicators": [
                 {
@@ -292,6 +292,10 @@ def build_payload() -> dict:
                 "data/processed/factors_tidy.parquet",
                 "data/raw/air_kaggle/city_day.csv",
                 "data/raw/cost_of_living/House_Rent_Dataset.csv",
+                "data/raw/safety/ncrb_table_1a3_2020_2022.xlsx",
+                "data/raw/health/srs_bulletin_2022.pdf",
+                "data/raw/economy/rbi_nsdp_2025_table20.xlsx",
+                "data/raw/economy/plfs_2023_24_annual_report.pdf",
                 "src/scoring/factors_config.yaml",
             ],
             "note": (

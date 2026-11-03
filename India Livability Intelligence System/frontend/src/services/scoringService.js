@@ -5,10 +5,10 @@ const API_BASE_URL = "http://localhost:8000/api";
 export const PLACES = DATA.places;
 export const FACTOR_DEFS = DATA.factorDefs;
 export const DATA_COVERAGE = DATA.meta;
-// The main time-series projection is anchored to the latest active air year.
-// Snapshot factors (currently rent) have their own observation year and are
-// never treated as a time series.
-export const BASELINE_YEAR = DATA.meta.lastYearByFactor?.air ?? DATA.meta.baselineYear;
+// Anchor the default view to the latest year with multi-factor observations
+// rather than the most recent air year. Snapshot factors (currently rent) have
+// their own observation year and are never treated as a time series.
+export const BASELINE_YEAR = DATA.meta.baselineYear;
 export const PROJECTION_END_YEAR = BASELINE_YEAR == null ? null : BASELINE_YEAR + 10;
 export const OBSERVED_YEARS = DATA.meta.years;
 export const PROJECTION_YEARS = Array.from(

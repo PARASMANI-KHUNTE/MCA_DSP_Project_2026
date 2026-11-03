@@ -89,7 +89,7 @@ export default function AboutView({ onOpenExplorer, onOpenMethodology }) {
             </div>
             <h4 className="mt-3 text-sm font-bold text-[#111111]">1. Ingestion & Harmonization</h4>
             <p className="mt-1.5 text-xs leading-relaxed text-[#666666]">
-              Processes the active local PM2.5 and rent files. Safety, health, and economy placeholders were quarantined; remaining local inputs are not independently source-verified.
+              Processes local PM2.5, rent, NCRB safety, SRS health, RBI NSDP and PLFS files. Generated placeholders remain quarantined; the active local inputs are not independently source-verified.
             </p>
           </div>
 

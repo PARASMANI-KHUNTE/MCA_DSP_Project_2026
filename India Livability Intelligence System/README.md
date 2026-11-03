@@ -1,30 +1,32 @@
 # India Livability Intelligence System
 
-An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files are labeled to public Kaggle sources, but their exact upstream versions and values have not been independently confirmed. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
+An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files combine local air-quality and rent data with NCRB, SRS, RBI NSDP and PLFS extracts, but their exact upstream versions and values have not been independently confirmed. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
 
 > **Course:** Data Science using Python (CAPCTD3 Elective-V)  
 > **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
 
 ## Project status
 
-- **Current workflow:** six raw tables were confirmed byte-for-byte as outputs from the retired placeholder generator and moved to `data/rejected/generated_placeholders/`. They are excluded from loaders. Processed outputs and the frontend bundle were rebuilt from the remaining air-quality and house-rent files.
+- **Current workflow:** six raw tables were confirmed byte-for-byte as outputs from the retired placeholder generator and remain quarantined in `data/rejected/generated_placeholders/`. Processed outputs and the frontend bundle combine the remaining local air-quality and rent files with public NCRB safety, SRS health, RBI NSDP and PLFS unemployment extracts.
 - The dashboard covers **61 places**: 32 states/UTs and 29 cities.
 - Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
-- The dashboard has embedded data and computes factor scores in the browser. It supports an air ranking and a separate rent snapshot ranking; neither is a composite livability ranking. The FastAPI backend is optional.
+- The dashboard has embedded data and computes factor scores in the browser. At 2023 it supports a full five-factor composite; earlier years are factor-specific views. Air-only and rent-only rankings remain available as presets. The FastAPI backend is optional.
 - There is no hosted demo linked at present.
 
 ## Findings status
 
-The remaining files are not known matches for the retired generator, but their values, exact upstream versions, and reuse terms have not been independently confirmed. Treat their results as exploratory local-data views, not verified public-data findings. The current files do not provide the required indicators for a composite livability score; composite rankings, cluster findings, and composite statistics are withheld. Available air-only and rent-only rankings are separate comparisons. See the [fabrication audit](reports/data_fabrication_audit.md).
+The remaining files are not known matches for the retired generator, but their values, exact upstream versions, and reuse terms have not been independently confirmed. Treat their results as exploratory local-data views, not verified public-data findings. A balanced 2023 composite is published for places that have all weighted factors; places missing a weighted factor remain unscored. Mixed-coverage years expose factor-specific results rather than a composite. See the [fabrication audit](reports/data_fabrication_audit.md).
 
 ## Data coverage and limitations
 
 - The air loader finds 48 valid city-year observations across 18 cities for 2015–2019. Name matching maps 40 city-years across 13 cities into the place master; unmatched observations are not assigned to another place.
 - The pipeline derives 40 state-year air means from those matched city observations across 13 states. They summarize the available city sample; states without a covered city remain unscored.
-- State safety, health, and economy files were excluded because they matched generated placeholders. Those indicators are unavailable.
+- Safety uses NCRB Table 1A.3 for 2020–2022 (36 states/UTs). The 2022 rate is published; 2020 and 2021 rates are derived from reported totals using the 2022 projected population, so those two years are approximations.
+- Health uses SRS Bulletin 2022 infant mortality rates for 35 states/UTs.
+- Economy uses RBI NSDP per-capita constant-price series (2011–2024) and PLFS 2023-24 unemployment for ages 15+. Gujarat is missing NSDP for 2023–24 and Ladakh is absent from the NSDP table, so both remain unscored under the balanced 2023 composite.
 - The local rent file yields six city snapshots. Its observation dates and upstream version remain unverified. It is not a time series.
 - State air values are explicitly derived means of available city observations, not independent state measurements.
-- Fixed score bounds, place metadata, map geometry, and visual thresholds are configuration/reference data. They are not observed measurements. No composite score or composite projection is currently published. Air-only projections are shown only for places with at least five eligible observations; rent is never projected.
+- Fixed score bounds, place metadata, map geometry, and visual thresholds are configuration/reference data. They are not observed measurements. The composite is anchored at 2023, the latest year with multi-factor observations. Composite projections are currently withheld because trend eligibility requires every weighted factor to share the same observed years; air-only projections remain available when a place has at least five eligible observations. Rent is never projected.
 
 ## Run the dashboard
 

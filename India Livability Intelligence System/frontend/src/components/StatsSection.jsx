@@ -9,7 +9,7 @@ const STATS = [
   {
     value: DATA_COVERAGE.counts.factorRows,
     label: "Active factor rows",
-    detail: "Air observations and derived state means; rent is counted separately"
+    detail: "Air, safety, health, economic and rent observations; inherited city rows are counted"
   },
   {
     value: DATA_COVERAGE.availableFactors.length,
@@ -19,7 +19,9 @@ const STATS = [
   {
     value: DATA_COVERAGE.compositeAvailable ? "Available" : "Unavailable",
     label: "Composite index",
-    detail: "Safety, health, and economy inputs are not active"
+    detail: DATA_COVERAGE.compositeAvailable
+      ? "Weighted across observed factors; places missing a weighted factor stay unscored"
+      : "One or more weighted factors lack usable observations"
   }
 ];
 

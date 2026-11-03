@@ -5,42 +5,63 @@ export const DATA = {
     "sourceStatus": "local_pipeline_data",
     "availableFactors": [
       "air",
+      "safety",
+      "health",
+      "economy",
       "col"
     ],
-    "compositeAvailable": false,
-    "baselineYear": 2022,
-    "projectionEndYear": 2022,
+    "compositeAvailable": true,
+    "baselineYear": 2023,
+    "projectionEndYear": 2023,
     "years": [
       2015,
       2016,
       2017,
       2018,
       2019,
-      2022
+      2020,
+      2021,
+      2022,
+      2023
     ],
     "firstYearByFactor": {
       "air": 2015,
+      "safety": 2020,
+      "health": 2022,
+      "economy": 2023,
       "col": 2022
     },
     "lastYearByFactor": {
       "air": 2019,
+      "safety": 2022,
+      "health": 2022,
+      "economy": 2023,
       "col": 2022
     },
     "counts": {
       "places": 61,
       "states": 32,
       "cities": 29,
-      "factorRows": 80,
+      "factorRows": 320,
       "costSnapshots": 6,
-      "inheritedRows": 0,
+      "inheritedRows": 170,
       "imputedRows": 0,
       "airCityYears": 40,
       "airStateYears": 40,
       "factorRowsByFactor": {
         "air_quality": 80,
-        "cost_of_living": 6
+        "cost_of_living": 6,
+        "health": 61,
+        "per_capita_nsdp_constant": 57,
+        "safety": 183,
+        "unemployment_rate": 57
       },
-      "inheritedByFactor": {}
+      "inheritedByFactor": {
+        "health": 29,
+        "per_capita_nsdp_constant": 27,
+        "safety": 87,
+        "unemployment_rate": 27
+      }
     },
     "sourceFiles": [
       "data/processed/places.csv",
@@ -48,6 +69,10 @@ export const DATA = {
       "data/processed/factors_tidy.parquet",
       "data/raw/air_kaggle/city_day.csv",
       "data/raw/cost_of_living/House_Rent_Dataset.csv",
+      "data/raw/safety/ncrb_table_1a3_2020_2022.xlsx",
+      "data/raw/health/srs_bulletin_2022.pdf",
+      "data/raw/economy/rbi_nsdp_2025_table20.xlsx",
+      "data/raw/economy/plfs_2023_24_annual_report.pdf",
       "src/scoring/factors_config.yaml"
     ],
     "note": "Only observed input rows and explicitly identified aggregates are exported. Missing values are retained; composite scores remain unavailable when a positively weighted core factor lacks usable observations."
@@ -631,7 +656,7 @@ export const DATA = {
         600
       ],
       "level": "state",
-      "source": "No active input; former generated table quarantined",
+      "source": "NCRB Table 1A.3; local extraction unverified",
       "sourceId": "safety_ncrb",
       "unit": "per lakh",
       "trend": "eligible_with_break_flag"
@@ -647,7 +672,7 @@ export const DATA = {
         50
       ],
       "level": "state",
-      "source": "No active input; former generated table quarantined",
+      "source": "SRS Bulletin 2022 Table 1; local extraction unverified",
       "sourceId": "health_srs",
       "unit": "per 1,000 births",
       "trend": "eligible"
@@ -658,7 +683,7 @@ export const DATA = {
       "shortLabel": "Econ",
       "direction": "mixed",
       "level": "state",
-      "source": "No active input; former generated tables quarantined",
+      "source": "RBI NSDP Table 20 + MoSPI PLFS 2023-24; local extraction unverified",
       "trend": "eligible",
       "indicators": [
         {
@@ -746,6 +771,174 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-AP",
+      "year": 2020,
+      "air": null,
+      "safety": 449.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP",
+      "year": 2021,
+      "air": null,
+      "safety": 419.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP",
+      "year": 2022,
+      "air": null,
+      "safety": 368.2,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 131083.0,
+      "unemployment": 4.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIJ",
+      "year": 2020,
+      "air": null,
+      "safety": 449.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIJ",
+      "year": 2021,
+      "air": null,
+      "safety": 419.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIJ",
+      "year": 2022,
+      "air": null,
+      "safety": 368.2,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIJ",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 131083.0,
+      "unemployment": 4.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-AP-VIS",
       "year": 2018,
       "air": 50.43307246376811,
@@ -788,6 +981,174 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-AP-VIS",
+      "year": 2020,
+      "air": null,
+      "safety": 449.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIS",
+      "year": 2021,
+      "air": null,
+      "safety": 419.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIS",
+      "year": 2022,
+      "air": null,
+      "safety": 368.2,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AP-VIS",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 131083.0,
+      "unemployment": 4.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AR",
+      "year": 2020,
+      "air": null,
+      "safety": 161.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AR",
+      "year": 2021,
+      "air": null,
+      "safety": 196.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AR",
+      "year": 2022,
+      "air": null,
+      "safety": 178.0,
+      "health": 19.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 110766.0,
+      "unemployment": 6.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-AS",
       "year": 2019,
       "air": 57.8033855799373,
@@ -795,6 +1156,90 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS",
+      "year": 2020,
+      "air": null,
+      "safety": 342.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS",
+      "year": 2021,
+      "air": null,
+      "safety": 375.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS",
+      "year": 2022,
+      "air": null,
+      "safety": 194.2,
+      "health": 32.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 80089.0,
+      "unemployment": 3.9,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -830,6 +1275,90 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-AS-GUW",
+      "year": 2020,
+      "air": null,
+      "safety": 342.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS-GUW",
+      "year": 2021,
+      "air": null,
+      "safety": 375.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS-GUW",
+      "year": 2022,
+      "air": null,
+      "safety": 194.2,
+      "health": 32.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-AS-GUW",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 80089.0,
+      "unemployment": 3.9,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-BR",
       "year": 2016,
       "air": 134.0391364902507,
@@ -874,11 +1403,95 @@ export const DATA = {
     {
       "placeId": "IN-BR",
       "year": 2019,
-      "air": 104.36576923076925,
+      "air": 104.36576923076923,
       "safety": null,
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR",
+      "year": 2020,
+      "air": null,
+      "safety": 205.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR",
+      "year": 2021,
+      "air": null,
+      "safety": 224.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR",
+      "year": 2022,
+      "air": null,
+      "safety": 277.1,
+      "health": 26.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 33966.0,
+      "unemployment": 3.0,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -937,11 +1550,347 @@ export const DATA = {
     {
       "placeId": "IN-BR-PAT",
       "year": 2019,
-      "air": 104.36576923076925,
+      "air": 104.36576923076923,
       "safety": null,
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR-PAT",
+      "year": 2020,
+      "air": null,
+      "safety": 205.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR-PAT",
+      "year": 2021,
+      "air": null,
+      "safety": 224.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR-PAT",
+      "year": 2022,
+      "air": null,
+      "safety": 277.1,
+      "health": 26.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-BR-PAT",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 33966.0,
+      "unemployment": 3.0,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG",
+      "year": 2020,
+      "air": null,
+      "safety": 344.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG",
+      "year": 2021,
+      "air": null,
+      "safety": 369.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG",
+      "year": 2022,
+      "air": null,
+      "safety": 404.2,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 87681.0,
+      "unemployment": 2.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG-RAI",
+      "year": 2020,
+      "air": null,
+      "safety": 344.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG-RAI",
+      "year": 2021,
+      "air": null,
+      "safety": 369.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG-RAI",
+      "year": 2022,
+      "air": null,
+      "safety": 404.2,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CG-RAI",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 87681.0,
+      "unemployment": 2.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CH",
+      "year": 2020,
+      "air": null,
+      "safety": 266.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CH",
+      "year": 2021,
+      "air": null,
+      "safety": 245.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CH",
+      "year": 2022,
+      "air": null,
+      "safety": 299.1,
+      "health": 8.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-CH",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 275139.0,
+      "unemployment": 7.1,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -958,7 +1907,7 @@ export const DATA = {
     {
       "placeId": "IN-DL",
       "year": 2015,
-      "air": 117.34082191780824,
+      "air": 117.34082191780823,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1000,7 +1949,7 @@ export const DATA = {
     {
       "placeId": "IN-DL",
       "year": 2017,
-      "air": 125.09071625344352,
+      "air": 125.09071625344353,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1061,9 +2010,93 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-DL",
+      "year": 2020,
+      "air": null,
+      "safety": 1261.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL",
+      "year": 2021,
+      "air": null,
+      "safety": 1452.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL",
+      "year": 2022,
+      "air": null,
+      "safety": 1518.2,
+      "health": 12.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 271490.0,
+      "unemployment": 2.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-DL-DEL",
       "year": 2015,
-      "air": 117.34082191780824,
+      "air": 117.34082191780823,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1105,7 +2138,7 @@ export const DATA = {
     {
       "placeId": "IN-DL-DEL",
       "year": 2017,
-      "air": 125.09071625344352,
+      "air": 125.09071625344353,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1152,6 +2185,174 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL-DEL",
+      "year": 2020,
+      "air": null,
+      "safety": 1261.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL-DEL",
+      "year": 2021,
+      "air": null,
+      "safety": 1452.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL-DEL",
+      "year": 2022,
+      "air": null,
+      "safety": 1518.2,
+      "health": 12.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-DL-DEL",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 271490.0,
+      "unemployment": 2.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GA",
+      "year": 2020,
+      "air": null,
+      "safety": 278.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GA",
+      "year": 2021,
+      "air": null,
+      "safety": 190.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GA",
+      "year": 2022,
+      "air": null,
+      "safety": 234.5,
+      "health": 5.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GA",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 357611.0,
+      "unemployment": 8.5,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -1229,6 +2430,69 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-GJ",
+      "year": 2020,
+      "air": null,
+      "safety": 986.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ",
+      "year": 2021,
+      "air": null,
+      "safety": 1031.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ",
+      "year": 2022,
+      "air": null,
+      "safety": 738.9,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-GJ-AHM",
       "year": 2015,
       "air": 79.26254480286738,
@@ -1292,6 +2556,216 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-GJ-AHM",
+      "year": 2020,
+      "air": null,
+      "safety": 986.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ-AHM",
+      "year": 2021,
+      "air": null,
+      "safety": 1031.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ-AHM",
+      "year": 2022,
+      "air": null,
+      "safety": 738.9,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ-SUR",
+      "year": 2020,
+      "air": null,
+      "safety": 986.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ-SUR",
+      "year": 2021,
+      "air": null,
+      "safety": 1031.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-GJ-SUR",
+      "year": 2022,
+      "air": null,
+      "safety": 738.9,
+      "health": 20.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HP",
+      "year": 2020,
+      "air": null,
+      "safety": 277.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HP",
+      "year": 2021,
+      "air": null,
+      "safety": 253.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HP",
+      "year": 2022,
+      "air": null,
+      "safety": 256.0,
+      "health": 17.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HP",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 153887.0,
+      "unemployment": 5.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-HR",
       "year": 2017,
       "air": 159.0041782729805,
@@ -1315,7 +2789,7 @@ export const DATA = {
     {
       "placeId": "IN-HR",
       "year": 2018,
-      "air": 116.5809742120344,
+      "air": 116.58097421203439,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1355,6 +2829,174 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-HR",
+      "year": 2020,
+      "air": null,
+      "safety": 642.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR",
+      "year": 2021,
+      "air": null,
+      "safety": 688.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR",
+      "year": 2022,
+      "air": null,
+      "safety": 810.4,
+      "health": 26.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 182816.0,
+      "unemployment": 3.4,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-FAR",
+      "year": 2020,
+      "air": null,
+      "safety": 642.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-FAR",
+      "year": 2021,
+      "air": null,
+      "safety": 688.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-FAR",
+      "year": 2022,
+      "air": null,
+      "safety": 810.4,
+      "health": 26.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-FAR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 182816.0,
+      "unemployment": 3.4,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-HR-GUR",
       "year": 2017,
       "air": 159.0041782729805,
@@ -1378,7 +3020,7 @@ export const DATA = {
     {
       "placeId": "IN-HR-GUR",
       "year": 2018,
-      "air": 116.5809742120344,
+      "air": 116.58097421203439,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1404,6 +3046,342 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-GUR",
+      "year": 2020,
+      "air": null,
+      "safety": 642.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-GUR",
+      "year": 2021,
+      "air": null,
+      "safety": 688.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-GUR",
+      "year": 2022,
+      "air": null,
+      "safety": 810.4,
+      "health": 26.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-HR-GUR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 182816.0,
+      "unemployment": 3.4,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH",
+      "year": 2020,
+      "air": null,
+      "safety": 162.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH",
+      "year": 2021,
+      "air": null,
+      "safety": 155.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH",
+      "year": 2022,
+      "air": null,
+      "safety": 164.5,
+      "health": 25.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 64347.0,
+      "unemployment": 1.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH-DHN",
+      "year": 2020,
+      "air": null,
+      "safety": 162.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH-DHN",
+      "year": 2021,
+      "air": null,
+      "safety": 155.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH-DHN",
+      "year": 2022,
+      "air": null,
+      "safety": 164.5,
+      "health": 25.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JH-DHN",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 64347.0,
+      "unemployment": 1.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JK",
+      "year": 2020,
+      "air": null,
+      "safety": 213.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JK",
+      "year": 2021,
+      "air": null,
+      "safety": 233.9,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JK",
+      "year": 2022,
+      "air": null,
+      "safety": 223.1,
+      "health": 14.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-JK",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 75955.0,
+      "unemployment": 6.1,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -1420,7 +3398,7 @@ export const DATA = {
     {
       "placeId": "IN-KA",
       "year": 2015,
-      "air": 28.72524475524476,
+      "air": 28.725244755244756,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1441,7 +3419,7 @@ export const DATA = {
     {
       "placeId": "IN-KA",
       "year": 2016,
-      "air": 47.10969230769231,
+      "air": 47.109692307692306,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1523,9 +3501,93 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-KA",
+      "year": 2020,
+      "air": null,
+      "safety": 222.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA",
+      "year": 2021,
+      "air": null,
+      "safety": 242.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA",
+      "year": 2022,
+      "air": null,
+      "safety": 268.1,
+      "health": 15.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 191970.0,
+      "unemployment": 2.7,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-KA-BLR",
       "year": 2015,
-      "air": 28.72524475524476,
+      "air": 28.725244755244756,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1546,7 +3608,7 @@ export const DATA = {
     {
       "placeId": "IN-KA-BLR",
       "year": 2016,
-      "air": 47.10969230769231,
+      "air": 47.109692307692306,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1612,6 +3674,321 @@ export const DATA = {
       "air": 35.424767123287666,
       "safety": null,
       "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA-BLR",
+      "year": 2020,
+      "air": null,
+      "safety": 222.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA-BLR",
+      "year": 2021,
+      "air": null,
+      "safety": 242.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA-BLR",
+      "year": 2022,
+      "air": null,
+      "safety": 268.1,
+      "health": 15.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KA-BLR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 191970.0,
+      "unemployment": 2.7,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL",
+      "year": 2020,
+      "air": null,
+      "safety": 1554.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL",
+      "year": 2021,
+      "air": null,
+      "safety": 1471.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL",
+      "year": 2022,
+      "air": null,
+      "safety": 1274.8,
+      "health": 7.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 165587.0,
+      "unemployment": 7.2,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL-KOC",
+      "year": 2020,
+      "air": null,
+      "safety": 1554.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL-KOC",
+      "year": 2021,
+      "air": null,
+      "safety": 1471.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL-KOC",
+      "year": 2022,
+      "air": null,
+      "safety": 1274.8,
+      "health": 7.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-KL-KOC",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 165587.0,
+      "unemployment": 7.2,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-LA",
+      "year": 2020,
+      "air": null,
+      "safety": 134.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-LA",
+      "year": 2021,
+      "air": null,
+      "safety": 186.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-LA",
+      "year": 2022,
+      "air": null,
+      "safety": 159.9,
+      "health": 5.0,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -1649,6 +4026,90 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-MH",
+      "year": 2020,
+      "air": null,
+      "safety": 428.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH",
+      "year": 2021,
+      "air": null,
+      "safety": 430.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH",
+      "year": 2022,
+      "air": null,
+      "safety": 443.0,
+      "health": 13.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 166013.0,
+      "unemployment": 3.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-MH-MUM",
       "year": 2019,
       "air": 34.7368493150685,
@@ -1670,6 +4131,1182 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-MH-MUM",
+      "year": 2020,
+      "air": null,
+      "safety": 428.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-MUM",
+      "year": 2021,
+      "air": null,
+      "safety": 430.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-MUM",
+      "year": 2022,
+      "air": null,
+      "safety": 443.0,
+      "health": 13.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-MUM",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 166013.0,
+      "unemployment": 3.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-NAG",
+      "year": 2020,
+      "air": null,
+      "safety": 428.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-NAG",
+      "year": 2021,
+      "air": null,
+      "safety": 430.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-NAG",
+      "year": 2022,
+      "air": null,
+      "safety": 443.0,
+      "health": 13.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-NAG",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 166013.0,
+      "unemployment": 3.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-PUN",
+      "year": 2020,
+      "air": null,
+      "safety": 428.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-PUN",
+      "year": 2021,
+      "air": null,
+      "safety": 430.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-PUN",
+      "year": 2022,
+      "air": null,
+      "safety": 443.0,
+      "health": 13.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MH-PUN",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 166013.0,
+      "unemployment": 3.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-ML",
+      "year": 2020,
+      "air": null,
+      "safety": 112.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-ML",
+      "year": 2021,
+      "air": null,
+      "safety": 102.9,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-ML",
+      "year": 2022,
+      "air": null,
+      "safety": 109.0,
+      "health": 30.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-ML",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 78387.0,
+      "unemployment": 6.2,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MN",
+      "year": 2020,
+      "air": null,
+      "safety": 93.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MN",
+      "year": 2021,
+      "air": null,
+      "safety": 100.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MN",
+      "year": 2022,
+      "air": null,
+      "safety": 122.3,
+      "health": 3.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MN",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 61059.0,
+      "unemployment": 6.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP",
+      "year": 2020,
+      "air": null,
+      "safety": 498.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP",
+      "year": 2021,
+      "air": null,
+      "safety": 554.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP",
+      "year": 2022,
+      "air": null,
+      "safety": 569.3,
+      "health": 40.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 67301.0,
+      "unemployment": 1.0,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-BHO",
+      "year": 2020,
+      "air": null,
+      "safety": 498.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-BHO",
+      "year": 2021,
+      "air": null,
+      "safety": 554.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-BHO",
+      "year": 2022,
+      "air": null,
+      "safety": 569.3,
+      "health": 40.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-BHO",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 67301.0,
+      "unemployment": 1.0,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-IND",
+      "year": 2020,
+      "air": null,
+      "safety": 498.4,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-IND",
+      "year": 2021,
+      "air": null,
+      "safety": 554.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-IND",
+      "year": 2022,
+      "air": null,
+      "safety": 569.3,
+      "health": 40.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MP-IND",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 67301.0,
+      "unemployment": 1.0,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MZ",
+      "year": 2020,
+      "air": null,
+      "safety": 186.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MZ",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MZ",
+      "year": 2022,
+      "air": null,
+      "safety": 336.0,
+      "health": 11.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-MZ",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 151676.0,
+      "unemployment": 2.3,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-NL",
+      "year": 2020,
+      "air": null,
+      "safety": 68.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-NL",
+      "year": 2021,
+      "air": null,
+      "safety": 66.6,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-NL",
+      "year": 2022,
+      "air": null,
+      "safety": 71.8,
+      "health": 9.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-NL",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 77568.0,
+      "unemployment": 7.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD",
+      "year": 2020,
+      "air": null,
+      "safety": 291.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD",
+      "year": 2021,
+      "air": null,
+      "safety": 337.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD",
+      "year": 2022,
+      "air": null,
+      "safety": 386.7,
+      "health": 32.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 89705.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD-BHU",
+      "year": 2020,
+      "air": null,
+      "safety": 291.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD-BHU",
+      "year": 2021,
+      "air": null,
+      "safety": 337.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD-BHU",
+      "year": 2022,
+      "air": null,
+      "safety": 386.7,
+      "health": 32.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-OD-BHU",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 89705.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB",
+      "year": 2020,
+      "air": null,
+      "safety": 270.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB",
+      "year": 2021,
+      "air": null,
+      "safety": 240.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB",
+      "year": 2022,
+      "air": null,
+      "safety": 240.6,
+      "health": 16.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 130758.0,
+      "unemployment": 5.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB-LUD",
+      "year": 2020,
+      "air": null,
+      "safety": 270.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB-LUD",
+      "year": 2021,
+      "air": null,
+      "safety": 240.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB-LUD",
+      "year": 2022,
+      "air": null,
+      "safety": 240.6,
+      "health": 16.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-PB-LUD",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 130758.0,
+      "unemployment": 5.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-RJ",
       "year": 2018,
       "air": 61.34679452054795,
@@ -1712,6 +5349,90 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-RJ",
+      "year": 2020,
+      "air": null,
+      "safety": 323.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ",
+      "year": 2021,
+      "air": null,
+      "safety": 353.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ",
+      "year": 2022,
+      "air": null,
+      "safety": 388.8,
+      "health": 30.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 90414.0,
+      "unemployment": 4.2,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-RJ-JAI",
       "year": 2018,
       "air": 61.34679452054795,
@@ -1740,6 +5461,174 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ-JAI",
+      "year": 2020,
+      "air": null,
+      "safety": 323.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ-JAI",
+      "year": 2021,
+      "air": null,
+      "safety": 353.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ-JAI",
+      "year": 2022,
+      "air": null,
+      "safety": 388.8,
+      "health": 30.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-RJ-JAI",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 90414.0,
+      "unemployment": 4.2,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-SK",
+      "year": 2020,
+      "air": null,
+      "safety": 99.3,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-SK",
+      "year": 2021,
+      "air": null,
+      "safety": 107.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-SK",
+      "year": 2022,
+      "air": null,
+      "safety": 119.7,
+      "health": 5.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-SK",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 292339.0,
+      "unemployment": 2.3,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -1838,6 +5727,90 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-TG",
+      "year": 2020,
+      "air": null,
+      "safety": 388.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG",
+      "year": 2021,
+      "air": null,
+      "safety": 418.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG",
+      "year": 2022,
+      "air": null,
+      "safety": 436.9,
+      "health": 18.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 179105.0,
+      "unemployment": 4.8,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-TG-HYD",
       "year": 2016,
       "air": 53.41038011695906,
@@ -1908,6 +5881,90 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG-HYD",
+      "year": 2020,
+      "air": null,
+      "safety": 388.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG-HYD",
+      "year": 2021,
+      "air": null,
+      "safety": 418.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG-HYD",
+      "year": 2022,
+      "air": null,
+      "safety": 436.9,
+      "health": 18.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TG-HYD",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 179105.0,
+      "unemployment": 4.8,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -2027,6 +6084,90 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-TN",
+      "year": 2020,
+      "air": null,
+      "safety": 1796.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN",
+      "year": 2021,
+      "air": null,
+      "safety": 986.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN",
+      "year": 2022,
+      "air": null,
+      "safety": 617.2,
+      "health": 11.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 178496.0,
+      "unemployment": 3.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-TN-CHE",
       "year": 2015,
       "air": 60.72362989323843,
@@ -2132,6 +6273,174 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-TN-CHE",
+      "year": 2020,
+      "air": null,
+      "safety": 1796.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN-CHE",
+      "year": 2021,
+      "air": null,
+      "safety": 986.5,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN-CHE",
+      "year": 2022,
+      "air": null,
+      "safety": 617.2,
+      "health": 11.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TN-CHE",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 178496.0,
+      "unemployment": 3.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TR",
+      "year": 2020,
+      "air": null,
+      "safety": 112.9,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TR",
+      "year": 2021,
+      "air": null,
+      "safety": 116.2,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TR",
+      "year": 2022,
+      "air": null,
+      "safety": 110.1,
+      "health": 17.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-TR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 98606.0,
+      "unemployment": 1.7,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-UP",
       "year": 2015,
       "air": 100.51884615384616,
@@ -2155,7 +6464,7 @@ export const DATA = {
     {
       "placeId": "IN-UP",
       "year": 2016,
-      "air": 124.04069565217392,
+      "air": 124.04069565217391,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2197,7 +6506,7 @@ export const DATA = {
     {
       "placeId": "IN-UP",
       "year": 2018,
-      "air": 119.24553424657536,
+      "air": 119.24553424657535,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2237,6 +6546,258 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-UP",
+      "year": 2020,
+      "air": null,
+      "safety": 281.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP",
+      "year": 2022,
+      "air": null,
+      "safety": 322.0,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 51898.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-AGR",
+      "year": 2020,
+      "air": null,
+      "safety": 281.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-AGR",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-AGR",
+      "year": 2022,
+      "air": null,
+      "safety": 322.0,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-AGR",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 51898.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-KAN",
+      "year": 2020,
+      "air": null,
+      "safety": 281.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-KAN",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-KAN",
+      "year": 2022,
+      "air": null,
+      "safety": 322.0,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-KAN",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 51898.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-UP-LKO",
       "year": 2015,
       "air": 100.51884615384616,
@@ -2260,7 +6821,7 @@ export const DATA = {
     {
       "placeId": "IN-UP-LKO",
       "year": 2016,
-      "air": 124.04069565217392,
+      "air": 124.04069565217391,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2302,7 +6863,7 @@ export const DATA = {
     {
       "placeId": "IN-UP-LKO",
       "year": 2018,
-      "air": 119.24553424657536,
+      "air": 119.24553424657535,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2328,6 +6889,258 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-LKO",
+      "year": 2020,
+      "air": null,
+      "safety": 281.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-LKO",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-LKO",
+      "year": 2022,
+      "air": null,
+      "safety": 322.0,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-LKO",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 51898.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-VNS",
+      "year": 2020,
+      "air": null,
+      "safety": 281.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-VNS",
+      "year": 2021,
+      "air": null,
+      "safety": 259.8,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-VNS",
+      "year": 2022,
+      "air": null,
+      "safety": 322.0,
+      "health": 38.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UP-VNS",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 51898.0,
+      "unemployment": 3.1,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UT",
+      "year": 2020,
+      "air": null,
+      "safety": 496.0,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UT",
+      "year": 2021,
+      "air": null,
+      "safety": 301.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UT",
+      "year": 2022,
+      "air": null,
+      "safety": 299.4,
+      "health": 21.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-UT",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 150931.0,
+      "unemployment": 4.3,
       "seriesBreak": {
         "air": false,
         "safety": false,
@@ -2363,6 +7176,174 @@ export const DATA = {
       }
     },
     {
+      "placeId": "IN-WB",
+      "year": 2020,
+      "air": null,
+      "safety": 184.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB",
+      "year": 2021,
+      "air": null,
+      "safety": 184.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB",
+      "year": 2022,
+      "air": null,
+      "safety": 182.8,
+      "health": 17.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 77933.0,
+      "unemployment": 2.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-HAO",
+      "year": 2020,
+      "air": null,
+      "safety": 184.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-HAO",
+      "year": 2021,
+      "air": null,
+      "safety": 184.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-HAO",
+      "year": 2022,
+      "air": null,
+      "safety": 182.8,
+      "health": 17.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-HAO",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 77933.0,
+      "unemployment": 2.5,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
       "placeId": "IN-WB-KOL",
       "year": 2019,
       "air": 68.31945205479451,
@@ -2370,6 +7351,90 @@ export const DATA = {
       "health": null,
       "nsdp": null,
       "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-KOL",
+      "year": 2020,
+      "air": null,
+      "safety": 184.7,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-KOL",
+      "year": 2021,
+      "air": null,
+      "safety": 184.1,
+      "health": null,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-KOL",
+      "year": 2022,
+      "air": null,
+      "safety": 182.8,
+      "health": 17.0,
+      "nsdp": null,
+      "unemployment": null,
+      "seriesBreak": {
+        "air": false,
+        "safety": false,
+        "health": false,
+        "economy": false
+      },
+      "gapFlags": {
+        "air": "",
+        "safety": "",
+        "health": "",
+        "economy": ""
+      }
+    },
+    {
+      "placeId": "IN-WB-KOL",
+      "year": 2023,
+      "air": null,
+      "safety": null,
+      "health": null,
+      "nsdp": 77933.0,
+      "unemployment": 2.5,
       "seriesBreak": {
         "air": false,
         "safety": false,

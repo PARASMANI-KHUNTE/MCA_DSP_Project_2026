@@ -13,7 +13,6 @@ import {
 import {
   DATA_COVERAGE,
   FACTOR_DEFS,
-  OBSERVED_YEARS,
   getScoreColor
 } from "../services/scoringService";
 
@@ -143,9 +142,9 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
       {
         title: "Statistically flagged trends",
         stat: `${significant} of ${stats.trended} at p < 0.05`,
-        summary: `${stats.improving} places are flagged improving and ${stats.declining} declining using composite OLS over ${OBSERVED_YEARS[0]}–${OBSERVED_YEARS[OBSERVED_YEARS.length - 1]} as-of scores.`,
+        summary: `${stats.improving} places are flagged improving and ${stats.declining} declining using OLS over years where every weighted factor is observed.`,
         interpretation:
-          "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level. Places without enough yearly points remain labelled insufficient data rather than receiving a synthetic projection."
+          "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level and at least five eligible yearly points exist. Mixed-coverage composites therefore remain insufficient data rather than receiving a synthetic projection."
       },
       {
         title: "Indicator coverage across places",
@@ -191,38 +190,38 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
   const provenance = [
     {
       label: "Air Quality (PM2.5)",
-      source: "CPCB National Ambient Monitoring",
-      latest: DATA_COVERAGE.lastYearByFactor?.air ?? 2024,
-      coverage: "City-level monitoring series 2015–2024.",
-      note: "Continuous sensor observations."
+      source: "Local Kaggle city_day PM2.5",
+      latest: DATA_COVERAGE.lastYearByFactor?.air ?? null,
+      coverage: "City-level series 2015–2019 for matched cities; state means derived from city observations.",
+      note: "Upstream publisher version and license are unverified."
     },
     {
       label: "Public Safety",
-      source: "NCRB Crime in India",
-      latest: DATA_COVERAGE.lastYearByFactor?.safety ?? 2022,
-      coverage: "State and UT annual IPC crime rates.",
-      note: "Cognizable crime rate per 100k population."
+      source: "NCRB Crime in India, Table 1A.3",
+      latest: DATA_COVERAGE.lastYearByFactor?.safety ?? null,
+      coverage: "State and UT annual cognizable crime rates, 2020–2022.",
+      note: "Locally extracted; 2020–21 rates use the 2022 projected population."
     },
     {
       label: "Healthcare (IMR)",
-      source: "SRS Bulletin / RGI",
-      latest: DATA_COVERAGE.lastYearByFactor?.health ?? 2020,
-      coverage: "State infant mortality rate series.",
-      note: "Inverted scale: lower infant mortality yields higher score."
+      source: "SRS Bulletin 2022 / RGI",
+      latest: DATA_COVERAGE.lastYearByFactor?.health ?? null,
+      coverage: "State infant mortality rates for 2022.",
+      note: "Locally extracted; inverted scale so lower IMR yields a higher score."
     },
     {
       label: "Economy & Employment",
-      source: "RBI NSDP & MoSPI PLFS",
-      latest: DATA_COVERAGE.lastYearByFactor?.economy ?? 2022,
-      coverage: "Per-capita NSDP and employment ratios.",
-      note: "Constant price economic output per capita."
+      source: "RBI NSDP Table 20 & MoSPI PLFS 2023-24",
+      latest: DATA_COVERAGE.lastYearByFactor?.economy ?? null,
+      coverage: "Constant-price per-capita NSDP (2011–2024) and 2023 unemployment (15+).",
+      note: "Locally extracted; economy scores require both indicators in the same year."
     },
     {
       label: "Housing Affordability",
-      source: "City Snapshot Data",
-      latest: 2022,
-      coverage: "Sample rent snapshot across 6 metros.",
-      note: "A single 2022 rent snapshot for six cities; it is never projected."
+      source: "Kaggle house-rent snapshot",
+      latest: DATA_COVERAGE.lastYearByFactor?.col ?? null,
+      coverage: "Rent snapshot across 6 metros.",
+      note: "A single observed snapshot for six cities; it is never projected."
     }
   ];
 
@@ -234,12 +233,16 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
       .filter(([key, weight]) => Number(weight) > 0 && DATA_COVERAGE.availableFactors?.includes(key))
       .map(([key]) => key);
     const validRanked = rankedPlaces.filter(place => Number.isFinite(place.overallScore));
-    const factorNames = { air: "Air quality", col: "Rent affordability" };
+    const factorNames = { air: "Air quality", safety: "Public safety", health: "Healthcare", economy: "Economy & jobs", col: "Rent affordability" };
     const factorRows = DATA_COVERAGE.counts?.factorRowsByFactor || {};
     const coverage = (DATA_COVERAGE.availableFactors || []).map(key => ({
       key,
       name: factorNames[key] || FACTOR_DEFS[key]?.label || key,
-      rows: key === "air" ? DATA_COVERAGE.counts?.airCityYears || 0 : factorRows[key === "col" ? "cost_of_living" : key] || 0,
+      rows: key === "air"
+        ? DATA_COVERAGE.counts?.airCityYears || 0
+        : key === "economy"
+          ? (factorRows.per_capita_nsdp_constant || 0) + (factorRows.unemployment_rate || 0)
+          : factorRows[key === "col" ? "cost_of_living" : key] || 0,
       first: DATA_COVERAGE.firstYearByFactor?.[key] ?? null,
       last: DATA_COVERAGE.lastYearByFactor?.[key] ?? null
     }));
@@ -252,7 +255,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-[#111111] sm:text-3xl">Available results and limits</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#555555]">
-            The current inputs support factor-specific rankings only. Air and rent use different places and periods, so they are kept separate. Upstream values and reuse terms have not been independently verified.
+            The current view does not have complete multi-factor coverage for the selected weights. Factor-specific results are shown instead. Upstream values and reuse terms have not been independently verified.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {coverage.map(item => (
@@ -276,7 +279,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
         </div>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-950">
-          Safety, health, and economy are not scored because their former local tables were identified as generated placeholders and quarantined. No composite ranking, cross-factor correlation, or composite trend is reported here.
+          At least one weighted factor lacks usable observations for this view. The preview above reports active factor coverage without substituting synthetic values.
         </div>
       </div>
     );

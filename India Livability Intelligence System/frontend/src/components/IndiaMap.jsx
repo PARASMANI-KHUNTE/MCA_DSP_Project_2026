@@ -644,8 +644,12 @@ export default function IndiaMap({
       {/* Projection or Factor Notice */}
       {year !== (DATA_COVERAGE.lastYearByFactor?.[activeFactor] ?? BASELINE_YEAR) && (
         <div className="pointer-events-none absolute left-2.5 top-14 z-10 rounded-lg border border-[#E5E5E5] bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-[#B51F3B] shadow-sm backdrop-blur sm:left-3">
-          {DATA_COVERAGE.compositeAvailable && year > BASELINE_YEAR
-            ? `OLS projection · ${year}`
+          {DATA_COVERAGE.compositeAvailable &&
+          colorMode === "overall" &&
+          year > BASELINE_YEAR
+            ? places.some(place => Number.isFinite(place.overallScore))
+              ? `OLS projection · ${year}`
+              : `No eligible projection · latest observations ≤ ${year}`
             : `Latest ${FACTOR_LABELS[activeFactor] || "factor"} observation ≤ ${year}`}
         </div>
       )}

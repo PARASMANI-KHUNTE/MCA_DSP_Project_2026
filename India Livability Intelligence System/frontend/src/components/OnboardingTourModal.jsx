@@ -17,8 +17,8 @@ const TOUR_STEPS = [
     subtitle: "A local data preview with clear coverage limits",
     icon: Compass,
     description:
-      "The active files provide local air observations and a rent snapshot. Their exact publisher versions and reuse terms have not been independently confirmed. Safety, health, and economy tables were quarantined as generated placeholders.",
-    takeaway: "Use the separate air or rent ranking as an exploratory view; the current data cannot support a composite livability index.",
+      "The active files provide local air, rent, NCRB safety, SRS health, RBI NSDP and PLFS observations. Their exact publisher versions and reuse terms have not been independently confirmed. Generated placeholder tables remain quarantined.",
+    takeaway: "Use the 2023 balanced view for the full composite, and treat earlier years as factor-specific snapshots with mixed coverage.",
     highlights: [
       `${DATA_COVERAGE.counts.states} states/UTs and ${DATA_COVERAGE.counts.cities} cities are listed; observations cover only a subset`,
       "Air observations cover 2015–2019 for matched cities and derived state means",
@@ -30,8 +30,8 @@ const TOUR_STEPS = [
     subtitle: "Choose an available factor ranking",
     icon: Sliders,
     description:
-      "Select air quality or rent affordability. Factors without active observations are disabled. Combining factors with different years or populations can limit what places are comparable.",
-    takeaway: "The current presets choose one observed factor at a time.",
+      "Select the balanced composite or a persona preset. Factors without active observations are disabled. Combining factors with different years or populations can limit what places are comparable.",
+    takeaway: "The balanced preset is now the default; single-factor presets remain available for focused rankings.",
     highlights: [
       "Air quality: locally supplied PM2.5 series · upstream source unverified",
       "Rent affordability: six-city local snapshot · upstream source unverified",

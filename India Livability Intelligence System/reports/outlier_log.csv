@@ -1981,3 +1981,18 @@ air_kaggle_daily_audit,28631,,,,Visakhapatnam,,2018-01-14,pm25,199.94,,retained_
 air_kaggle_daily_audit,28929,,,,Visakhapatnam,,2018-11-08,pm25,198.38,,retained_pending_review
 air_kaggle_daily_audit,28996,,,,Visakhapatnam,,2019-01-14,pm25,203.05,,retained_pending_review
 air_kaggle_daily_audit,29361,,,,Visakhapatnam,,2020-01-14,pm25,177.2,,retained_pending_review
+safety,18,,,Gujarat,,2020.0,,crime_rate_per_lakh,986.4,,retained_pending_review
+safety,19,,,Gujarat,,2021.0,,crime_rate_per_lakh,1031.6,,retained_pending_review
+safety,23,,,Haryana,,2022.0,,crime_rate_per_lakh,810.4,,retained_pending_review
+safety,33,,,Kerala,,2020.0,,crime_rate_per_lakh,1554.7,,retained_pending_review
+safety,34,,,Kerala,,2021.0,,crime_rate_per_lakh,1471.3,,retained_pending_review
+safety,35,,,Kerala,,2022.0,,crime_rate_per_lakh,1274.8,,retained_pending_review
+safety,66,,,Tamil Nadu,,2020.0,,crime_rate_per_lakh,1796.0,,retained_pending_review
+safety,67,,,Tamil Nadu,,2021.0,,crime_rate_per_lakh,986.5,,retained_pending_review
+safety,93,,,Delhi,,2020.0,,crime_rate_per_lakh,1261.0,,retained_pending_review
+safety,94,,,Delhi,,2021.0,,crime_rate_per_lakh,1452.1,,retained_pending_review
+safety,95,,,Delhi,,2022.0,,crime_rate_per_lakh,1518.2,,retained_pending_review
+economy,5,,,Chandigarh,,2023.0,,per_capita_nsdp_constant,275139.0,,retained_pending_review
+economy,7,,,Delhi,,2023.0,,per_capita_nsdp_constant,271490.0,,retained_pending_review
+economy,8,,,Goa,,2023.0,,per_capita_nsdp_constant,357611.0,,retained_pending_review
+economy,25,,,Sikkim,,2023.0,,per_capita_nsdp_constant,292339.0,,retained_pending_review

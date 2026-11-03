@@ -34,6 +34,7 @@ data/interim/
 
 # Processed data (commit small ones; gitignore large parquet)
 data/processed/*.parquet
+data/processed/versions/
 
 # Environment variables / secrets
 .env

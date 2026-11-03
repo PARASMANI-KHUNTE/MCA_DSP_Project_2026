@@ -18,9 +18,9 @@ import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR, getScoreColor, getT
 
 const FACTOR_CARDS = [
   { key: "air", label: "Air Quality", source: "Local PM2.5 input · source unverified", icon: Wind, color: "#0284c7" },
-  { key: "safety", label: "Public Safety", source: "Unavailable · former placeholder quarantined", icon: ShieldAlert, color: "#e11d48" },
-  { key: "health", label: "Healthcare", source: "Unavailable · former placeholder quarantined", icon: HeartPulse, color: "#16a34a" },
-  { key: "economy", label: "Economy", source: "Unavailable · former placeholders quarantined", icon: TrendingUp, color: "#d97706" },
+  { key: "safety", label: "Public Safety", source: "NCRB Table 1A.3 · local extraction unverified", icon: ShieldAlert, color: "#e11d48" },
+  { key: "health", label: "Healthcare", source: "SRS Bulletin 2022 · local extraction unverified", icon: HeartPulse, color: "#16a34a" },
+  { key: "economy", label: "Economy", source: "RBI NSDP + PLFS 2023-24 · local extraction unverified", icon: TrendingUp, color: "#d97706" },
   { key: "col", label: "Cost of Living", source: "Local rent snapshot · source unverified", icon: Coins, color: "#9333ea" }
 ];
 

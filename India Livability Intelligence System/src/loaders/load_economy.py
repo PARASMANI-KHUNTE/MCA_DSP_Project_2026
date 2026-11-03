@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pandas as pd
 
+_YEAR_RE = re.compile(r"^(?:19|20)\d{2}(?:-\d{2,4})?$")
+
 from src.utils.constants import RAW_ECONOMY
 from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import (
@@ -35,6 +37,105 @@ logger = logging.getLogger(__name__)
 
 
 # ── RBI NSDP loader ─────────────────────────────────────────────────────────
+
+def _parse_rbi_nsdp_file(path: Path) -> pd.DataFrame:
+    """Parse the RBI Handbook Table 20 layout (multi-sheet, state × FY).
+
+    The published workbook splits the series across two sheets (2011-12 to
+    2016-17 and 2017-18 to 2024-25). Each sheet has a title block, a state
+    label column that is not always column 0, and a separate financial-year
+    header row.
+    """
+    if path.suffix.lower() in (".xls", ".xlsx"):
+        sheets = pd.read_excel(path, sheet_name=None, header=None, dtype=str)
+    else:
+        sheets = {"csv": pd.read_csv(path, header=None, dtype=str)}
+
+    records: list[dict] = []
+    for sheet_name, raw in sheets.items():
+        header_idx = None
+        header: list[str] = []
+        year_cols: dict[int, int] = {}
+        data_start = 0
+
+        for index in range(min(20, len(raw))):
+            cells = [
+                str(value).strip() for value in raw.iloc[index].tolist()
+                if pd.notna(value)
+            ]
+            if not any("state" in cell.lower() for cell in cells):
+                continue
+
+            header = [
+                str(value).strip() if pd.notna(value) else ""
+                for value in raw.iloc[index].tolist()
+            ]
+            same_row_years = {
+                column: int(cell[:4])
+                for column, cell in enumerate(header)
+                if _YEAR_RE.match(cell)
+            }
+            if same_row_years:
+                year_cols = same_row_years
+                data_start = index + 1
+            elif index + 1 < len(raw):
+                next_row = [
+                    str(value).strip() if pd.notna(value) else ""
+                    for value in raw.iloc[index + 1].tolist()
+                ]
+                year_cols = {
+                    column: int(cell[:4])
+                    for column, cell in enumerate(next_row)
+                    if _YEAR_RE.match(cell)
+                }
+                data_start = index + 2
+
+            if year_cols:
+                header_idx = index
+                break
+
+        if header_idx is None or not year_cols:
+            logger.warning("Could not parse RBI NSDP sheet '%s' in %s", sheet_name, path.name)
+            continue
+
+        state_col = next(
+            (i for i, cell in enumerate(header) if "state" in cell.lower()), None
+        )
+        if state_col is None:
+            continue
+
+        for row_index in range(data_start, len(raw)):
+            row = raw.iloc[row_index]
+            raw_state = row.iloc[state_col]
+            if pd.isna(raw_state):
+                continue
+            state_name = re.sub(r"\*+$", "", str(raw_state).strip()).strip()
+            lowered = state_name.lower()
+            if (
+                not state_name
+                or state_name.startswith("-")
+                or state_name.startswith("*")
+                or lowered.startswith("source")
+                or lowered.startswith("note")
+            ):
+                continue
+
+            for column, year in year_cols.items():
+                raw_value = str(row.iloc[column]).replace(",", "").strip()
+                value = pd.to_numeric(raw_value, errors="coerce")
+                if pd.isna(value):
+                    continue
+                records.append({
+                    "state_name": state_name,
+                    "year": year,
+                    "per_capita_nsdp_constant": float(value),
+                })
+
+    if not records:
+        return pd.DataFrame()
+    logger.info("Parsed RBI NSDP workbook: %d state-years from %s.", len(records), path.name)
+    return pd.DataFrame(records)
+
 
 def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
     """
@@ -58,6 +159,15 @@ def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
     frames = []
     for path in files:
         logger.info("Loading RBI NSDP: %s", path.name)
+        try:
+            published = _parse_rbi_nsdp_file(path)
+        except Exception as exc:
+            logger.error("Failed to parse published layout in %s: %s", path.name, exc)
+            published = pd.DataFrame()
+        if not published.empty:
+            frames.append(published)
+            continue
+
         try:
             df = pd.read_excel(path, dtype=str) if path.suffix.lower() in (".xls", ".xlsx") \
                 else pd.read_csv(path, dtype=str)
@@ -118,11 +228,11 @@ def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         return pd.DataFrame()
 
     combined = pd.concat(frames, ignore_index=True)
+    combined = combined[
+        ~combined["state_name"].str.strip().str.lower().isin(["total", "india", "all india"])
+    ].copy()
     alias_map = load_alias_map()
     combined = apply_name_standardization(combined, "state_name", alias_map)
-    combined = combined[
-        ~combined["state_name"].str.lower().isin(["total", "india", "all india"])
-    ].copy()
     combined = combined.drop_duplicates(subset=["state_name", "year"], keep="last")
     combined = flag_outliers(combined, "per_capita_nsdp_constant", domain_lo=0.0)
 
@@ -131,6 +241,60 @@ def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
 
 
 # ── MoSPI PLFS loader ───────────────────────────────────────────────────────
+
+def _extract_plfs_pdf(path: Path) -> pd.DataFrame:
+    """Extract state unemployment rates (age 15+, person, rural+urban).
+
+    PLFS Annual Reports publish Table 18 as a text table. The person column
+    for rural+urban is the last value on each state line. The table for
+    "15 years and above" sits next to the "15-59 years" table, so the page
+    is located by its exact title rather than by a fixed page number.
+    """
+    try:
+        import pdfplumber
+    except ImportError:
+        logger.error("pdfplumber is required to read %s", path.name)
+        return pd.DataFrame()
+
+    with pdfplumber.open(path) as pdf:
+        total_pages = len(pdf.pages)
+        preferred = [i for i in range(120, min(170, total_pages))]
+        fallback = [i for i in range(total_pages) if i not in preferred]
+        page_text = None
+        for page_index in preferred + fallback:
+            text = pdf.pages[page_index].extract_text() or ""
+            if "Table (18)" in text and "age group: 15 years and above" in text:
+                page_text = text
+                break
+
+    if page_text is None:
+        logger.warning("No PLFS Table 18 (15+) found in %s", path.name)
+        return pd.DataFrame()
+
+    number = r"\d+(?:\.\d+)?"
+    pattern = re.compile(r"^(.+?)\s+((?:" + number + r"\s+)*" + number + r")$")
+    records: list[dict] = []
+    for line in page_text.splitlines():
+        match = pattern.match(line.strip())
+        if not match:
+            continue
+        state_name = match.group(1).strip()
+        values = [float(value) for value in match.group(2).split()]
+        if not values:
+            continue
+        records.append({
+            "state_name": state_name,
+            "year": 2023,
+            "unemployment_rate": values[-1],
+            "period_type": "survey",
+        })
+
+    if not records:
+        logger.warning("No PLFS unemployment rows extracted from %s", path.name)
+        return pd.DataFrame()
+    logger.info("Extracted %d PLFS unemployment rows from %s.", len(records), path.name)
+    return pd.DataFrame(records)
+
 
 def load_plfs_unemployment(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
     """
@@ -151,19 +315,18 @@ def load_plfs_unemployment(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         and not is_known_generated_source(f)
     )
 
+    frames = []
     if not files:
         pdfs = [f for f in raw_dir.glob("*.pdf") if "plfs" in f.name.lower()]
-        if pdfs:
-            logger.warning(
-                "%d PLFS PDF(s) found — extract state unemployment tables manually "
-                "using pdfplumber/camelot and save as CSV. Files: %s",
-                len(pdfs), [p.name for p in pdfs],
-            )
-        else:
+        if not pdfs:
             logger.error("No PLFS files found in %s", raw_dir)
-        return pd.DataFrame()
+            return pd.DataFrame()
+        for path in sorted(pdfs):
+            logger.info("Loading PLFS PDF: %s", path.name)
+            extracted = _extract_plfs_pdf(path)
+            if not extracted.empty:
+                frames.append(extracted)
 
-    frames = []
     for path in files:
         logger.info("Loading PLFS: %s", path.name)
         try:
@@ -209,11 +372,11 @@ def load_plfs_unemployment(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         return pd.DataFrame()
 
     combined = pd.concat(frames, ignore_index=True)
+    combined = combined[
+        ~combined["state_name"].str.strip().str.lower().isin(["total", "india", "all india"])
+    ].copy()
     alias_map = load_alias_map()
     combined = apply_name_standardization(combined, "state_name", alias_map)
-    combined = combined[
-        ~combined["state_name"].str.lower().isin(["total", "india", "all india"])
-    ].copy()
     combined = combined.drop_duplicates(subset=["state_name", "year"], keep="last")
     combined = flag_outliers(combined, "unemployment_rate", domain_lo=0.0, domain_hi=100.0)
 

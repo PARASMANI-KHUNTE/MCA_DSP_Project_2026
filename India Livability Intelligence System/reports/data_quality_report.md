@@ -1,16 +1,12 @@
 # Data Quality Report
 
-**Rows in tidy table:** 86
+**Rows in tidy table:** 444
 
-**Factors present:** ['air_quality', 'cost_of_living']
+**Factors present:** ['air_quality', 'cost_of_living', 'health', 'per_capita_nsdp_constant', 'safety', 'unemployment_rate']
 
-**Places covered:** 26
+**Places covered:** 61
 
 **Imputed values:** 0
-
-## Composite score availability
-
-A complete composite cannot be calculated from the active inputs. Missing core indicators: health, per_capita_nsdp_constant, safety, unemployment_rate.
 
 ## Structural validation: PASSED
 

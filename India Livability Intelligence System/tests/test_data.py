@@ -121,7 +121,15 @@ class TestCoverage:
     def test_active_factor_rows_use_only_available_non_placeholder_factors(self):
         tidy   = _load_tidy()
         assert not tidy.empty, "No active factor rows are available."
-        assert set(tidy["factor"].dropna().unique()) <= {"air_quality", "cost_of_living"}
+        allowed = {
+            "air_quality",
+            "cost_of_living",
+            "safety",
+            "health",
+            "per_capita_nsdp_constant",
+            "unemployment_rate",
+        }
+        assert set(tidy["factor"].dropna().unique()) <= allowed
 
     def test_air_quality_cities_have_data(self):
         tidy = _load_tidy()

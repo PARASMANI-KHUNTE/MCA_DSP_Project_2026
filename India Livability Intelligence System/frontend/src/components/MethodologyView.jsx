@@ -5,7 +5,7 @@ import { DATA_COVERAGE } from "../services/scoringService";
 const PIPELINE = [
   {
     title: "Ingest",
-    body: "The pipeline loads active local air and rent inputs, standardizes place names, and retains missing observations. Their upstream values and licenses remain unverified."
+    body: "The pipeline loads local air, rent, NCRB safety, SRS health, RBI NSDP and PLFS inputs, standardizes place names, and retains missing observations. Their upstream values and licenses remain unverified."
   },
   {
     title: "Normalize",
@@ -13,11 +13,11 @@ const PIPELINE = [
   },
   {
     title: "Weight",
-    body: "Weights combine only factors with observations. Currently the interface can rank air and rent separately; a complete multi-factor index is unavailable."
+    body: "Weights combine only factors with observations. The 2023 view supports a full five-factor composite; earlier years expose each factor at its latest observation at or before that year."
   },
   {
     title: "Project",
-    body: "An air-factor OLS trend is shown only for places with at least five eligible observations. Rent is a snapshot and is never projected."
+    body: "Projections appear only when every weighted factor has at least five directly observed years. Mixed pillar coverage currently disables composite projections; air-only views can still project. Rent is a snapshot and is never projected."
   }
 ];
 
@@ -48,7 +48,7 @@ const LIMITATIONS = [
   },
   {
     title: "Tier colors are score bands",
-    body: "The current map uses available factor scores. It does not present an unavailable composite index or old cluster assignments as current findings."
+    body: "The map colors by the live weighted score. Places missing a weighted factor remain unscored rather than receiving a synthetic value."
   }
 ];
 

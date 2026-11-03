@@ -15,6 +15,7 @@ Key data decisions (M3.6):
 """
 
 import logging
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -78,9 +79,113 @@ def _compute_crime_rate(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+_YEAR_RE = re.compile(r"^(?:19|20)\d{2}$")
+
+
+def _parse_wide_ncrb(path: Path) -> pd.DataFrame | None:
+    """Parse the NCRB Table 1A.3 layout (states × year columns).
+
+    The published table gives absolute IPC+SLL totals for 2020–2022, one
+    2022 projected population column (in lakhs), and the published 2022 rate.
+    Rates for 2020 and 2021 are derived as ``total / population_lakh`` using
+    the same 2022 projected population; they are not published directly.
+    """
+    if path.suffix.lower() in (".xls", ".xlsx"):
+        raw = pd.read_excel(path, header=None, dtype=str)
+    else:
+        raw = pd.read_csv(path, header=None, dtype=str)
+
+    header_idx = None
+    header: list[str] = []
+    for index in range(min(15, len(raw))):
+        cells = [str(value).strip() for value in raw.iloc[index].tolist() if pd.notna(value)]
+        if any("state" in cell.lower() for cell in cells) and any(
+            _YEAR_RE.match(cell) for cell in cells
+        ):
+            header_idx = index
+            header = [
+                str(value).strip() if pd.notna(value) else ""
+                for value in raw.iloc[index].tolist()
+            ]
+            break
+
+    if header_idx is None:
+        return None
+
+    state_col = next(
+        (i for i, cell in enumerate(header) if "state" in cell.lower()), None
+    )
+    year_cols = {
+        i: int(cell) for i, cell in enumerate(header) if _YEAR_RE.match(cell)
+    }
+    population_col = next(
+        (i for i, cell in enumerate(header) if "population" in cell.lower()), None
+    )
+    rate_col = next(
+        (
+            i for i, cell in enumerate(header)
+            if "rate" in cell.lower() and ("crime" in cell.lower() or "cognizable" in cell.lower())
+        ),
+        None,
+    )
+    if state_col is None or not year_cols:
+        return None
+
+    records: list[dict] = []
+    for row_index in range(header_idx + 1, len(raw)):
+        row = raw.iloc[row_index]
+        raw_state = row.iloc[state_col]
+        if pd.isna(raw_state):
+            continue
+        state_name = str(raw_state).strip()
+        if not state_name or state_name.upper().endswith(":") or state_name.lower().startswith("total"):
+            continue
+
+        totals = {
+            year: pd.to_numeric(row.iloc[column], errors="coerce")
+            for column, year in year_cols.items()
+        }
+        if all(pd.isna(value) for value in totals.values()):
+            continue
+
+        population_lakh = (
+            pd.to_numeric(row.iloc[population_col], errors="coerce")
+            if population_col is not None else float("nan")
+        )
+        published_rate = (
+            pd.to_numeric(row.iloc[rate_col], errors="coerce")
+            if rate_col is not None else float("nan")
+        )
+
+        for year, total in totals.items():
+            if pd.isna(total):
+                continue
+            if pd.notna(published_rate) and year == max(year_cols.values()):
+                crime_rate = float(published_rate)
+            elif pd.notna(population_lakh) and population_lakh > 0:
+                crime_rate = round(float(total) / float(population_lakh), 1)
+            else:
+                continue
+            records.append({
+                "state_name": state_name,
+                "year": year,
+                "crime_rate_per_lakh": crime_rate,
+                "series_break": False,
+            })
+
+    if not records:
+        return None
+    logger.info("Parsed wide NCRB table: %d state-years from %s.", len(records), path.name)
+    return pd.DataFrame(records)
+
+
 def _load_single_file(path: Path, year: int | None = None) -> pd.DataFrame:
     """Load one NCRB file (CSV or XLSX) and return a standardized DataFrame."""
     logger.info("Loading: %s", path.name)
+
+    wide = _parse_wide_ncrb(path)
+    if wide is not None:
+        return wide
 
     if path.suffix.lower() in (".xls", ".xlsx"):
         df = pd.read_excel(path, dtype=str)

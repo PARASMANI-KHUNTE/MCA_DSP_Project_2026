@@ -2,6 +2,8 @@ raw_name,standard_name,type,notes
 "Andaman & Nicobar Islands","Andaman and Nicobar Islands",state,""
 "Andaman and Nicobar","Andaman and Nicobar Islands",state,""
 "A & N Islands","Andaman and Nicobar Islands",state,""
+"A&N Islands","Andaman and Nicobar Islands",state,"NCRB abbreviation"
+"Andaman & N. Island","Andaman and Nicobar Islands",state,"PLFS abbreviation"
 "Andhra Pradesh","Andhra Pradesh",state,""
 "Arunachal Pradesh","Arunachal Pradesh",state,""
 "Assam","Assam",state,""
@@ -11,6 +13,8 @@ raw_name,standard_name,type,notes
 "Chhatisgarh","Chhattisgarh",state,alternate spelling
 "Dadra & Nagar Haveli and Daman & Diu","Dadra and Nagar Haveli and Daman and Diu",state,merged UT
 "Dadra and Nagar Haveli","Dadra and Nagar Haveli and Daman and Diu",state,pre-merger name
+"D&N Haveli and Daman & Diu","Dadra and Nagar Haveli and Daman and Diu",state,"NCRB abbreviation"
+"Dadra & Nagar Haveli & Daman & Diu","Dadra and Nagar Haveli and Daman and Diu",state,"PLFS spelling"
 "Daman and Diu","Dadra and Nagar Haveli and Daman and Diu",state,pre-merger name
 "Delhi","Delhi",state,""
 "NCT of Delhi","Delhi",state,""

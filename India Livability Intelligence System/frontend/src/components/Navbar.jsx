@@ -39,10 +39,9 @@ export default function Navbar({
 }) {
   const isProjected = selectedYear > BASELINE_YEAR;
   const [showYearInfo, setShowYearInfo] = useState(false);
-  const trendYears = OBSERVED_YEARS.filter(year => year <= BASELINE_YEAR);
   const projectionInfo = PROJECTION_END_YEAR == null
     ? "No factor currently has enough observed years for a projection."
-    : `Air trend scores are projected from eligible observations (${trendYears.join(", ")}) through ${PROJECTION_END_YEAR}. The ${DATA_COVERAGE.lastYearByFactor?.col ?? "rent"} rent snapshot is observed separately and is never projected.`;
+    : `${BASELINE_YEAR} is the latest year with multi-factor observations. Earlier years show each factor at its latest observation at or before that year. Future years are projected only when every weighted factor has at least five directly observed years, so mixed-coverage composite views remain observed-only. The ${DATA_COVERAGE.lastYearByFactor?.col ?? "rent"} rent snapshot is observed separately and is never projected.`;
   const backendOnline = backendStatus === "ok";
   const backendLabel = backendOnline ? "API Live" : "Local Engine";
   const backendDescription = backendOnline
@@ -120,10 +119,8 @@ export default function Navbar({
                   {YEARS.map(year => (
                     <option key={year} value={year} className="bg-white text-[#111111]">
                       {year > BASELINE_YEAR
-                        ? OBSERVED_YEARS.includes(year)
-                          ? `${year} (air proj. · rent snapshot)`
-                          : `${year} (air proj.)`
-                        : `${year} (air observed)`}
+                        ? `${year} (projection if eligible)`
+                        : `${year} (observed)`}
                     </option>
                   ))}
                 </select>

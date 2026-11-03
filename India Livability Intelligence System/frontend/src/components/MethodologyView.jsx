@@ -180,13 +180,14 @@ export default function MethodologyView() {
         </div>
 
         <div className="custom-scrollbar overflow-x-auto">
-          <table className="w-full min-w-[540px] border-collapse text-left text-[11px]">
+          <table className="w-full min-w-[780px] border-collapse text-left text-[11px]">
             <thead>
               <tr className="border-b border-slate-800 text-[9px] font-bold uppercase tracking-wider text-slate-500">
                 <th className="px-2 py-2">Pillar</th>
                 <th className="px-2 py-2">Observed range</th>
                 <th className="px-2 py-2">Direction</th>
                 <th className="px-2 py-2">Source authority</th>
+                <th className="px-2 py-2">License / attribution</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -196,6 +197,7 @@ export default function MethodologyView() {
                   <td className="px-2 py-2.5 font-mono text-cyan-300">{item.bounds}</td>
                   <td className="px-2 py-2.5 text-slate-300">{item.direction}</td>
                   <td className="px-2 py-2.5 text-slate-400">{item.source}</td>
+                  <td className="px-2 py-2.5 text-amber-200">{item.license}</td>
                 </tr>
               ))}
             </tbody>

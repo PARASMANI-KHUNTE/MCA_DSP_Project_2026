@@ -173,11 +173,16 @@ def flag_outliers(
     Add an 'outlier_flag' column and an 'outlier_reason' column.
     1. Domain bounds (physically impossible values) are flagged first.
     2. IQR rule (outside Q1 - k*IQR or Q3 + k*IQR) flags the rest.
-    Does NOT remove rows — caller decides what to do.
+    Physically invalid domain values are made missing while their original
+    values and removal decision are retained for the pipeline audit log.
+    IQR-only observations are flagged for review but kept, since real extremes
+    (for example hazardous air readings) must not be discarded automatically.
     """
     df = df.copy()
     df["outlier_flag"] = False
     df["outlier_reason"] = ""
+    df["outlier_original_value"] = pd.NA
+    df["outlier_action"] = ""
 
     # Domain bounds
     if domain_lo is not None:
@@ -190,12 +195,20 @@ def flag_outliers(
         df.loc[mask, "outlier_flag"] = True
         df.loc[mask, "outlier_reason"] += f"|above_domain_max({domain_hi})"
 
+    domain_mask = df["outlier_flag"].copy()
+    df.loc[domain_mask, "outlier_original_value"] = df.loc[domain_mask, col]
+    df.loc[domain_mask, "outlier_action"] = "removed_domain_violation"
+    df.loc[domain_mask, col] = pd.NA
+
     # IQR rule on remaining non-domain-flagged values
     clean = df.loc[~df["outlier_flag"], col].dropna()
     lo, hi = iqr_bounds(clean, k=k)
     iqr_mask = (df[col] < lo) | (df[col] > hi)
     df.loc[iqr_mask & ~df["outlier_flag"], "outlier_flag"] = True
     df.loc[iqr_mask & ~df["outlier_flag"], "outlier_reason"] = "iqr_rule"
+    iqr_new = iqr_mask & ~domain_mask
+    df.loc[iqr_new, "outlier_original_value"] = df.loc[iqr_new, col]
+    df.loc[iqr_new, "outlier_action"] = "retained_pending_review"
 
     return df
 

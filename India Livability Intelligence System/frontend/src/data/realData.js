@@ -2,6 +2,7 @@
 export const DATA = {
   "meta": {
     "generated": "2026-10-27",
+    "sourceStatus": "unverified",
     "baselineYear": 2024,
     "projectionEndYear": 2034,
     "years": [

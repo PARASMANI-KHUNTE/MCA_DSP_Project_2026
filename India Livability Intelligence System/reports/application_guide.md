@@ -1,4 +1,6 @@
 # India Livability Intelligence System (ILIS)
+> **Data verification hold (3 November 2026):** the current embedded data includes values from generated placeholders. Treat the displayed scores and analysis as demonstration-only until verified source data replaces them and the project is rebuilt.
+
 ## Application Guide
 
 **Author:** Parasmani Khunte (MCA, Batch 2024–2026)  

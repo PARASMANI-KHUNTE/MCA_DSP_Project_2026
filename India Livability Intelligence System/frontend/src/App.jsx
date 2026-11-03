@@ -12,7 +12,7 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
-import { BASELINE_YEAR, calculateScores } from "./services/scoringService";
+import { BASELINE_YEAR, calculateScores, DATA_COVERAGE } from "./services/scoringService";
 import { PRESETS } from "./data/methodologyData";
 
 const MOBILE_PANELS = [
@@ -137,7 +137,8 @@ export default function App() {
   const checkHealth = useCallback(async () => {
     try {
       const response = await fetch("http://localhost:8000/api/health", { method: "GET" });
-      const online = response.ok;
+      const health = response.ok ? await response.json() : null;
+      const online = health?.status === "ok";
       setBackendOnline(online);
       return online;
     } catch {
@@ -197,6 +198,17 @@ export default function App() {
             : "pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-8"
         }`}
       >
+        {DATA_COVERAGE.sourceStatus !== "verified" && (
+          <div
+            role="alert"
+            className="mb-3 rounded-xl border border-rose-500/50 bg-rose-950/80 px-4 py-3 text-xs leading-relaxed text-rose-100"
+          >
+            <strong className="font-bold">Data verification warning:</strong> Some displayed state and air
+            observations came from generated placeholders rather than checked source records. Scores, rankings,
+            findings, and projections are for demonstration only and must not be interpreted as verified results.
+          </div>
+        )}
+
         {activeTab === "map" && (
           <div className="flex flex-col">
             <QuickStartBanner

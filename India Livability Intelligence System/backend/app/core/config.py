@@ -5,11 +5,26 @@ Application configuration loaded from environment variables.
 """
 
 from pathlib import Path
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug_value(cls, value):
+        """Accept common deployment labels as safe false values (e.g. DEBUG=release)."""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "debug"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "release", "production", "prod", ""}:
+                return False
+        return value
 
     # Path to the processed data directory (mounted read-only in Docker)
     data_dir: Path = Path(__file__).resolve().parents[3] / "data" / "processed"

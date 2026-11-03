@@ -3,9 +3,11 @@
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
-**Version:** 1.1 (revised after a dataset availability check, 26 October 2026)
+**Version:** 1.2 (provenance and scope update, 3 November 2026)
 
-> **Revision 1.1 summary.** A web check of the candidate datasets showed that only air quality is available at city level with a time series. Everything else is state-level, cost of living is a snapshot for six cities, and several series have gaps or breaks. This revision therefore: (1) cuts the core factors to air, safety, health and economy; (2) adds a verified dataset register and a list of unverified candidates (M2, Appendix D); (3) adds rules for gaps, series breaks and PDF extraction (M3.6); (4) separates trend-capable factors from snapshot factors (M5, M6); (5) replaces the validation split with one that fits the real years (M6.3); (6) updates the map boundary guidance, ethics, risks and timeline. Listings were found by web search; **no files have been downloaded or inspected yet.**
+> **Implementation status update, 3 November 2026.** A code/data audit found that state crime, health, economy, and 2023–2024 CPCB CSVs currently in `data/raw/` exactly match hard-coded values from the retired `src/loaders/populate_official_data.py`. These files are unverified placeholders, not source-derived observations. The pipeline and frontend exporter now block those exact files. All scores, statistical findings, clusters, trends, and the embedded dashboard data derived from them are invalid for empirical interpretation until real source records replace them and the analyses are regenerated. The 32-state/UT and 29-city place master is a candidate inventory; city inclusion remains subject to a fresh coverage check.
+
+> **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
 
 ---
 
@@ -68,7 +70,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 ## 0.3 Scope
 
 **In scope**
-- 12 to 15 states. Cities are included **only if they have usable air quality data** (expected 10 to 25 after the coverage check in M2.1.3).
+- Candidate inventory currently contains 32 states/UTs and 29 cities. The final analytical scope is not frozen: include states with verified core-source records and cities only after the M2.1.2 coverage rule passes on source-derived air observations.
 - **Four core factors:** air quality (city level), safety, health and economy (state level; economy combines income and unemployment).
 - **One optional snapshot factor:** cost of living (rent) for six cities only, scored but never trended.
 - Years differ by factor. Air quality is expected to cover 2015 to 2019 and 2023 to 2024 (with a gap); state factors cover roughly 7 to 14 yearly points. The real numbers are set by the coverage check.
@@ -209,17 +211,17 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 
 ## 2.1 Dataset register (listings verified by web search, 26 October 2026)
 
-"Verified" means a listing was found. Files have **not** been downloaded or inspected. Confirm columns, years and licenses on the source page before relying on any row.
+"Listing verified" means a source listing was found; it does not verify the raw files or their observations. Several currently present state-level and CPCB files are known generated placeholders (see the implementation status notice above). Confirm each raw file against its publisher, years, columns, and license before using it.
 
 | Factor | Source | Level | Years (as listed) | Status | Notes and risks |
 |---|---|---|---|---|---|
-| Air quality (history) | Kaggle "Air Quality Data in India (2015 - 2020)": `city_day.csv`, `station_day.csv`, `stations.csv` | City, daily | 2015 to 2020 | Usable | License not shown on one mirror; check the Kaggle page. 2020 is a COVID year. |
-| Air quality (recent) | CPCB NAMP annual tables, for example "Ambient Air Quality Status of the Country during 2023"; NCAP annual city tables | City, annual | 2023 and 2024 listed; 2021 and 2022 not confirmed | Usable with effort | Published as PDFs. PM2.5 is blank for some cities. Different method from the Kaggle daily data. |
-| Safety | NCRB Crime in India (state-wise and metro-city tables) via data.gov.in or Dataful | State; metro cities only | Up to 2024 | Usable, check access | IPC to BNS transition may break the series in 2024. One metro dataset notes a missing year (2021). Crime rates reflect reporting as well as crime. |
-| Health | SRS Statistical Report (state infant mortality) | State | Latest report covers 2022, published June 2025 | Usable | About three years of lag. Survey-based estimates. |
-| Economy: income | RBI Handbook of Statistics on Indian States, per capita NSDP at constant prices | State | Long series to 2024-25 | Good | Use the 2011-12 base series only (earlier years are factor cost). Financial years. |
-| Economy: unemployment | MoSPI PLFS annual reports (state and UT annexure) | State | 2017-18 to 2023-24, plus a calendar-year 2024 release | About 7 points | Tables inside PDFs. July to June survey years. |
-| Cost of living (snapshot) | Kaggle "House Rent Prediction Dataset" (about 4,700 listings) | 6 cities: Kolkata, Mumbai, Bangalore, Delhi, Chennai, Hyderabad | One snapshot | Optional, never trended | Reported license CC BY-SA 4.0 (attribution and share-alike apply). |
+| Air quality (history) | Kaggle "Air Quality Data in India (2015 - 2020)": `city_day.csv`, `station_day.csv`, `stations.csv` | City, daily | Listing describes 2015 to 2020 | Candidate; local historical files require verification | Exact dataset license is unverified. 2020 is a COVID year. |
+| Air quality (recent) | CPCB NAMP annual tables and NCAP city tables | City, annual | Candidate years 2023 and 2024 | Current local CSVs are known generated placeholders; replace with CPCB source records | Reports are PDFs; different method from Kaggle data; verify PM2.5 values, extraction, and reuse terms. |
+| Safety | NCRB Crime in India state and metro tables | State; metro cities only | Candidate coverage varies by report | Current local state table is a known generated placeholder | Replace with source table; verify terms, IPC/BNS break, and missing years. |
+| Health | SRS Statistical Report (state infant mortality) | State | Candidate latest report covers 2022 | Current local table is a known generated placeholder | Replace with source table; confirm release and terms. |
+| Economy: income | RBI Handbook of Statistics on Indian States, per capita NSDP at constant prices | State | Candidate long series | Current local table is a known generated placeholder | Replace with RBI table; use 2011-12 base series and verify extraction. |
+| Economy: unemployment | MoSPI PLFS annual reports (state and UT annexure) | State | Candidate 2017-18 onward | Current local table is a known generated placeholder | Replace with report-derived values; verify period alignment and terms. |
+| Cost of living (snapshot) | Kaggle "House Rent Prediction Dataset" | Candidate six cities | One snapshot | Optional; never trended | Exact license is unverified; previous CC BY-SA claim is unconfirmed. |
 | Cost of living (price index) | MoSPI state CPI (base 2012=100, new 2024=100 base) | State | Monthly from 2013 | **Not used** | It measures price change, not cost level between places, and the base year change is a series break. |
 | Boundaries | Survey of India external boundary via DataMeet; state-boundary GeoJSON from open repositories | Geometry | n/a | Verify before use | License of the official layer is unclear. One open state layer is reported to label Telangana as Andhra Pradesh and to use pre-delimitation boundaries. Another reflects 2019 boundaries. |
 
@@ -366,6 +368,7 @@ Do not blindly delete extremes. Severe pollution is the point of the project, no
 | `data/processed/factors_wide.csv` | One row per place and year, one column per factor |
 | `reports/data_quality_report.md` | Coverage, imputation counts, outlier counts |
 | `reports/outlier_log.csv` | Every removed value |
+| `data/processed/versions/<run_id>/` | Versioned tidy/wide snapshots with a SHA-256 manifest |
 
 ## 3.8 Folder structure for the pipeline
 
@@ -642,7 +645,7 @@ Report **MSE, RMSE and R-squared** on validation and test, and compare against a
 ## 6.4 K-Means clustering (unsupervised)
 
 - **Input:** standardized factor scores per place for the latest year.
-- **Choose k:** elbow method plus silhouette score, expected k of 3 or 4.
+- **Choose k:** use elbow and silhouette analysis over a documented k range; report the selected value and feature set rather than assuming a target k.
 - **Output:** cluster labels, interpreted by cluster mean profile (for example "clean and affluent", "polluted but high income", "low cost but weak services").
 - **Use in app:** an optional "tier" color mode.
 
@@ -1362,7 +1365,7 @@ make docker      # build and run everything with Docker Compose
 
 ## Appendix D. Data verification log (26 October 2026)
 
-Method: web search for each candidate dataset. Files were **not** downloaded or opened. Re-check each item when you download it.
+Method: this appendix records the original 26 October 2026 web-search review; that review did not download or inspect source files. A later local-file audit on 3 November 2026 found six files that exactly match the retired hard-coded placeholder generator, as listed in the implementation status notice. Local presence does not establish publisher provenance. Re-check each item against its publisher before use.
 
 | Item | Found? | Detail | Open question |
 |---|---|---|---|

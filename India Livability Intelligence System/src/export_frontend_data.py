@@ -24,6 +24,7 @@ from src.utils.constants import (
     RAW_COL,
     SCORING_CONFIG,
 )
+from src.utils.provenance import find_unverified_generated_sources
 
 OUTPUT = Path(__file__).resolve().parents[1] / "frontend" / "src" / "data" / "realData.js"
 
@@ -140,6 +141,14 @@ def _cost_snapshot_year() -> int:
 
 
 def build_payload() -> dict:
+    unverified = find_unverified_generated_sources()
+    if unverified:
+        paths = ", ".join(str(path) for path in unverified)
+        raise RuntimeError(
+            "Refusing to export frontend data derived from synthetic placeholder "
+            f"sources. Replace these with verified source data first: {paths}"
+        )
+
     places = pd.read_csv(PLACES_CSV, dtype=str)
     factors = pd.read_csv(FACTORS_WIDE)
     tidy = pd.read_parquet(FACTORS_TIDY)
@@ -209,6 +218,7 @@ def build_payload() -> dict:
     return {
         "meta": {
             "generated": date.today().isoformat(),
+            "sourceStatus": "verified",
             "baselineYear": 2024,
             "projectionEndYear": 2034,
             "years": years,

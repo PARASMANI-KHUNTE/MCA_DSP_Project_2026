@@ -37,6 +37,7 @@ data:
 	@echo "✅ Pipeline complete. Outputs in data/processed/"
 
 notebooks:
+	$(PYTHON) -m src.utils.provenance
 	jupyter nbconvert --to notebook --execute --inplace \
 		$(NB_DIR)/00_coverage_check.ipynb \
 		$(NB_DIR)/01_data_profiling.ipynb \

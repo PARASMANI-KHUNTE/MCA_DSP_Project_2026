@@ -1,4 +1,6 @@
 # India Livability Intelligence System (ILIS)
+> **Data verification hold (3 November 2026):** several input tables used for these findings are generated placeholders rather than source-verified observations. Do not present the reported results as empirical findings until validated data replaces them and the analysis is rerun.
+
 ## Data-Driven Livability Index with Interactive Map and Trend Projection
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)  

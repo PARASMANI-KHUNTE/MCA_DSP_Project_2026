@@ -1,4 +1,6 @@
 # Data Quality & Coverage Audit Report
+> **Superseded (3 November 2026):** this report's validation claims predate discovery that several state-level and recent CPCB raw tables exactly match hard-coded placeholder data. Counts, bounds, test claims, and findings below are not current verification. See `reports/data_provenance_notice.md`.
+
 ### India Livability Intelligence System (MCA DSP Capstone 2026)
 **Generated:** October 2026 | **Pipeline Version:** 1.0.0 | **Status:** Validated ✅
 

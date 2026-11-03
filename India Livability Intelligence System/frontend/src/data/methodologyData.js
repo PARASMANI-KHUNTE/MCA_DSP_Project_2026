@@ -39,37 +39,43 @@ export const METHODOLOGY_DETAILS = {
       factor: "Air quality (PM2.5)",
       bounds: "10 to 150 µg/m³",
       direction: "Lower is better",
-      source: "CPCB / Kaggle urban monitors (WHO=15, NAAQS=60, 5th-95th percentile=35-122)"
+      source: "CPCB / Kaggle urban monitors (WHO=15, NAAQS=60, 5th-95th percentile=35-122)",
+      license: "Unverified for the exact source files; see source register."
     },
     {
       factor: "Public safety (IPC crime rate)",
       bounds: "100 to 600 per lakh",
       direction: "Lower is better",
-      source: "NCRB Crime in India (5th-95th percentile=140-510)"
+      source: "NCRB Crime in India (5th-95th percentile=140-510)",
+      license: "Dataset-specific terms unverified; see source register."
     },
     {
       factor: "Healthcare (infant mortality)",
       bounds: "5 to 50 per 1,000 births",
       direction: "Lower is better",
-      source: "SRS, Registrar General of India (5th-95th percentile=10-46, min=5, max=50)"
+      source: "SRS, Registrar General of India (5th-95th percentile=10-46, min=5, max=50)",
+      license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Economy: NSDP per capita",
       bounds: "₹50,000 to ₹3,20,000",
       direction: "Higher is better",
-      source: "RBI Handbook of Statistics on Indian States (5th-95th percentile=₹54.2k-₹312k)"
+      source: "RBI Handbook of Statistics on Indian States (5th-95th percentile=₹54.2k-₹312k)",
+      license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Economy: unemployment",
       bounds: "2.0% to 10.0% of labour force",
       direction: "Lower is better",
-      source: "MoSPI Periodic Labour Force Survey (5th-95th percentile=2.4%-9.4%)"
+      source: "MoSPI Periodic Labour Force Survey (5th-95th percentile=2.4%-9.4%)",
+      license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Cost of living (rent)",
       bounds: "₹10,000 to ₹90,000 / month",
       direction: "Lower is better",
-      source: "Kaggle house-rent snapshot (6 metros: Kolkata ₹11.6k to Mumbai ₹85.3k)"
+      source: "Kaggle house-rent snapshot (6 metros: Kolkata ₹11.6k to Mumbai ₹85.3k)",
+      license: "Unverified on the exact dataset page; previous CC BY-SA claim is unconfirmed."
     }
   ],
   ethics: [
@@ -86,5 +92,6 @@ export const DATA_GAPS = [
   "State safety, health and economy series end in 2022. Scores for 2023 and 2024 reuse those latest observations and label their source year.",
   "Cost of living is a single 2022 rent snapshot for six metros, so it is never trended and applies only to those six cities.",
   "Population is not part of the processed dataset, so map pin sizes use a fixed scale rather than population.",
+  "The state boundary paths and several data source licenses are not yet verified; the attribution register marks unresolved terms explicitly.",
   "The clustering outputs are not used in the interface because the current cluster assignments are not consistent with the stored K-Means evaluation results."
 ];

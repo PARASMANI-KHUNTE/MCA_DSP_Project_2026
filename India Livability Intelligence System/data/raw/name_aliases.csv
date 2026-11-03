@@ -1,0 +1,102 @@
+raw_name,standard_name,type,notes
+"Andaman & Nicobar Islands","Andaman and Nicobar Islands",state,""
+"Andaman and Nicobar","Andaman and Nicobar Islands",state,""
+"A & N Islands","Andaman and Nicobar Islands",state,""
+"Andhra Pradesh","Andhra Pradesh",state,""
+"Arunachal Pradesh","Arunachal Pradesh",state,""
+"Assam","Assam",state,""
+"Bihar","Bihar",state,""
+"Chandigarh","Chandigarh",state,""
+"Chhattisgarh","Chhattisgarh",state,""
+"Chhatisgarh","Chhattisgarh",state,alternate spelling
+"Dadra & Nagar Haveli and Daman & Diu","Dadra and Nagar Haveli and Daman and Diu",state,merged UT
+"Dadra and Nagar Haveli","Dadra and Nagar Haveli and Daman and Diu",state,pre-merger name
+"Daman and Diu","Dadra and Nagar Haveli and Daman and Diu",state,pre-merger name
+"Delhi","Delhi",state,""
+"NCT of Delhi","Delhi",state,""
+"Goa","Goa",state,""
+"Gujarat","Gujarat",state,""
+"Haryana","Haryana",state,""
+"Himachal Pradesh","Himachal Pradesh",state,""
+"Jammu & Kashmir","Jammu and Kashmir",state,now UT
+"Jammu and Kashmir","Jammu and Kashmir",state,""
+"J&K","Jammu and Kashmir",state,""
+"Jharkhand","Jharkhand",state,""
+"Jharkhand","Jharkhand",state,""
+"Karnataka","Karnataka",state,""
+"Kerala","Kerala",state,""
+"Ladakh","Ladakh",state,UT carved out of J&K in 2019
+"Lakshadweep","Lakshadweep",state,""
+"Madhya Pradesh","Madhya Pradesh",state,""
+"M.P.","Madhya Pradesh",state,""
+"Maharashtra","Maharashtra",state,""
+"Manipur","Manipur",state,""
+"Meghalaya","Meghalaya",state,""
+"Mizoram","Mizoram",state,""
+"Nagaland","Nagaland",state,""
+"Odisha","Odisha",state,""
+"Orissa","Odisha",state,old name
+"Puducherry","Puducherry",state,""
+"Pondicherry","Puducherry",state,old name
+"Punjab","Punjab",state,""
+"Rajasthan","Rajasthan",state,""
+"Sikkim","Sikkim",state,""
+"Tamil Nadu","Tamil Nadu",state,""
+"Tamilnadu","Tamil Nadu",state,""
+"Telangana","Telangana",state,""
+"Tripura","Tripura",state,""
+"Uttar Pradesh","Uttar Pradesh",state,""
+"U.P.","Uttar Pradesh",state,""
+"Uttarakhand","Uttarakhand",state,""
+"Uttaranchal","Uttarakhand",state,old name
+"West Bengal","West Bengal",state,""
+"W.B.","West Bengal",state,""
+"Ahmedabad","Ahmedabad",city,""
+"Ahemdabad","Ahmedabad",city,alternate spelling
+"Bengaluru","Bengaluru",city,""
+"Bangalore","Bengaluru",city,old name still common
+"Bhopal","Bhopal",city,""
+"Chennai","Chennai",city,""
+"Madras","Chennai",city,old name
+"Delhi","Delhi",city,""
+"New Delhi","Delhi",city,""
+"Guwahati","Guwahati",city,""
+"Hyderabad","Hyderabad",city,""
+"Jaipur","Jaipur",city,""
+"Kolkata","Kolkata",city,""
+"Calcutta","Kolkata",city,old name
+"Lucknow","Lucknow",city,""
+"Mumbai","Mumbai",city,""
+"Bombay","Mumbai",city,old name
+"Nagpur","Nagpur",city,""
+"Patna","Patna",city,""
+"Pune","Pune",city,""
+"Poona","Pune",city,old name
+"Surat","Surat",city,""
+"Visakhapatnam","Visakhapatnam",city,""
+"Vishakhapatnam","Visakhapatnam",city,alternate spelling
+"Vizag","Visakhapatnam",city,""
+"Amritsar","Amritsar",city,""
+"Aurangabad","Aurangabad",city,""
+"Chandigarh","Chandigarh",city,also a UT
+"Coimbatore","Coimbatore",city,""
+"Faridabad","Faridabad",city,""
+"Ghaziabad","Ghaziabad",city,""
+"Indore","Indore",city,""
+"Jodhpur","Jodhpur",city,""
+"Kanpur","Kanpur",city,""
+"Kochi","Kochi",city,""
+"Cochin","Kochi",city,old name
+"Meerut","Meerut",city,""
+"Mysuru","Mysuru",city,""
+"Mysore","Mysuru",city,old name
+"Nashik","Nashik",city,""
+"Rajkot","Rajkot",city,""
+"Raipur","Raipur",city,""
+"Ranchi","Ranchi",city,""
+"Thiruvananthapuram","Thiruvananthapuram",city,""
+"Trivandrum","Thiruvananthapuram",city,old name
+"Vadodara","Vadodara",city,""
+"Baroda","Vadodara",city,old name
+"Varanasi","Varanasi",city,""
+"Benaras","Varanasi",city,old name

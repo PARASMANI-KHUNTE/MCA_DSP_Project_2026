@@ -23,6 +23,7 @@ from src.utils.constants import (
     CORE_FACTORS,
 )
 from src.utils.helpers import setup_logging
+from src.utils.provenance import require_verified_sources
 from src.scoring.scoring import compute_scores, load_config, sensitivity_analysis
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 def run() -> None:
     setup_logging()
+    require_verified_sources()
     logger.info("=== SCORING STAGE START ===")
 
     # Load inputs

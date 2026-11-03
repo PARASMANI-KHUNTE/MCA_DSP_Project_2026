@@ -1,4 +1,6 @@
 # Key Findings and Statistical Analysis Report
+> **Data verification hold (3 November 2026):** the state crime, health, economy, and recent CPCB inputs used for these results were generated from hard-coded placeholders, not verified source records. The statistics and derived results below are withdrawn pending replacement of those inputs and a full rerun.
+
 **India Livability Intelligence System (ILIS)**  
 *CAPCTD3 Elective-V: Data Science using Python*  
 *Date: 26 October 2026 | Author: Parasmani Khunte (MCA, 2026)*

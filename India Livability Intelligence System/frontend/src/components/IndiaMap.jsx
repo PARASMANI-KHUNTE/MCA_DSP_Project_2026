@@ -223,6 +223,9 @@ export default function IndiaMap({
 
   const getColorForPlace = place => {
     if (!place) return "#1e293b";
+    if (colorMode === "factor") {
+      return getScoreColor(place.factorScores?.[activeFactor]);
+    }
     return getScoreColor(place.overallScore);
   };
 

@@ -16,20 +16,20 @@ export const PROJECTION_YEARS = Array.from(
 const MIN_TREND_POINTS = 5;
 const P_VALUE_THRESHOLD = 0.05;
 
-// Red → orange → yellow → lime → green.  Low scores are bad, high scores are good.
+// Color-vision-safer purple/blue/teal/yellow scale. Low scores are worse.
 export const SCORE_BANDS = [
-  { min: 80, color: "#059669", label: "Elite" },
-  { min: 70, color: "#22c55e", label: "High" },
-  { min: 60, color: "#84cc16", label: "Good" },
-  { min: 50, color: "#eab308", label: "Moderate" },
-  { min: 40, color: "#f97316", label: "Developing" },
-  { min: 0, color: "#dc2626", label: "Critical" }
+  { min: 80, color: "#fde725", label: "Elite" },
+  { min: 70, color: "#5ec962", label: "High" },
+  { min: 60, color: "#21918c", label: "Good" },
+  { min: 50, color: "#3b528b", label: "Moderate" },
+  { min: 40, color: "#31688e", label: "Developing" },
+  { min: 0, color: "#440154", label: "Critical" }
 ];
 
 // Low-to-high ordering of the same bands, used by legends and gradients.
 export const SCORE_BANDS_ASC = [...SCORE_BANDS].sort((a, b) => a.min - b.min);
 
-// Smooth red → green gradient mirroring the band thresholds.
+// Smooth perceptually ordered gradient mirroring the band thresholds.
 export const SCORE_GRADIENT_CSS = `linear-gradient(90deg, ${SCORE_BANDS_ASC.map(
   band => `${band.color} ${band.min}%`
 ).join(", ")})`;

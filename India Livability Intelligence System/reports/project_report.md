@@ -1,4 +1,6 @@
 # India Livability Intelligence System
+> **Data verification hold (3 November 2026):** state crime, health, economy, and recent CPCB inputs used by this report match hard-coded placeholders, not verified source records. Empirical claims and derived results below are not valid until source data is replaced and the analysis is rerun.
+
 ## A Multi-Criteria Analytical Framework, Statistical Trend Projections, and Interactive Spatial Decision Support System
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)  

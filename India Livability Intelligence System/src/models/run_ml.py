@@ -12,7 +12,9 @@ import logging
 import sys
 import json
 
+import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error, r2_score
 
 from src.utils.constants import (
     DATA_PROCESSED,
@@ -25,6 +27,7 @@ from src.utils.constants import (
     PROJECTION_YEARS,
 )
 from src.utils.helpers import setup_logging
+from src.utils.provenance import require_verified_sources
 from src.scoring.scoring import load_config
 from src.models.trend import run_all_trends
 from src.models.clustering import run_clustering
@@ -63,8 +66,71 @@ def _build_scores_long(scores_wide: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _metric_summary(actual: list[float], predicted: list[float]) -> dict:
+    if not actual:
+        return {"n": 0, "mse": None, "rmse": None, "r2": None}
+    mse = float(mean_squared_error(actual, predicted))
+    return {
+        "n": len(actual),
+        "mse": mse,
+        "rmse": float(np.sqrt(mse)),
+        "r2": float(r2_score(actual, predicted)) if len(actual) >= 2 else None,
+    }
+
+
+def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
+    """Evaluate city air-score OLS against a last-observation baseline.
+
+    The fixed SRS split is train 2015–2018, validation 2019, and test 2023–2024.
+    Metrics pool eligible city-year predictions; missing city-years are omitted.
+    """
+    required = {"place_id", "year", "air_quality_score"}
+    if not required.issubset(scores_wide.columns):
+        return {"status": "unavailable", "reason": "required score columns are missing"}
+
+    table = scores_wide[["place_id", "year", "air_quality_score"]].copy()
+    table["year"] = pd.to_numeric(table["year"], errors="coerce")
+    table["air_quality_score"] = pd.to_numeric(table["air_quality_score"], errors="coerce")
+    table = table.dropna(subset=["year", "air_quality_score"])
+    predictions = {"validation": {"actual": [], "ols": [], "baseline": []},
+                   "test": {"actual": [], "ols": [], "baseline": []}}
+
+    for _, group in table.groupby("place_id"):
+        group = group.sort_values("year")
+        train = group[group["year"].between(2015, 2018)]
+        if len(train) < 3:
+            continue
+        slope, intercept = np.polyfit(train["year"].to_numpy(), train["air_quality_score"].to_numpy(), 1)
+        baseline_value = float(train.iloc[-1]["air_quality_score"])
+        for split_name, split_rows in (
+            ("validation", group[group["year"] == 2019]),
+            ("test", group[group["year"].between(2023, 2024)]),
+        ):
+            if split_rows.empty:
+                continue
+            forecast = np.clip(intercept + slope * split_rows["year"].to_numpy(), 0, 100)
+            predictions[split_name]["actual"].extend(split_rows["air_quality_score"].astype(float).tolist())
+            predictions[split_name]["ols"].extend(forecast.astype(float).tolist())
+            predictions[split_name]["baseline"].extend([baseline_value] * len(split_rows))
+
+    return {
+        "target": "air_quality_score",
+        "unit_of_evaluation": "pooled city-year predictions",
+        "split_years": {"train": "2015-2018", "validation": "2019", "test": "2023-2024"},
+        "validation": {
+            "ols": _metric_summary(predictions["validation"]["actual"], predictions["validation"]["ols"]),
+            "naive_last_value": _metric_summary(predictions["validation"]["actual"], predictions["validation"]["baseline"]),
+        },
+        "test": {
+            "ols": _metric_summary(predictions["test"]["actual"], predictions["test"]["ols"]),
+            "naive_last_value": _metric_summary(predictions["test"]["actual"], predictions["test"]["baseline"]),
+        },
+    }
+
+
 def run() -> None:
     setup_logging()
+    require_verified_sources()
     logger.info("=== ML STAGE START ===")
 
     # Load inputs
@@ -80,6 +146,7 @@ def run() -> None:
     logger.info("Loaded scores_wide: %d rows.", len(scores_wide))
 
     config = load_config(SCORING_CONFIG)
+    model_evaluation = evaluate_air_holdout(scores_wide)
 
     # ── Trend projection ────────────────────────────────────────────────────
     logger.info("Fitting trend projections...")
@@ -118,10 +185,8 @@ def run() -> None:
     logger.info("Running K-Means clustering...")
     available_score_cols = [c for c in FACTOR_SCORE_COLS if c in scores_wide.columns]
 
-    # Cluster on composite score across ALL years' latest snapshot per place.
-    # Since factor scores are partially populated (city vs state level), we use
-    # the composite 'score' plus any available factor score as features.
-    # Pick the year with the most non-null composite scores.
+    # Use the latest year with broad coverage, breaking ties in favor of the
+    # latest year. This keeps cluster summaries aligned with reported results.
     best_year = None
     best_count = 0
     for yr in sorted(scores_wide["year"].unique(), reverse=True):
@@ -134,6 +199,18 @@ def run() -> None:
     latest_year = int(best_year) if best_year is not None else int(scores_wide["year"].max())
     latest_scores = scores_wide[scores_wide["year"] == latest_year].copy()
 
+    metrics = {
+        "clustering": {"status": "skipped", "year": latest_year, "n_places": 0},
+        "trends": {
+            "n_fitted": int((trends_df["outlook"] != "Insufficient data").sum()),
+            "n_insufficient": int((trends_df["outlook"] == "Insufficient data").sum()),
+            "improving": int((trends_df["outlook"] == "Improving").sum()),
+            "declining": int((trends_df["outlook"] == "Declining").sum()),
+            "stable": int((trends_df["outlook"] == "Stable or uncertain").sum()),
+        },
+        "holdout_evaluation": model_evaluation,
+    }
+
     # Build feature columns: use composite score (available for all places)
     # Factor-level scores have disjoint coverage (air=city-only, safety/health=state-only),
     # so we cannot cluster on multiple factors without dropping all rows.
@@ -141,9 +218,8 @@ def run() -> None:
     feature_cols = []
     if "score" in latest_scores.columns:
         feature_cols.append("score")
-    # Also add factor scores per place_type if there's enough data
-    # (state-only cluster on state-level factors; city-only on air)
-    # For simplicity, cluster all on composite score only.
+    # The saved composite is the common feature across state and city records;
+    # this is intentionally a one-dimensional tier comparison.
 
     logger.info("Clustering %d places on %d features: %s", len(latest_scores), len(feature_cols), feature_cols)
 
@@ -169,30 +245,22 @@ def run() -> None:
                 km_metrics_df.to_csv(km_path, index=False)
                 logger.info("Saved: %s", km_path)
 
-            # Compute and save model metrics
-            metrics = {
-                "clustering": {
-                    "k_chosen": int(clusters_df["cluster_id"].nunique()),
-                    "year": latest_year,
-                    "n_places": len(clusters_df),
-                },
-                "trends": {
-                    "n_fitted": int((trends_df["outlook"].notna() &
-                                     (trends_df["outlook"] != "Insufficient data")).sum()),
-                    "n_insufficient": int((trends_df["outlook"] == "Insufficient data").sum()),
-                    "improving": int((trends_df["outlook"] == "Improving").sum()),
-                    "declining": int((trends_df["outlook"] == "Declining").sum()),
-                    "stable": int((trends_df["outlook"] == "Stable or uncertain").sum()),
-                },
+            metrics["clustering"] = {
+                "status": "complete",
+                "k_chosen": int(clusters_df["cluster_id"].nunique()),
+                "year": latest_year,
+                "n_places": len(clusters_df),
             }
-            MODELS_DIR.mkdir(parents=True, exist_ok=True)
-            with open(METRICS_JSON, "w", encoding="utf-8") as f:
-                json.dump(metrics, f, indent=2)
-            logger.info("Saved: %s", METRICS_JSON)
 
         except Exception as e:
             logger.error("Clustering failed: %s", e, exc_info=True)
             pd.DataFrame(columns=["place_id", "cluster_id", "tier_label"]).to_csv(CLUSTERS_CSV, index=False)
+            metrics["clustering"] = {"status": "failed", "year": latest_year, "error": str(e)}
+
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(METRICS_JSON, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+    logger.info("Saved: %s", METRICS_JSON)
 
     logger.info("=== ML STAGE COMPLETE ===")
 

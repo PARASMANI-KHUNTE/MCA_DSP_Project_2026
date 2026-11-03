@@ -7,6 +7,9 @@ following the 5-minute Viva presentation script outlined in M14.3.
 
 from pathlib import Path
 from markdown_pdf import Section, MarkdownPdf
+from src.utils.provenance import require_verified_sources
+
+require_verified_sources()
 
 SLIDES_MD = Path("reports/presentation_slides.md")
 SLIDES_PDF = Path("reports/presentation_slides.pdf")

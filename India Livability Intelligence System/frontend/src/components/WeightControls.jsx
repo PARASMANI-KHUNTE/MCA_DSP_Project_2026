@@ -22,7 +22,9 @@ const FACTORS = [
 ];
 
 const COLOR_MODES = [
-  { id: "overall", label: "Bad → Good" }
+  { id: "overall", label: "Overall" },
+  { id: "factor", label: "Factor" },
+  { id: "tier", label: "Score bands" }
 ];
 
 const MAP_FACTORS = [
@@ -192,14 +194,14 @@ export default function WeightControls({
       <div className="border-t border-slate-800/70 pt-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="eyebrow">Map color</span>
-          <span className="text-[9px] text-slate-500">Red = bad · Yellow = mid · Green = good</span>
+          <span className="text-[9px] text-slate-500">Purple = low · Blue/teal = mid · Yellow = high</span>
         </div>
         <div className="mb-2 px-0.5">
           <div
             className="h-2.5 rounded-full ring-1 ring-inset ring-slate-950/60"
             style={{ background: SCORE_GRADIENT_CSS }}
             role="img"
-            aria-label="Score color range from red (bad) through yellow (moderate) to green (good)"
+            aria-label="Score color range from purple (low score) through blue and teal to yellow (high score)"
           />
           <div className="mt-1 flex justify-between text-[9px] font-medium text-slate-500">
             <span className="text-red-400">Worse ← 0</span>
@@ -207,7 +209,7 @@ export default function WeightControls({
             <span className="text-emerald-400">100 → Better</span>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
           {COLOR_MODES.map(mode => (
             <button
               key={mode.id}
@@ -224,6 +226,21 @@ export default function WeightControls({
             </button>
           ))}
         </div>
+        {colorMode === "factor" && (
+          <label className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
+            <span>Color by factor</span>
+            <select
+              value={activeFactor}
+              onChange={event => onChangeActiveFactor(event.target.value)}
+              aria-label="Select map color factor"
+              className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-slate-200"
+            >
+              {MAP_FACTORS.map(factor => (
+                <option key={factor.id} value={factor.id}>{factor.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
     </div>
   );

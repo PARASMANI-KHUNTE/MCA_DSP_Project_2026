@@ -7,6 +7,7 @@ An MCA data science project that explores livability across Indian states/UTs an
 
 ## Project status
 
+- **Data verification blocker:** several state-level and CPCB raw tables currently match hard-coded placeholders from the retired `populate_official_data.py` generator. The data pipeline and frontend-data exporter now refuse those exact files; existing processed tables and the embedded demo bundle are marked unverified and must not be presented as real findings until source-derived data replaces them.
 - The dashboard covers **61 places**: 32 states/UTs and 29 cities.
 - Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
 - The dashboard has embedded data and computes scores in the browser. The FastAPI backend is available for API use, but is not required to run the dashboard.
@@ -61,7 +62,7 @@ The API documentation is at `http://localhost:8000/docs`; health check: `http://
 
 ## Data pipeline and analysis
 
-The full Python stack is listed in the root `requirements.txt`. Raw source files are expected under `data/raw/` as described by [`data/raw/source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`.
+The full Python stack is listed in the root `requirements.txt`. Raw source files are expected under `data/raw/` as described by [`data/raw/source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`. At present, `make data` and `python -m src.export_frontend_data` stop if the known placeholder records are still present. Replace them with verified publisher data and update the source register before regenerating outputs.
 
 ```bash
 pip install -r requirements.txt

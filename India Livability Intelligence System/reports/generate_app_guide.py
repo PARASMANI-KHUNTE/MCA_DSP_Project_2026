@@ -8,6 +8,9 @@ projection horizons, inherited indicators and explicit missing-data behavior.
 
 from pathlib import Path
 from markdown_pdf import Section, MarkdownPdf
+from src.utils.provenance import require_verified_sources
+
+require_verified_sources()
 
 GUIDE_MD = Path("reports/application_guide.md")
 GUIDE_PDF = Path("reports/application_guide.pdf")

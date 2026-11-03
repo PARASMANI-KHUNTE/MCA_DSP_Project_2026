@@ -20,6 +20,8 @@ Run directly:
 import json
 import logging
 import sys
+import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -39,6 +41,7 @@ from src.utils.constants import (
     MAX_MISSING_PCT_TO_IMPUTE,
 )
 from src.utils.helpers import setup_logging, interpolate_within_place, missing_summary
+from src.utils.provenance import require_verified_sources
 from src.loaders.load_air_kaggle import load_city_day, aggregate_to_city_year
 from src.loaders.load_air_cpcb import load_all_cpcb
 from src.loaders.load_safety import load_safety
@@ -59,6 +62,7 @@ def stage_load() -> dict[str, pd.DataFrame]:
     # Air — Kaggle (daily → annual)
     try:
         city_day = load_city_day()
+        raw["air_kaggle_daily_audit"] = city_day
         raw[FACTOR_AIR + "_kaggle"] = aggregate_to_city_year(city_day)
     except Exception as e:
         logger.error("Failed to load Kaggle air data: %s", e)
@@ -429,7 +433,12 @@ def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
 
 # ── Stage 7: Export ────────────────────────────────────────────────────────
 
-def stage_export(tidy: pd.DataFrame, wide: pd.DataFrame, issues: list[str]) -> None:
+def stage_export(
+    tidy: pd.DataFrame,
+    wide: pd.DataFrame,
+    issues: list[str],
+    raw_sources: dict[str, pd.DataFrame] | None = None,
+) -> None:
     """Write processed files with version tag."""
     logger.info("=== STAGE 7: EXPORT ===")
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
@@ -439,6 +448,63 @@ def stage_export(tidy: pd.DataFrame, wide: pd.DataFrame, issues: list[str]) -> N
 
     wide.to_csv(FACTORS_WIDE, index=False)
     logger.info("Saved: %s", FACTORS_WIDE)
+
+    version_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    version_dir = DATA_PROCESSED / "versions" / version_id
+    version_dir.mkdir(parents=True, exist_ok=False)
+    version_tidy = version_dir / FACTORS_TIDY.name
+    version_wide = version_dir / FACTORS_WIDE.name
+    tidy.to_parquet(version_tidy, index=False)
+    wide.to_csv(version_wide, index=False)
+    version_manifest = {
+        "version": version_id,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "rows": {"factors_tidy": len(tidy), "factors_wide": len(wide)},
+        "files": {
+            version_tidy.name: hashlib.sha256(version_tidy.read_bytes()).hexdigest(),
+            version_wide.name: hashlib.sha256(version_wide.read_bytes()).hexdigest(),
+        },
+    }
+    (version_dir / "manifest.json").write_text(
+        json.dumps(version_manifest, indent=2), encoding="utf-8"
+    )
+    logger.info("Saved versioned analytical snapshot: %s", version_dir)
+
+    # Persist all detected source outliers with enough context to review them.
+    outlier_rows = []
+    for source_id, source_df in (raw_sources or {}).items():
+        if source_df.empty or "outlier_flag" not in source_df.columns:
+            continue
+        flagged = source_df[source_df["outlier_flag"].fillna(False).astype(bool)]
+        for row_index, row in flagged.iterrows():
+            context = {
+                key: row.get(key)
+                for key in ("place_id", "place_name", "state_name", "city", "year", "date")
+                if key in source_df.columns
+            }
+            value_column = next(
+                (key for key in ("pm25", "pm25_mean", "crime_rate_per_lakh",
+                                 "infant_mortality_rate", "per_capita_nsdp_constant",
+                                 "unemployment_rate", "rent") if key in source_df.columns),
+                None,
+            )
+            outlier_rows.append({
+                "source_id": source_id,
+                "source_row": str(row_index),
+                **context,
+                "value_column": value_column or "",
+                "original_value": row.get("outlier_original_value"),
+                "reason": row.get("outlier_reason", ""),
+                "action": row.get("outlier_action", ""),
+            })
+    outlier_log = pd.DataFrame(outlier_rows, columns=[
+        "source_id", "source_row", "place_id", "place_name", "state_name", "city",
+        "year", "date", "value_column", "original_value", "reason", "action",
+    ])
+    outlier_path = Path("reports") / "outlier_log.csv"
+    outlier_path.parent.mkdir(parents=True, exist_ok=True)
+    outlier_log.to_csv(outlier_path, index=False)
+    logger.info("Saved: %s (%d flagged rows)", outlier_path, len(outlier_log))
 
     # Write data quality report stub
     report_path = Path("reports") / "data_quality_report.md"
@@ -465,6 +531,8 @@ def run(places_path: Path = PLACES_CSV) -> None:
     """Run the full pipeline end to end."""
     setup_logging()
     logger.info("=== INDIA LIVABILITY PIPELINE START ===")
+
+    require_verified_sources()
 
     # Load place master
     if not places_path.exists():
@@ -513,7 +581,7 @@ def run(places_path: Path = PLACES_CSV) -> None:
     issues = stage_validate(tidy, places)
 
     # Stage 7: Export
-    stage_export(tidy, wide, issues)
+    stage_export(tidy, wide, issues, raw_sources=raw)
 
     logger.info("=== PIPELINE COMPLETE ===")
 

@@ -1,26 +1,11 @@
-# Data Inputs and Interpretation
+﻿# Data Inputs and Interpretation
 
-The project now runs its data-processing, scoring, analysis, model, and frontend-export stages against the files currently present in `data/raw/`. Source-review status is not an execution gate. This report documents the data limitations that affect interpretation; it does not prevent the application from displaying results.
+Six local CSVs were confirmed as output from the retired placeholder generator and moved to `data/rejected/generated_placeholders/`. They are excluded from active loaders. See [fabrication audit](data_fabrication_audit.md).
 
-An earlier project inspection identified these files as matching demonstration values produced by the retired `src/loaders/populate_official_data.py` script. They remain active inputs because the project is using the data currently available locally:
+The active pipeline currently reads the local Kaggle-labeled `city_day.csv` and `House_Rent_Dataset.csv`. They are not known matches for that generator, but their exact publisher versions, observation values, extraction lineage, and reuse terms have not been independently verified. A filename, source register entry, or schema match is not proof of authenticity.
 
-| Raw file | Claimed source | Pipeline use |
-|---|---|---|
-| `data/raw/safety/ncrb_crime_rate_2015_2022.csv` | NCRB | Included |
-| `data/raw/health/srs_infant_mortality_2015_2022.csv` | SRS / Registrar General of India | Included |
-| `data/raw/economy/rbi_nsdp_per_capita_constant.csv` | RBI | Included |
-| `data/raw/economy/plfs_unemployment_rates.csv` | MoSPI / PLFS | Included |
-| `data/raw/air_cpcb/cpcb_aqs_2023.csv` | CPCB | Included |
-| `data/raw/air_cpcb/cpcb_aqs_2024.csv` | CPCB | Included |
+The latest rebuild contains 48 city-year air observations across 18 cities and 40 state-year averages of available city observations across 13 states, plus six rent snapshots. State averages are derived summaries of the sampled cities, not independent state measurements. Missing values are left missing. Safety, health, and economy have no active observations; complete composite scores and rankings are therefore unavailable. Existing score configuration does not authorize scoring from an incomplete subset.
 
-The generated results describe the active input tables and the project's configured transformations. A successful load, schema check, score calculation, or API response means the software processed those inputs; it does not establish that their values match a publisher's release.
+The map geography, place coordinates, region mapping, score bounds, weights, and display bands are hardcoded reference/configuration values, not source observations. Score bounds are analyst-selected anchors rather than empirical percentiles. Geometry and coordinate provenance still need documentation.
 
-## Coverage and interpretation
-
-- The pipeline inherits state-level safety, health, and economy values for cities because city-level series are not available in the current inputs.
-- State air values are annual means of the observed cities in each state; they summarize only the available city sample.
-- Air observations have a gap between 2019 and 2023; safety, health, and economy observations end in 2022.
-- Cost-of-living observations cover six cities and one snapshot only.
-- Trend projections use the available historical series and configured break/gap handling; they are not observed future values.
-
-The retired demonstration-data generator remains disabled. Existing datasets can be refreshed or replaced in `data/raw/`, then the complete pipeline commands in the README regenerate processed outputs and the frontend bundle.
+Pipeline validation confirms table structure and processing only; it does not verify source provenance. Do not describe current exploratory outputs as verified public-data findings.

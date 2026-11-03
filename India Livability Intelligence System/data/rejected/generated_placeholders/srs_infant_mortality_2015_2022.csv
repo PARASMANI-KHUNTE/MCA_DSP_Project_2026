@@ -1,0 +1,212 @@
+state_name,year,infant_mortality_rate
+Andhra Pradesh,2015,37
+Andhra Pradesh,2016,34
+Andhra Pradesh,2017,32
+Andhra Pradesh,2018,29
+Andhra Pradesh,2019,25
+Andhra Pradesh,2020,24
+Andhra Pradesh,2021,23
+Andhra Pradesh,2022,22
+Assam,2015,47
+Assam,2016,44
+Assam,2017,44
+Assam,2018,41
+Assam,2019,40
+Assam,2020,36
+Assam,2021,34
+Assam,2022,32
+Bihar,2015,42
+Bihar,2016,38
+Bihar,2017,35
+Bihar,2018,32
+Bihar,2019,29
+Bihar,2020,27
+Bihar,2021,26
+Bihar,2022,25
+Chhattisgarh,2015,41
+Chhattisgarh,2016,39
+Chhattisgarh,2017,38
+Chhattisgarh,2018,41
+Chhattisgarh,2019,40
+Chhattisgarh,2020,38
+Chhattisgarh,2021,36
+Chhattisgarh,2022,35
+Goa,2015,9
+Goa,2016,8
+Goa,2017,9
+Goa,2018,7
+Goa,2019,8
+Goa,2020,7
+Goa,2021,6
+Goa,2022,6
+Gujarat,2015,33
+Gujarat,2016,30
+Gujarat,2017,30
+Gujarat,2018,28
+Gujarat,2019,25
+Gujarat,2020,23
+Gujarat,2021,22
+Gujarat,2022,21
+Haryana,2015,36
+Haryana,2016,33
+Haryana,2017,30
+Haryana,2018,30
+Haryana,2019,27
+Haryana,2020,26
+Haryana,2021,25
+Haryana,2022,24
+Himachal Pradesh,2015,28
+Himachal Pradesh,2016,25
+Himachal Pradesh,2017,22
+Himachal Pradesh,2018,19
+Himachal Pradesh,2019,19
+Himachal Pradesh,2020,18
+Himachal Pradesh,2021,17
+Himachal Pradesh,2022,16
+Jharkhand,2015,32
+Jharkhand,2016,29
+Jharkhand,2017,29
+Jharkhand,2018,30
+Jharkhand,2019,27
+Jharkhand,2020,25
+Jharkhand,2021,24
+Jharkhand,2022,23
+Karnataka,2015,28
+Karnataka,2016,24
+Karnataka,2017,25
+Karnataka,2018,23
+Karnataka,2019,21
+Karnataka,2020,19
+Karnataka,2021,18
+Karnataka,2022,17
+Kerala,2015,12
+Kerala,2016,10
+Kerala,2017,10
+Kerala,2018,7
+Kerala,2019,6
+Kerala,2020,6
+Kerala,2021,5
+Kerala,2022,5
+Madhya Pradesh,2015,50
+Madhya Pradesh,2016,47
+Madhya Pradesh,2017,47
+Madhya Pradesh,2018,48
+Madhya Pradesh,2019,46
+Madhya Pradesh,2020,43
+Madhya Pradesh,2021,41
+Madhya Pradesh,2022,39
+Maharashtra,2015,21
+Maharashtra,2016,19
+Maharashtra,2017,19
+Maharashtra,2018,19
+Maharashtra,2019,17
+Maharashtra,2020,16
+Maharashtra,2021,15
+Maharashtra,2022,15
+Odisha,2015,46
+Odisha,2016,44
+Odisha,2017,41
+Odisha,2018,40
+Odisha,2019,38
+Odisha,2020,36
+Odisha,2021,33
+Odisha,2022,31
+Punjab,2015,23
+Punjab,2016,21
+Punjab,2017,21
+Punjab,2018,20
+Punjab,2019,19
+Punjab,2020,18
+Punjab,2021,17
+Punjab,2022,16
+Rajasthan,2015,43
+Rajasthan,2016,41
+Rajasthan,2017,38
+Rajasthan,2018,37
+Rajasthan,2019,35
+Rajasthan,2020,32
+Rajasthan,2021,30
+Rajasthan,2022,29
+Tamil Nadu,2015,19
+Tamil Nadu,2016,17
+Tamil Nadu,2017,16
+Tamil Nadu,2018,15
+Tamil Nadu,2019,15
+Tamil Nadu,2020,13
+Tamil Nadu,2021,12
+Tamil Nadu,2022,11
+Telangana,2015,34
+Telangana,2016,31
+Telangana,2017,29
+Telangana,2018,27
+Telangana,2019,23
+Telangana,2020,21
+Telangana,2021,20
+Telangana,2022,19
+Uttar Pradesh,2015,46
+Uttar Pradesh,2016,43
+Uttar Pradesh,2017,41
+Uttar Pradesh,2018,43
+Uttar Pradesh,2019,41
+Uttar Pradesh,2020,38
+Uttar Pradesh,2021,36
+Uttar Pradesh,2022,34
+Uttarakhand,2015,34
+Uttarakhand,2016,38
+Uttarakhand,2017,32
+Uttarakhand,2018,31
+Uttarakhand,2019,27
+Uttarakhand,2020,24
+Uttarakhand,2021,23
+Uttarakhand,2022,22
+West Bengal,2015,26
+West Bengal,2016,25
+West Bengal,2017,24
+West Bengal,2018,22
+West Bengal,2019,20
+West Bengal,2020,19
+West Bengal,2021,18
+West Bengal,2022,17
+Delhi,2015,18
+Delhi,2016,18
+Delhi,2017,16
+Delhi,2018,13
+Delhi,2019,11
+Delhi,2020,12
+Delhi,2021,10
+Delhi,2022,10
+Chandigarh,2015,14
+Chandigarh,2016,14
+Chandigarh,2017,14
+Chandigarh,2018,13
+Chandigarh,2019,12
+Chandigarh,2020,11
+Chandigarh,2021,10
+Chandigarh,2022,9
+Arunachal Pradesh,2015,26
+Arunachal Pradesh,2018,22
+Arunachal Pradesh,2022,19
+Manipur,2015,14
+Manipur,2018,12
+Manipur,2022,10
+Meghalaya,2015,38
+Meghalaya,2018,34
+Meghalaya,2022,30
+Mizoram,2015,22
+Mizoram,2018,18
+Mizoram,2022,15
+Nagaland,2015,18
+Nagaland,2018,15
+Nagaland,2022,12
+Sikkim,2015,18
+Sikkim,2018,15
+Sikkim,2022,11
+Tripura,2015,20
+Tripura,2018,16
+Tripura,2022,13
+Jammu and Kashmir,2015,26
+Jammu and Kashmir,2018,22
+Jammu and Kashmir,2022,17
+Ladakh,2015,22
+Ladakh,2018,18
+Ladakh,2022,15

@@ -1,5 +1,5 @@
-# India Livability Intelligence System (ILIS)
-> **Data verification hold (3 November 2026):** the current embedded data includes values from generated placeholders. Treat the displayed scores and analysis as demonstration-only until verified source data replaces them and the project is rebuilt.
+﻿# India Livability Intelligence System (ILIS)
+> **Withdrawn guide (3 November 2026):** this document describes the former full index and contains outdated coverage and analysis claims. Six generated input tables were quarantined and the app was rebuilt; current local air/rent inputs remain unverified and composite scores are unavailable. Do not use this guide as a description of current results. See `data_fabrication_audit.md`.
 
 ## Application Guide
 

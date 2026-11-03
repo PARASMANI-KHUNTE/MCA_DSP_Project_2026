@@ -20,6 +20,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.constants import RAW_SAFETY
+from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import (
     apply_name_standardization,
     load_alias_map,
@@ -133,9 +134,14 @@ def load_safety(raw_dir: Path = RAW_SAFETY) -> pd.DataFrame:
         state_name, year, crime_rate_per_lakh,
         series_break, is_imputed (added by pipeline)
     """
-    files = sorted(
-        [f for f in raw_dir.iterdir() if f.suffix.lower() in (".csv", ".xls", ".xlsx")]
-    )
+    candidates = [
+        f for f in raw_dir.iterdir()
+        if f.suffix.lower() in (".csv", ".xls", ".xlsx")
+    ]
+    files = sorted(f for f in candidates if not is_known_generated_source(f))
+    for path in candidates:
+        if is_known_generated_source(path):
+            logger.error("Excluding known generated placeholder from safety inputs: %s", path)
     if not files:
         logger.error("No safety files found in %s", raw_dir)
         return pd.DataFrame()

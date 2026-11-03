@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Map, SlidersHorizontal, Trophy } from "lucide-react";
+import { ArrowUp, ExternalLink, FolderGit2, Map, SlidersHorizontal, Trophy } from "lucide-react";
 import Navbar from "./components/Navbar";
+import HeroSection from "./components/HeroSection";
+import TechStack from "./components/TechStack";
+import StatsSection from "./components/StatsSection";
+import AboutView from "./components/AboutView";
 import WeightControls from "./components/WeightControls";
 import IndiaMap from "./components/IndiaMap";
 import Leaderboard from "./components/Leaderboard";
@@ -12,9 +16,8 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
-import { BASELINE_YEAR, calculateScores } from "./services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
-import { PRESETS } from "./data/methodologyData";
 
 const MOBILE_PANELS = [
   { id: "map", label: "Map", icon: Map },
@@ -28,16 +31,19 @@ export default function App() {
   const [mobilePanel, setMobilePanel] = useState("map");
 
   const [weights, setWeights] = useState({
-    air: 35,
-    safety: 25,
-    health: 25,
-    economy: 15,
+    air: DATA_COVERAGE.availableFactors?.includes("air") ? 100 : 0,
+    safety: 0,
+    health: 0,
+    economy: 0,
     col: 0
   });
-  const [selectedPresetId, setSelectedPresetId] = useState("balanced");
+  const [selectedPresetId, setSelectedPresetId] = useState(
+    DATA_COVERAGE.availableFactors?.includes("air") ? "air_only" : "col_only"
+  );
 
-  const [colorMode, setColorMode] = useState("overall");
-  const [activeFactor, setActiveFactor] = useState("overall");
+  const initialFactor = DATA_COVERAGE.availableFactors?.[0] || "air";
+  const [colorMode, setColorMode] = useState(DATA_COVERAGE.compositeAvailable ? "overall" : "factor");
+  const [activeFactor, setActiveFactor] = useState(initialFactor);
 
   const [selectedPlaceId, setSelectedPlaceId] = useState(null);
   const [compareIds, setCompareIds] = useState([]);
@@ -79,16 +85,37 @@ export default function App() {
   const handleWeightChange = (factor, value) => {
     setSelectedPresetId("custom");
     setWeights(previous => ({ ...previous, [factor]: value }));
+    if (value > 0) {
+      const availableYear = DATA_COVERAGE.lastYearByFactor?.[factor];
+      if (availableYear != null && selectedYear < DATA_COVERAGE.firstYearByFactor?.[factor]) {
+        setSelectedYear(availableYear);
+      }
+    }
   };
 
   const handleSelectPreset = preset => {
     setSelectedPresetId(preset.id);
     setWeights(preset.weights);
+    const factor = preset.id.endsWith("_only") ? preset.id.replace("_only", "") : null;
+    const latestYear = factor && DATA_COVERAGE.lastYearByFactor?.[factor];
+    if (latestYear != null) setSelectedYear(latestYear);
+  };
+
+  const handleChangeActiveFactor = factor => {
+    setActiveFactor(factor);
+    const firstYear = DATA_COVERAGE.firstYearByFactor?.[factor];
+    const latestYear = DATA_COVERAGE.lastYearByFactor?.[factor];
+    if (firstYear != null && latestYear != null && selectedYear < firstYear) {
+      setSelectedYear(latestYear);
+    }
   };
 
   const handleReset = () => {
-    const balanced = PRESETS.find(preset => preset.id === "balanced");
-    if (balanced) handleSelectPreset(balanced);
+    const defaultFactor = DATA_COVERAGE.availableFactors?.includes("air") ? "air" : DATA_COVERAGE.availableFactors?.[0];
+    const resetWeights = { air: 0, safety: 0, health: 0, economy: 0, col: 0 };
+    if (defaultFactor) resetWeights[defaultFactor] = 100;
+    setSelectedPresetId(defaultFactor === "col" ? "col_only" : "air_only");
+    setWeights(resetWeights);
   };
 
   const handleToggleCompare = useCallback(
@@ -172,133 +199,259 @@ export default function App() {
     notify(
       status === "ok"
         ? "FastAPI backend connected."
-        : "Backend offline. The embedded scoring engine keeps working.",
+        : "Backend offline. The embedded scoring engine continues running.",
       status === "offline" ? "info" : "success"
     );
   };
 
-  const explorerHeight = compareIds.length
-    ? "lg:h-[calc(100dvh-12.25rem)]"
-    : "lg:h-[calc(100dvh-7.25rem)]";
 
   return (
-    <div className="flex min-h-[100dvh] flex-col text-neutral-100">
-      <Navbar
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        selectedYear={selectedYear}
-        onChangeYear={setSelectedYear}
-        backendStatus={backendStatus}
-        onRetryBackend={handleRetryBackend}
-        onOpenTour={() => setShowTourModal(true)}
-        dataAvailable={dataAvailable}
-      />
+    <div className="min-h-screen bg-[#F5F5F2] p-2 sm:p-4 lg:p-6 text-[#111111] flex flex-col font-sans">
+      {/* Centered Portfolio Container */}
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[#E5E5E5] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] overflow-hidden">
+        {/* Navigation Bar */}
+        <Navbar
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          selectedYear={selectedYear}
+          onChangeYear={setSelectedYear}
+          backendStatus={backendStatus}
+          onRetryBackend={handleRetryBackend}
+          onOpenTour={() => setShowTourModal(true)}
+          dataAvailable={dataAvailable}
+        />
 
-      <main
-        className={`relative z-10 mx-auto w-full max-w-[1720px] flex-1 px-3 pt-3 sm:px-5 sm:pt-4 lg:px-6 lg:pt-5 ${
-          !dataAvailable
-            ? "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8"
-            : compareIds.length
-            ? "pb-[calc(8.5rem+env(safe-area-inset-bottom))] lg:pb-28"
-            : "pb-[calc(6.25rem+env(safe-area-inset-bottom))] lg:pb-8"
-        }`}
-      >
-        {dataAvailable && activeTab === "map" && (
-          <div className="flex flex-col">
-            <QuickStartBanner
-              onOpenTour={() => setShowTourModal(true)}
-              onSelectPreset={handleSelectPreset}
-            />
+        {/* Main Content Surfaces */}
+        <div className="flex-1 px-4 sm:px-8 lg:px-10 py-4 sm:py-6">
+          {/* Interactive Views */}
+          <main className="flex-1">
+            {/* View 0: Portfolio Showcase */}
+            {activeTab === "portfolio" && (
+              <div className="flex flex-col animate-fade-in">
+                <HeroSection
+                  onExplore={() => setActiveTab("map")}
+                  onOpenMethodology={() => setActiveTab("methodology")}
+                />
+                <TechStack />
+                <StatsSection />
 
-            <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1 sm:mb-4 lg:hidden">
-              {MOBILE_PANELS.map(panel => {
-                const Icon = panel.icon;
-                const active = mobilePanel === panel.id;
-                return (
-                  <button
-                    key={panel.id}
-                    onClick={() => setMobilePanel(panel.id)}
-                    aria-pressed={active}
-                    className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[11px] font-semibold transition-all sm:text-xs ${
-                      active
-                        ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
-                        : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
+                {/* Featured Project Card */}
+                {dataAvailable && (
+                  <div className="mt-8 rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-6 sm:p-8">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[11px] font-semibold text-[#666666]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#B51F3B]" />
+                          Featured Project
+                        </div>
+                        <h3 className="mt-3 text-xl font-extrabold text-[#111111]">
+                          India Livability Intelligence System
+                        </h3>
+                        <p className="mt-1 max-w-xl text-sm leading-relaxed text-[#555555]">
+                          Explore a local data preview with an air quality ranking and a separate rent snapshot ranking. A complete livability index is unavailable because safety, health, and economy inputs are not active.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("map")}
+                        className="group inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#111111] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#B51F3B] hover:shadow-md"
+                      >
+                        <Map size={14} />
+                        <span>Open Explorer</span>
+                        <ArrowUp size={14} className="rotate-90 transition-transform group-hover:translate-x-0.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-8">
+                  <AboutView
+                    onOpenExplorer={() => setActiveTab("map")}
+                    onOpenMethodology={() => setActiveTab("methodology")}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* View 1: Explorer (Decision System) */}
+            {dataAvailable && activeTab === "map" && (
+              <div className="flex flex-col">
+                <div className="mb-3 flex flex-col gap-1">
+                  <div className="inline-flex items-center gap-2 self-start rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-3 py-1 text-[11px] font-semibold text-[#666666]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#B51F3B]" />
+                    Interactive Decision Platform
+                  </div>
+                  <h2 className="text-xl font-extrabold tracking-tight text-[#111111] sm:text-2xl">
+                    Spatial Explorer & Livability Rankings
+                  </h2>
+                  <p className="text-xs text-[#666666] sm:text-sm">
+                    Rank places by available observations, inspect their coverage, and view eligible air trend projections.
+                  </p>
+                </div>
+
+                <QuickStartBanner
+                  onOpenTour={() => setShowTourModal(true)}
+                  onSelectPreset={handleSelectPreset}
+                  compositeAvailable={DATA_COVERAGE.compositeAvailable}
+                  availableFactors={DATA_COVERAGE.availableFactors || []}
+                />
+
+                {!DATA_COVERAGE.compositeAvailable && (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900">
+                    Composite rankings are unavailable because required indicators are missing. The map shows only available observed factors; missing tables remain unscored.
+                  </div>
+                )}
+
+                {/* Mobile View Toggle */}
+                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 lg:hidden">
+                  {MOBILE_PANELS.map(panel => {
+                    const Icon = panel.icon;
+                    const active = mobilePanel === panel.id;
+                    return (
+                      <button
+                        key={panel.id}
+                        onClick={() => setMobilePanel(panel.id)}
+                        aria-pressed={active}
+                        className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-all ${
+                          active
+                            ? "bg-[#111111] text-white shadow-xs"
+                            : "text-[#666666] hover:bg-white hover:text-[#111111]"
+                        }`}
+                      >
+                        <Icon size={13} />
+                        {panel.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 3-Column Decision Grid */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:h-[calc(100dvh-13rem)] lg:min-h-[580px]">
+                  {/* Left Column: Weights */}
+                  <div
+                    className={`custom-scrollbar min-h-0 lg:col-span-3 lg:block lg:overflow-y-auto lg:pr-1 ${
+                      mobilePanel === "weights" ? "block" : "hidden"
                     }`}
                   >
-                    <Icon size={13} />
-                    {panel.label}
-                  </button>
-                );
-              })}
+                    <WeightControls
+                      weights={weights}
+                      onChangeWeight={handleWeightChange}
+                      onSelectPreset={handleSelectPreset}
+                      onReset={handleReset}
+                      colorMode={colorMode}
+                      onChangeColorMode={setColorMode}
+                      activeFactor={activeFactor}
+                      onChangeActiveFactor={handleChangeActiveFactor}
+                      selectedPresetId={selectedPresetId}
+                      availableFactors={DATA_COVERAGE.availableFactors || []}
+                      compositeAvailable={DATA_COVERAGE.compositeAvailable}
+                    />
+                  </div>
+
+                  {/* Center Column: Interactive Map */}
+                  <div
+                    className={`h-[460px] sm:h-[540px] lg:col-span-6 lg:h-full flex flex-col min-h-0 ${
+                      mobilePanel === "map" ? "flex" : "hidden"
+                    } lg:flex`}
+                  >
+                    <IndiaMap
+                      places={rankedPlaces}
+                      selectedPlace={selectedPlace}
+                      onSelectPlace={place => setSelectedPlaceId(place.id)}
+                      colorMode={colorMode}
+                      activeFactor={activeFactor}
+                      year={selectedYear}
+                    />
+                  </div>
+
+                  {/* Right Column: Leaderboard */}
+                  <div
+                    className={`h-[460px] sm:h-[540px] lg:col-span-3 lg:h-full flex flex-col min-h-0 ${
+                      mobilePanel === "rankings" ? "flex" : "hidden"
+                    } lg:flex`}
+                  >
+                    <Leaderboard
+                      rankedPlaces={rankedPlaces}
+                      onSelectPlace={place => setSelectedPlaceId(place.id)}
+                      selectedPlaceId={selectedPlaceId}
+                      compareIds={compareIds}
+                      onToggleCompare={handleToggleCompare}
+                      year={selectedYear}
+                      compositeAvailable={DATA_COVERAGE.compositeAvailable}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* View 2: Insights */}
+            {dataAvailable && activeTab === "insights" && (
+              <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} weights={weights} />
+            )}
+
+            {/* View 3: Methodology */}
+            {activeTab === "methodology" && (
+              <MethodologyView />
+            )}
+
+            {/* View 4: About & Code */}
+            {activeTab === "about" && (
+              <AboutView
+                onOpenExplorer={() => setActiveTab("map")}
+                onOpenMethodology={() => setActiveTab("methodology")}
+              />
+            )}
+          </main>
+        </div>
+
+        {/* Editorial Footer */}
+        <footer className="border-t border-[#E5E5E5] bg-[#FAFAF8] px-6 py-6 sm:px-10">
+          <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+            <div>
+              <p className="text-xs font-bold text-[#111111]">
+                Parasmani Khunte — MCA, 2026
+              </p>
+              <p className="mt-0.5 text-[11px] text-[#777777]">
+                India Livability Intelligence System · Multi-Criteria Spatial Scoring & Trend Analytics
+              </p>
             </div>
 
-            <div className={`grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 ${explorerHeight}`}>
-              <div
-                className={`custom-scrollbar min-h-0 lg:col-span-3 lg:block lg:overflow-y-auto lg:pr-1 ${
-                  mobilePanel === "weights" ? "block" : "hidden"
-                }`}
+            <div className="flex items-center gap-4 text-xs font-medium text-[#666666]">
+              <button
+                onClick={() => setActiveTab("methodology")}
+                className="hover:text-[#111111] transition-colors"
               >
-                <WeightControls
-                  weights={weights}
-                  onChangeWeight={handleWeightChange}
-                  onSelectPreset={handleSelectPreset}
-                  onReset={handleReset}
-                  colorMode={colorMode}
-                  onChangeColorMode={setColorMode}
-                  activeFactor={activeFactor}
-                  onChangeActiveFactor={setActiveFactor}
-                  selectedPresetId={selectedPresetId}
-                />
-              </div>
-
-              <div
-                className={`h-[calc(100dvh-17rem)] min-h-[360px] sm:min-h-[440px] lg:col-span-6 lg:h-full lg:min-h-0 ${
-                  mobilePanel === "map" ? "flex" : "hidden"
-                } lg:flex`}
+                Methodology
+              </button>
+              <button
+                onClick={() => setActiveTab("about")}
+                className="hover:text-[#111111] transition-colors"
               >
-                <IndiaMap
-                  places={rankedPlaces}
-                  selectedPlace={selectedPlace}
-                  onSelectPlace={place => setSelectedPlaceId(place.id)}
-                  colorMode={colorMode}
-                  activeFactor={activeFactor}
-                  year={selectedYear}
-                />
-              </div>
-
-              <div
-                className={`h-[calc(100dvh-17rem)] min-h-[360px] sm:min-h-[440px] lg:col-span-3 lg:h-full lg:min-h-0 ${
-                  mobilePanel === "rankings" ? "flex" : "hidden"
-                } lg:flex`}
+                About & Code
+              </button>
+              <a
+                href="https://github.com/PARASMANI-KHUNTE/MCA_DSP_Project_2026"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 hover:text-[#111111] transition-colors"
               >
-                <Leaderboard
-                  rankedPlaces={rankedPlaces}
-                  onSelectPlace={place => setSelectedPlaceId(place.id)}
-                  selectedPlaceId={selectedPlaceId}
-                  compareIds={compareIds}
-                  onToggleCompare={handleToggleCompare}
-                  year={selectedYear}
-                />
-              </div>
+                <FolderGit2 size={13} />
+                <span>GitHub</span>
+                <ExternalLink size={10} className="text-[#999999]" />
+              </a>
             </div>
           </div>
-        )}
+        </footer>
+      </div>
 
-        {dataAvailable && activeTab === "insights" && (
-          <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} />
-        )}
-
-        {activeTab === "methodology" && (
-          <MethodologyView />
-        )}
-      </main>
-
-      {dataAvailable && <CompareBar
-        places={comparePlaces}
-        onRemove={handleRemoveCompare}
-        onClear={handleClearCompare}
-        onOpen={handleOpenCompare}
-      />}
+      {/* Floating Elements */}
+      {dataAvailable && (
+        <CompareBar
+          places={comparePlaces}
+          onRemove={handleRemoveCompare}
+          onClear={handleClearCompare}
+          onOpen={handleOpenCompare}
+        />
+      )}
 
       <Toast toast={toast} onDismiss={() => setToast(null)} />
 

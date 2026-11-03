@@ -110,9 +110,6 @@ MIN_KAGGLE_VALID_YEARS  = 4     # within 2015–2019
 MIN_CPCB_VALID_YEARS    = 1     # within 2023–2024
 MIN_DAY_COVERAGE_PCT    = 0.75  # ≥75% of days in a year to count as valid
 
-# Missing data imputation threshold
-MAX_MISSING_PCT_TO_IMPUTE = 0.20   # impute if < 20% missing; else exclude
-
 # Minimum yearly points required for trend projection
 MIN_TREND_POINTS = 5
 

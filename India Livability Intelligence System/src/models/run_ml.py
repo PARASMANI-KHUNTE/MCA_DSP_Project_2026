@@ -200,6 +200,9 @@ def run() -> None:
     latest_scores = scores_wide[scores_wide["year"] == latest_year].copy()
 
     metrics = {
+        "input_source_status": "local files not independently verified against publishers",
+        "analysis_scope": "factor-level exploratory trends only; no composite score is available",
+        "composite_available": bool(scores_wide.get("score", pd.Series(dtype=float)).notna().any()),
         "clustering": {"status": "skipped", "year": latest_year, "n_places": 0},
         "trends": {
             "n_fitted": int((trends_df["outlook"] != "Insufficient data").sum()),
@@ -226,6 +229,8 @@ def run() -> None:
     if not feature_cols or len(latest_scores.dropna(subset=feature_cols[:1])) < 4:
         logger.warning("Not enough data for clustering — skipping.")
         pd.DataFrame(columns=["place_id", "cluster_id", "tier_label"]).to_csv(CLUSTERS_CSV, index=False)
+        pd.DataFrame().to_csv(DATA_PROCESSED / "cluster_profiles.csv", index=False)
+        pd.DataFrame(columns=["k", "silhouette"]).to_csv(DATA_PROCESSED / "kmeans_metrics.csv", index=False)
     else:
         try:
             clusters_df, profiles_df, km_metrics_df = run_clustering(

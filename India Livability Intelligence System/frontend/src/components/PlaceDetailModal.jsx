@@ -1,13 +1,10 @@
 import { useEffect, useRef } from "react";
 import {
-  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
   ChevronRight,
   Coins,
   HeartPulse,
-  Info,
-  Layers,
   MapPin,
   Minus,
   Scale,
@@ -17,40 +14,40 @@ import {
   X
 } from "lucide-react";
 import Modal from "./Modal";
-import { getScoreColor, getTierColor } from "../services/scoringService";
+import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR, getScoreColor, getTierColor } from "../services/scoringService";
 
 const FACTOR_CARDS = [
-  { key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee" },
-  { key: "safety", label: "Public Safety", source: "NCRB", icon: ShieldAlert, color: "#fb7185" },
-  { key: "health", label: "Healthcare", source: "SRS · IMR", icon: HeartPulse, color: "#34d399" },
-  { key: "economy", label: "Economy", source: "RBI · NSDP", icon: TrendingUp, color: "#fbbf24" },
-  { key: "col", label: "Cost of Living", source: "6 metros · rent", icon: Coins, color: "#c084fc" }
+  { key: "air", label: "Air Quality", source: "Local PM2.5 input · source unverified", icon: Wind, color: "#0284c7" },
+  { key: "safety", label: "Public Safety", source: "Unavailable · former placeholder quarantined", icon: ShieldAlert, color: "#e11d48" },
+  { key: "health", label: "Healthcare", source: "Unavailable · former placeholder quarantined", icon: HeartPulse, color: "#16a34a" },
+  { key: "economy", label: "Economy", source: "Unavailable · former placeholders quarantined", icon: TrendingUp, color: "#d97706" },
+  { key: "col", label: "Cost of Living", source: "Local rent snapshot · source unverified", icon: Coins, color: "#9333ea" }
 ];
 
 function OutlookBadge({ outlook }) {
   if (outlook === "Improving") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
         <ArrowUpRight size={11} /> Improving
       </span>
     );
   }
   if (outlook === "Declining") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/25 bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800">
         <ArrowDownRight size={11} /> Declining
       </span>
     );
   }
   if (outlook === "Insufficient data") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/25 bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-bold text-[#777777]">
         <Minus size={11} /> Insufficient data
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
       <Minus size={11} /> Stable
     </span>
   );
@@ -70,7 +67,7 @@ export default function PlaceDetailModal({
 
   const history = place?.history || [];
   const projections = place?.projections || [];
-  const plotHistory = history.filter(point => Number.isFinite(point.score));
+  const plotHistory = history.filter(point => Number.isFinite(point.score) && point.trendEligible);
   const plotProjections = projections.filter(point => Number.isFinite(point.score));
   const allPoints = [...plotHistory, ...plotProjections];
 
@@ -80,49 +77,43 @@ export default function PlaceDetailModal({
 
   if (!place) return null;
 
-  const totalWeight =
-    Number(weights?.air || 0) +
-    Number(weights?.safety || 0) +
-    Number(weights?.health || 0) +
-    Number(weights?.economy || 0) +
-    Number(weights?.col || 0);
+  const scoreColor = getScoreColor(place.overallScore);
+  const tierColor = getTierColor(place.tier);
 
-  const weightPct = key => {
-    if (!totalWeight) return 0;
-    return Math.round((Number(weights?.[key] || 0) / totalWeight) * 100);
-  };
-
-  const selectedIndex = allPoints.findIndex(point => point.year === year);
-  const selectedPoint = selectedIndex >= 0 ? allPoints[selectedIndex] : null;
-  const baselineIndex = allPoints.findIndex(point => point.year === 2024);
-  const baselinePoint = baselineIndex >= 0 ? allPoints[baselineIndex] : null;
+  const selectedPoint = allPoints.find(point => point.year === year) || null;
+  const baselinePoint = history.find(point => point.year === BASELINE_YEAR) || null;
   const finalPoint = plotProjections.length ? plotProjections[plotProjections.length - 1] : null;
   const hasChart = plotHistory.length >= 2 || plotProjections.length > 0;
   const hasProjection = plotHistory.length > 0 && plotProjections.length > 0;
-  const slopeAvailable = Number.isFinite(place.slope);
-  const pValueText = Number.isFinite(place.pVal)
-    ? place.pVal < 0.001 ? "<0.001" : place.pVal.toFixed(3)
-    : "—";
 
-  const scoreColor = getScoreColor(place.overallScore);
-  const tierColor = getTierColor(place.tier);
-  const stateCities =
-    place.type === "state"
-      ? allPlaces.filter(city => city.type === "city" && city.state === place.name)
-      : [];
+  const totalWeight = Object.values(weights).reduce((total, value) => total + Number(value || 0), 0);
+  const weightPct = factor => {
+    if (!totalWeight) return 0;
+    return Math.round((Number(weights[factor] || 0) / totalWeight) * 100);
+  };
 
-  const svgWidth = 560;
+  const stateCities = allPlaces.filter(candidate => candidate.type === "city" && candidate.state === place.name);
+
+  const svgWidth = 640;
   const svgHeight = 220;
-  const padLeft = 38;
-  const padRight = 22;
-  const padTop = 22;
-  const padBottom = 30;
+  const padLeft = 40;
+  const padRight = 24;
+  const padTop = 24;
+  const padBottom = 32;
   const chartW = svgWidth - padLeft - padRight;
   const chartH = svgHeight - padTop - padBottom;
 
-  const denominator = Math.max(1, allPoints.length - 1);
-  const getX = index => padLeft + (index / denominator) * chartW;
-  const getY = value => padTop + chartH - (value / 100) * chartH;
+  const allScores = [
+    ...plotHistory.map(p => p.score),
+    ...plotProjections.flatMap(p => [p.score, p.lower, p.upper].filter(Number.isFinite))
+  ];
+  const minVal = allScores.length ? Math.max(0, Math.floor(Math.min(...allScores) / 10) * 10 - 5) : 0;
+  const maxVal = allScores.length ? Math.min(100, Math.ceil(Math.max(...allScores) / 10) * 10 + 5) : 100;
+  const valRange = Math.max(10, maxVal - minVal);
+
+  const totalPoints = Math.max(1, allPoints.length - 1);
+  const getX = index => padLeft + (index / totalPoints) * chartW;
+  const getY = value => padTop + chartH - ((value - minVal) / valRange) * chartH;
 
   const historyPath = plotHistory
     .map((point, index) => `${index === 0 ? "M" : "L"} ${getX(index)} ${getY(point.score)}`)
@@ -132,90 +123,90 @@ export default function PlaceDetailModal({
   const projectionPath = hasProjection
     ? [
         `M ${getX(startIndex)} ${getY(plotHistory[startIndex].score)}`,
-        ...plotProjections.map(
-          (point, index) => `L ${getX(startIndex + 1 + index)} ${getY(point.score)}`
-        )
+        ...plotProjections.map((point, index) => `L ${getX(startIndex + 1 + index)} ${getY(point.score)}`)
       ].join(" ")
     : "";
 
-  const bandPath = hasProjection
-    ? [
-        `M ${getX(startIndex)} ${getY(plotHistory[startIndex].score)}`,
-        ...plotProjections.map(
-          (point, index) =>
-            `L ${getX(startIndex + 1 + index)} ${getY(point.upper)}`
-        ),
-        ...[...plotProjections].reverse().map(
-          (point, index) =>
-            `L ${getX(startIndex + plotProjections.length - index)} ${getY(point.lower)}`
-        ),
-        "Z"
-      ].join(" ")
-    : "";
+  const bandUpper = plotProjections.map((p, index) => `${index === 0 ? "M" : "L"} ${getX(startIndex + 1 + index)} ${getY(p.upper)}`).join(" ");
+  const bandLower = [...plotProjections].reverse().map(p => `L ${getX(startIndex + 1 + plotProjections.indexOf(p))} ${getY(p.lower)}`).join(" ");
+  const bandPath = hasProjection && plotProjections.length ? `${bandUpper} ${bandLower} Z` : "";
+
+  const selectedIndex = allPoints.findIndex(point => point.year === year);
+  const baselineIndex = allPoints.findIndex(point => point.year === BASELINE_YEAR);
+
+  const slopeAvailable = Number.isFinite(place.slope);
+  const pValueText = Number.isFinite(place.trend?.pValue)
+    ? place.trend.pValue < 0.001
+      ? "< 0.001"
+      : place.trend.pValue.toFixed(3)
+    : "—";
 
   return (
-    <Modal onClose={onClose} label={`${place.name} livability details`} className="max-w-3xl">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800/80 bg-slate-950/40 p-4 sm:p-5">
-        <div className="flex min-w-0 items-start gap-3">
+    <Modal onClose={onClose} label={`${place.name} details`} className="max-w-4xl">
+      {/* Modal Top Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E5E5E5] bg-[#FAFAF8] p-4 sm:p-6">
+        <div className="flex min-w-0 items-center gap-3.5">
           <div
-            className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl font-black shadow-lg"
+            className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl font-black text-white shadow-sm"
             style={{ backgroundColor: scoreColor }}
           >
-            <span className="text-lg leading-none text-slate-950">{place.overallScore ?? "—"}</span>
-            <span className="mt-0.5 text-[8px] uppercase tracking-wide text-slate-950/70">{year}</span>
+            <span className="text-xl leading-none">{place.overallScore ?? "—"}</span>
+            <span className="mt-0.5 text-[8px] uppercase tracking-wider opacity-90">{year}</span>
           </div>
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-xl font-black tracking-tight text-white">{place.name}</h2>
+              <h2 className="truncate text-xl font-extrabold text-[#111111] sm:text-2xl">{place.name}</h2>
               <span
-                className="rounded-full px-2 py-0.5 text-[9px] font-bold text-slate-900"
+                className="rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs"
                 style={{ backgroundColor: tierColor }}
               >
                 {place.tier?.split(":")[0] || "Unclassified"}
               </span>
               <OutlookBadge outlook={place.outlook} />
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
+            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 text-xs text-[#666666]">
               <span className="flex items-center gap-1">
-                <MapPin size={11} className="text-slate-500" />
+                <MapPin size={12} className="text-[#B51F3B]" />
                 {place.type === "city" ? `${place.state} · City` : `${place.region} · State`}
               </span>
-              <span className="text-slate-700">·</span>
-              <span className="font-semibold text-emerald-400">
+              <span>·</span>
+              <span className="font-bold text-[#111111]">
                 {place.rank ? `Rank #${place.rank}` : "Unranked"}
               </span>
-              <span className="text-slate-700">·</span>
+              <span>·</span>
               <span>
                 {slopeAvailable ? (
                   <>
-                    OLS slope{" "}
-                    <strong className={place.slope >= 0 ? "text-emerald-300" : "text-rose-300"}>
+                    OLS slope:{" "}
+                    <strong className={place.slope >= 0 ? "text-emerald-700" : "text-[#B51F3B]"}>
                       {place.slope > 0 ? "+" : ""}{place.slope}
                     </strong>{" "}
                     pts/yr
                   </>
-                ) : "Insufficient data for an OLS trend"}
+                ) : (
+                  "Insufficient trend points"
+                )}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-            <button
-              onClick={() => onToggleCompare(place)}
-              className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition-all hover:scale-[1.02] ${
-                isComparing
-                  ? "border-emerald-400/70 bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 shadow-md shadow-emerald-500/25"
-                  : "border-slate-700 bg-slate-800/70 text-slate-300 hover:border-emerald-500/50 hover:bg-slate-700 hover:text-white"
-              }`}
-            >
-              <Scale size={13} />
-              {isComparing ? "In Compare Tray" : "Add to Compare"}
-            </button>
+          <button
+            onClick={() => onToggleCompare(place)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
+              isComparing
+                ? "bg-[#B51F3B] text-white border-transparent shadow-xs"
+                : "border-[#E5E5E5] bg-white text-[#111111] hover:border-[#D4D4D4] hover:bg-[#FAFAF8]"
+            }`}
+          >
+            <Scale size={13} />
+            {isComparing ? "In Compare Tray" : "Add to Compare"}
+          </button>
           <button
             onClick={onClose}
-            className="icon-btn h-8 w-8"
+            className="rounded-xl p-2 text-[#888888] hover:bg-[#E5E5E5] hover:text-[#111111]"
             aria-label="Close details"
           >
             <X size={17} />
@@ -224,71 +215,74 @@ export default function PlaceDetailModal({
       </div>
 
       <div ref={bodyRef} className="custom-scrollbar flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-5 p-4 sm:p-5">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            <div className="surface-inset p-2.5">
-              <span className="eyebrow">Baseline 2024</span>
-              <div className="mt-1 text-lg font-black text-slate-100">{baselinePoint?.score ?? "—"}</div>
+        <div className="flex flex-col gap-6 p-5 sm:p-6">
+          {/* Key Metric Tiles */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+              <span className="eyebrow text-[#888888]">Baseline {BASELINE_YEAR}</span>
+              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
+                {baselinePoint?.score ?? "—"}
+              </div>
             </div>
-            <div className="surface-inset p-2.5">
-              <span className="eyebrow">Selected {year}</span>
-              <div className="mt-1 text-lg font-black text-emerald-300">{selectedPoint?.score ?? "—"}</div>
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+              <span className="eyebrow text-[#888888]">Selected {year}</span>
+              <div className="mt-1 font-mono text-xl font-black text-[#B51F3B]">
+                {selectedPoint?.score ?? "—"}
+              </div>
             </div>
-            <div className="surface-inset p-2.5">
-              <span className="eyebrow">2034 projection</span>
-              <div className="mt-1 text-lg font-black text-rose-300">{finalPoint?.score ?? "—"}</div>
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+              <span className="eyebrow text-[#888888]">{PROJECTION_END_YEAR ?? "10-year"} Projection</span>
+              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
+                {finalPoint?.score ?? "—"}
+              </div>
             </div>
-            <div className="surface-inset p-2.5">
-              <span className="eyebrow">Trend p-value</span>
-              <div className="mt-1 text-lg font-black text-slate-100">{pValueText}</div>
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+              <span className="eyebrow text-[#888888]">Trend p-value</span>
+              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
+                {pValueText}
+              </div>
             </div>
-            <div className="surface-inset col-span-2 p-2.5 sm:col-span-1">
-              <span className="eyebrow">Pillars available</span>
-              <div className="mt-1 flex items-center gap-1.5 text-lg font-black text-slate-100">
-                <Layers size={14} className="text-slate-500" />
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 col-span-2 sm:col-span-1">
+              <span className="eyebrow text-[#888888]">Available Pillars</span>
+              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
                 {place.availablePillars ?? 0}/5
               </div>
             </div>
           </div>
 
+          {/* Pillar Breakdown */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="eyebrow">Pillar breakdown</h3>
-              <span className="text-[10px] text-slate-500">
-                Weight sum {totalWeight}
-              </span>
+              <h3 className="eyebrow text-[#888888]">Pillar Breakdown & Ground-Truth Years</h3>
+              <span className="text-xs text-[#888888]">Total Weight: {totalWeight}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
               {FACTOR_CARDS.map(card => {
                 const Icon = card.icon;
                 const value = place.factorScores?.[card.key];
                 const hasValue = value !== null && value !== undefined;
                 const sourceYear = place.factorYears?.[card.key];
-                const sourceTag = sourceYear ?? "No data";
 
                 return (
-                  <div key={card.key} className="surface-soft flex flex-col justify-between gap-2 p-2.5">
+                  <div key={card.key} className="rounded-xl border border-[#E5E5E5] bg-white p-3 flex flex-col justify-between gap-2">
                     <div className="flex items-start justify-between gap-1">
-                      <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: card.color }}>
+                      <span className="flex items-center gap-1 text-[11px] font-bold" style={{ color: card.color }}>
                         <Icon size={12} />
                         {card.label}
                       </span>
-                      <span
-                        className="rounded bg-slate-800/80 px-1 py-0.5 text-[8px] font-medium text-slate-400"
-                        title={sourceYear ? `Latest observation: ${sourceYear}` : "No observation available"}
-                      >
-                        {sourceTag}
+                      <span className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-semibold text-[#666666]">
+                        {sourceYear ?? "No data"}
                       </span>
                     </div>
                     <div className="flex items-end justify-between">
-                      <span className="text-xl font-black leading-none text-slate-100">
+                      <span className="font-mono text-2xl font-black text-[#111111]">
                         {hasValue ? value : "—"}
                       </span>
-                      <span className="text-[9px] font-medium text-slate-500">
+                      <span className="text-[10px] font-medium text-[#888888]">
                         {weightPct(card.key)}% wt
                       </span>
                     </div>
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#E5E5E5]">
                       <div
                         className="h-full rounded-full"
                         style={{ width: `${hasValue ? value : 0}%`, backgroundColor: card.color }}
@@ -298,82 +292,71 @@ export default function PlaceDetailModal({
                 );
               })}
             </div>
-
-            {place.type === "city" && (
-              <div className="mt-2 flex items-start gap-2 rounded-xl border border-slate-800/80 bg-slate-950/40 p-2.5 text-[10px] leading-relaxed text-slate-400">
-                <Info size={13} className="mt-0.5 shrink-0 text-cyan-400" />
-                <span>
-                  Air quality is measured from CPCB urban monitors in {place.name}. Safety, health and economy are
-                  inherited from {place.state} state-level indicators and labelled accordingly.
-                </span>
-              </div>
-            )}
           </div>
 
+          {/* Major Cities in State (if State) */}
           {place.type === "state" && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="eyebrow">Major cities in {place.name}</h3>
-                <span className="text-[10px] text-slate-500">{stateCities.length} tracked</span>
+                <h3 className="eyebrow text-[#888888]">Major Cities in {place.name}</h3>
+                <span className="text-xs text-[#888888]">{stateCities.length} tracked</span>
               </div>
               {stateCities.length ? (
-                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {stateCities.map(city => (
                     <button
                       key={city.id}
                       onClick={() => onSelectPlace(city)}
-                      className="group flex items-center justify-between gap-2 rounded-xl border border-slate-800/80 bg-slate-950/40 px-3 py-2 text-left transition-colors hover:border-emerald-500/40 hover:bg-slate-800/50"
+                      className="group flex items-center justify-between gap-2 rounded-xl border border-[#E5E5E5] bg-white px-3.5 py-2.5 text-left transition-colors hover:border-[#111111] hover:bg-[#FAFAF8]"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-xs font-semibold text-slate-200 group-hover:text-emerald-300">
+                        <span className="block truncate text-xs font-bold text-[#111111] group-hover:text-[#B51F3B]">
                           {city.name}
                         </span>
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[11px] text-[#777777]">
                           Rank #{city.rank} · {city.outlook}
                         </span>
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span
-                          className="rounded-md px-1.5 py-0.5 text-[10px] font-bold text-slate-950"
+                          className="rounded-lg px-2 py-0.5 text-xs font-bold text-white shadow-xs"
                           style={{ backgroundColor: getScoreColor(city.overallScore) }}
                         >
                           {city.overallScore}
                         </span>
-                        <ChevronRight size={13} className="text-slate-600 group-hover:text-emerald-400" />
+                        <ChevronRight size={13} className="text-[#888888] group-hover:text-[#111111]" />
                       </span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="surface-inset p-3 text-[11px] text-slate-500">
-                  City-level detail is available only for major cities included in the project scope.
+                <p className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 text-xs text-[#777777]">
+                  No major metropolitan cities are isolated in this state's direct scope.
                 </p>
               )}
             </div>
           )}
 
+          {/* Historical Trajectory & OLS Projection */}
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="eyebrow">Trajectory & OLS projection</h3>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500">
+              <h3 className="eyebrow text-[#888888]">Temporal Trajectory & OLS Trend</h3>
+              <div className="flex flex-wrap items-center gap-3 text-[10px] text-[#666666]">
                 <span className="flex items-center gap-1">
-                  <span className="h-0.5 w-3 rounded-full bg-cyan-400" /> History
+                  <span className="h-1 w-3 rounded-full bg-[#111111]" /> Eligible observed years
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="h-0.5 w-3 rounded-full bg-rose-400" /> Projection
+                  <span className="h-1 w-3 rounded-full bg-[#B51F3B]" /> Projected after the latest eligible observation
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-sm bg-rose-500/20" /> 95% band
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-sm bg-white" /> Selected year
+                  <span className="h-2 w-2 rounded-sm bg-[#B51F3B]/15" /> 95% Confidence Band
                 </span>
               </div>
             </div>
 
             {hasChart ? (
-              <div className="surface-inset p-2 sm:p-3">
-                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full" role="img" aria-label={`Score history and ten year projection for ${place.name}`}>
+              <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 sm:p-4">
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full" role="img" aria-label={`Score history and projection for ${place.name}`}>
                   {[20, 40, 60, 80, 100].map(value => (
                     <g key={value}>
                       <line
@@ -381,15 +364,15 @@ export default function PlaceDetailModal({
                         y1={getY(value)}
                         x2={svgWidth - padRight}
                         y2={getY(value)}
-                        stroke="#1e293b"
-                        strokeDasharray="2,4"
+                        stroke="#E5E5E5"
+                        strokeDasharray="3,4"
                       />
                       <text
                         x={padLeft - 8}
                         y={getY(value) + 3}
-                        fill="#64748b"
+                        fill="#888888"
                         textAnchor="end"
-                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                        className="text-[10px] font-mono"
                       >
                         {value}
                       </text>
@@ -403,29 +386,31 @@ export default function PlaceDetailModal({
                         y1={padTop}
                         x2={getX(baselineIndex)}
                         y2={padTop + chartH}
-                        stroke="#475569"
+                        stroke="#B51F3B"
                         strokeDasharray="3,3"
+                        strokeOpacity="0.4"
                       />
                       <text
                         x={getX(baselineIndex)}
                         y={padTop - 6}
-                        fill="#94a3b8"
+                        fill="#B51F3B"
                         textAnchor="middle"
-                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                        className="text-[9px] font-bold"
                       >
-                        Baseline 2024
+                        {BASELINE_YEAR} Anchor
                       </text>
                     </>
                   )}
 
                   {hasProjection && (
                     <>
-                      <path d={bandPath} fill="#f43f5e" fillOpacity="0.14" stroke="none" />
-                      <path d={projectionPath} fill="none" stroke="#f43f5e" strokeWidth="2.4" strokeDasharray="4,4" />
+                      <path d={bandPath} fill="#B51F3B" fillOpacity="0.08" stroke="none" />
+                      <path d={projectionPath} fill="none" stroke="#B51F3B" strokeWidth="2.2" strokeDasharray="4,4" />
                     </>
                   )}
+
                   {plotHistory.length > 1 && (
-                    <path d={historyPath} fill="none" stroke="#38bdf8" strokeWidth="2.4" />
+                    <path d={historyPath} fill="none" stroke="#111111" strokeWidth="2.4" />
                   )}
 
                   {plotHistory.map((point, index) => (
@@ -433,12 +418,12 @@ export default function PlaceDetailModal({
                       key={point.year}
                       cx={getX(index)}
                       cy={getY(point.score)}
-                      r={point.isCovid ? 4 : 2.6}
-                      fill={point.isCovid ? "#eab308" : "#38bdf8"}
-                      stroke="#0f172a"
-                      strokeWidth="1.4"
+                      r={point.isCovid ? 4 : 3}
+                      fill={point.isCovid ? "#d97706" : "#111111"}
+                      stroke="#FFFFFF"
+                      strokeWidth="1.5"
                     >
-                      <title>{`${point.year}: ${point.score}${point.isCovid ? " (COVID lockdown)" : ""}`}</title>
+                      <title>{`${point.year}: ${point.score}${point.isCovid ? " (COVID shock)" : ""}`}</title>
                     </circle>
                   ))}
 
@@ -447,12 +432,12 @@ export default function PlaceDetailModal({
                       key={point.year}
                       cx={getX(startIndex + 1 + index)}
                       cy={getY(point.score)}
-                      r="2.6"
-                      fill="#f43f5e"
-                      stroke="#0f172a"
-                      strokeWidth="1.4"
+                      r="3"
+                      fill="#B51F3B"
+                      stroke="#FFFFFF"
+                      strokeWidth="1.5"
                     >
-                      <title>{`${point.year}: ${point.score} (approx. 95% interval ${point.lower}–${point.upper})`}</title>
+                      <title>{`${point.year}: ${point.score} (95% CI ${point.lower}–${point.upper})`}</title>
                     </circle>
                   ))}
 
@@ -463,33 +448,32 @@ export default function PlaceDetailModal({
                         y1={padTop}
                         x2={getX(selectedIndex)}
                         y2={padTop + chartH}
-                        stroke="#f8fafc"
-                        strokeOpacity="0.55"
+                        stroke="#111111"
                         strokeWidth="1.2"
                         strokeDasharray="4,3"
                       />
                       <circle
                         cx={getX(selectedIndex)}
                         cy={getY(allPoints[selectedIndex].score)}
-                        r="5.5"
-                        fill={year > 2024 ? "#fb7185" : "#38bdf8"}
-                        stroke="#ffffff"
+                        r="5"
+                        fill={year > BASELINE_YEAR ? "#B51F3B" : "#111111"}
+                        stroke="#FFFFFF"
                         strokeWidth="2"
                       />
                       <text
                         x={getX(selectedIndex)}
                         y={padTop + chartH + 16}
-                        fill="#f8fafc"
-                        fontWeight="700"
+                        fill="#111111"
+                        fontWeight="800"
                         textAnchor="middle"
-                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                        className="text-[10px] font-mono"
                       >
                         {year}
                       </text>
                     </g>
                   )}
 
-                  {[2015, 2020, 2024, 2029, 2034].map(labelYear => {
+                  {[OBSERVED_YEARS?.[0], BASELINE_YEAR, PROJECTION_END_YEAR].filter(Number.isFinite).map(labelYear => {
                     if (labelYear === year) return null;
                     const pointIndex = allPoints.findIndex(point => point.year === labelYear);
                     if (pointIndex === -1) return null;
@@ -498,9 +482,9 @@ export default function PlaceDetailModal({
                         key={labelYear}
                         x={getX(pointIndex)}
                         y={padTop + chartH + 16}
-                        fill="#64748b"
+                        fill="#888888"
                         textAnchor="middle"
-                        className="text-[16px] sm:text-[10px] lg:text-[8px]"
+                        className="text-[9px] font-mono"
                       >
                         {labelYear}
                       </text>
@@ -509,21 +493,10 @@ export default function PlaceDetailModal({
                 </svg>
               </div>
             ) : (
-              <div className="surface-inset p-4 text-[11px] leading-relaxed text-slate-400">
-                No chartable history is available for this place under the current weights. Increase a pillar
-                with observed data or select a year covered by the source series.
+              <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 text-xs text-[#777777]">
+                Insufficient historical points to establish an OLS projection.
               </div>
             )}
-          </div>
-
-          <div className="flex items-start gap-2 rounded-xl border border-amber-800/60 bg-amber-950/25 p-3 text-[10px] leading-relaxed text-amber-200/90">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-400" />
-            <div>
-              <strong className="font-semibold text-amber-300">Statistical disclaimer:</strong>{" "}
-              Scores for 2015–2024 use the latest real observation at or before each year. Values for 2025–2034
-              are OLS projections from those composite scores and are hidden when fewer than five yearly points
-              exist. They do not model policy shifts, climate tipping points or future investment.
-            </div>
           </div>
         </div>
       </div>

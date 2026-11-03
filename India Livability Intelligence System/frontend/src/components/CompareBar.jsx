@@ -7,35 +7,35 @@ export default function CompareBar({ places, onRemove, onClear, onOpen }) {
   const canCompare = places.length >= 2;
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-3 lg:bottom-5">
-      <div className="surface flex w-full max-w-3xl items-center gap-2 rounded-2xl p-2 pl-3 shadow-2xl animate-slide-up">
-        <div className="hidden items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:flex">
-          <Scale size={14} className="text-emerald-400" />
-          Compare
+    <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-3 lg:bottom-6">
+      <div className="flex w-full max-w-3xl items-center gap-2 rounded-2xl border border-[#E5E5E5] bg-white p-2.5 pl-4 shadow-xl animate-slide-up">
+        <div className="hidden items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#111111] sm:flex">
+          <Scale size={14} className="text-[#B51F3B]" />
+          <span>Compare</span>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
           {places.map(place => (
             <span
               key={place.id}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700/70 bg-slate-900/80 py-1 pl-2 pr-1 text-[11px] font-semibold text-slate-200"
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] py-1 pl-2.5 pr-1.5 text-xs font-semibold text-[#111111]"
             >
               <span
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: getScoreColor(place.overallScore) }}
               />
-              {place.name}
+              <span>{place.name}</span>
               <button
                 onClick={() => onRemove(place)}
-                className="rounded p-0.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-rose-300"
+                className="rounded p-0.5 text-[#888888] transition-colors hover:bg-[#E5E5E5] hover:text-[#B51F3B]"
                 aria-label={`Remove ${place.name} from comparison`}
               >
-                <X size={11} />
+                <X size={12} />
               </button>
             </span>
           ))}
           {places.length < 3 && (
-            <span className="hidden shrink-0 text-[11px] text-slate-500 sm:inline">
+            <span className="hidden shrink-0 text-xs text-[#888888] sm:inline">
               + {3 - places.length} slot{3 - places.length === 1 ? "" : "s"} left
             </span>
           )}
@@ -43,7 +43,7 @@ export default function CompareBar({ places, onRemove, onClear, onOpen }) {
 
         <button
           onClick={onClear}
-          className="icon-btn hidden h-8 w-8 shrink-0 sm:inline-flex"
+          className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#888888] transition-colors hover:bg-[#FAFAF8] hover:text-[#111111] sm:inline-flex"
           title="Clear comparison tray"
           aria-label="Clear comparison tray"
         >
@@ -53,14 +53,14 @@ export default function CompareBar({ places, onRemove, onClear, onOpen }) {
         <button
           onClick={onOpen}
           disabled={!canCompare}
-          className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all ${
+          className={`flex h-8 shrink-0 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all ${
             canCompare
-              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
-              : "cursor-not-allowed bg-slate-800 text-slate-500"
+              ? "bg-[#111111] text-white shadow-sm hover:bg-[#B51F3B]"
+              : "cursor-not-allowed border border-[#E5E5E5] bg-[#FAFAF8] text-[#AAAAAA]"
           }`}
           title={canCompare ? "Open comparison" : "Add one more place to compare"}
         >
-          Compare
+          <span>Compare</span>
           <ArrowRight size={13} />
         </button>
       </div>

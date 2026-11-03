@@ -88,13 +88,19 @@ def run() -> None:
     scores_wide.to_csv(SCORES_WIDE, index=False)
     logger.info("Saved: %s", SCORES_WIDE)
 
+    # Do not leave a prior run's sensitivity ranks available when this run has
+    # no complete composite scores.
+    sensitivity_path = DATA_PROCESSED / "sensitivity.csv"
+    if not scores_wide.get("score", pd.Series(dtype=float)).notna().any():
+        pd.DataFrame(columns=["place_id", "rank_mean", "rank_std"]).to_csv(sensitivity_path, index=False)
+
     # Sensitivity analysis on latest year
     latest_year = int(scores_wide["year"].max())
     try:
-        sensitivity = sensitivity_analysis(factors_wide, config, year=latest_year, n_draws=500)
-        sensitivity_path = DATA_PROCESSED / "sensitivity.csv"
-        sensitivity.to_csv(sensitivity_path, index=False)
-        logger.info("Saved sensitivity analysis: %s", sensitivity_path)
+        if scores_wide.get("score", pd.Series(dtype=float)).notna().any():
+            sensitivity = sensitivity_analysis(factors_wide, config, year=latest_year, n_draws=500)
+            sensitivity.to_csv(sensitivity_path, index=False)
+            logger.info("Saved sensitivity analysis: %s", sensitivity_path)
     except Exception as e:
         logger.warning("Sensitivity analysis skipped: %s", e)
 

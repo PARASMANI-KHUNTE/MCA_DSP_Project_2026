@@ -118,10 +118,10 @@ def place_detail(place_id: str, store: DataStore = Depends(get_store)):
 @router.get(
     "/places/{place_id}/trend",
     response_model=TrendResponse,
-    summary="10-year trend projection for a place",
+    summary="Trend analysis for a place",
 )
 def place_trend(place_id: str, store: DataStore = Depends(get_store)):
-    """Return slope, outlook label, and 10-year projection per factor."""
+    """Return available factor trends; snapshot-only factors have no trend."""
     places = store.places
     place_row = places[places["place_id"] == place_id]
     if place_row.empty:

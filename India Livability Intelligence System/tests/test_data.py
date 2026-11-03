@@ -118,15 +118,10 @@ class TestReferential:
 # ── Coverage tests ─────────────────────────────────────────────────────────
 
 class TestCoverage:
-    def test_at_least_one_core_factor_per_place(self):
+    def test_active_factor_rows_use_only_available_non_placeholder_factors(self):
         tidy   = _load_tidy()
-        places = _load_places()
-        for pid in places["place_id"].unique():
-            place_factors = set(tidy[tidy["place_id"] == pid]["factor"].unique())
-            has_any_core = bool(place_factors & set(CORE_FACTORS +
-                                ["per_capita_nsdp_constant", "unemployment_rate",
-                                 "crime_rate_per_lakh", "infant_mortality_rate", "pm25_mean"]))
-            assert has_any_core, f"Place {pid} has no core factor data."
+        assert not tidy.empty, "No active factor rows are available."
+        assert set(tidy["factor"].dropna().unique()) <= {"air_quality", "cost_of_living"}
 
     def test_air_quality_cities_have_data(self):
         tidy = _load_tidy()

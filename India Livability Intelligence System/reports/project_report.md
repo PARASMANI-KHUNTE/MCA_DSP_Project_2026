@@ -1,5 +1,5 @@
-# India Livability Intelligence System
-> **Data verification hold (3 November 2026):** state crime, health, economy, and recent CPCB inputs used by this report match hard-coded placeholders, not verified source records. Empirical claims and derived results below are not valid until source data is replaced and the analysis is rerun.
+﻿# India Livability Intelligence System
+> **Withdrawn report (3 November 2026):** this report contains historical results generated before six placeholder inputs were quarantined. Those claims and figures are not current findings. The current rebuild has no composite scores; the remaining local inputs are not source-verified. See `data_fabrication_audit.md`.
 
 ## A Multi-Criteria Analytical Framework, Statistical Trend Projections, and Interactive Spatial Decision Support System
 

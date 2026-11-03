@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.constants import RAW_HEALTH
+from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import (
     apply_name_standardization,
     load_alias_map,
@@ -50,9 +51,14 @@ def load_health(raw_dir: Path = RAW_HEALTH) -> pd.DataFrame:
     pd.DataFrame with columns:
         state_name, year, infant_mortality_rate, is_imputed (later added)
     """
-    files = sorted(
-        [f for f in raw_dir.iterdir() if f.suffix.lower() in (".csv", ".xls", ".xlsx")]
-    )
+    candidates = [
+        f for f in raw_dir.iterdir()
+        if f.suffix.lower() in (".csv", ".xls", ".xlsx")
+    ]
+    files = sorted(f for f in candidates if not is_known_generated_source(f))
+    for path in candidates:
+        if is_known_generated_source(path):
+            logger.error("Excluding known generated placeholder from health inputs: %s", path)
 
     # Try PDFs if no tabular files found
     if not files:

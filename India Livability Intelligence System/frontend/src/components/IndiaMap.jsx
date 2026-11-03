@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Move, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
-import { getContinuousScoreColor, getTierColor } from "../services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, getContinuousScoreColor, getTierColor } from "../services/scoringService";
 import { INDIA_STATES, MAP_VIEWBOX, projectLatLng } from "../data/indiaMap";
 
 const MIN_ZOOM = 0.85;
@@ -28,7 +28,7 @@ const VIEWS = [
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const clampPan = (x, y, zoom) => {
-  const limit = 160 + 260 * (zoom - 1);
+  const limit = Math.max(0, (zoom - 1) * 320);
   return {
     x: clamp(x, -limit, limit),
     y: clamp(y, -limit, limit)
@@ -222,7 +222,7 @@ export default function IndiaMap({
   }, [cities, mapSize, zoom, showCityLabels, selectedPlace, hoveredPlace]);
 
   const getColorForPlace = place => {
-    if (!place) return "#1e293b";
+    if (!place) return "#E5E5E5";
     if (colorMode === "tier") {
       return getTierColor(place.tier);
     }
@@ -231,6 +231,12 @@ export default function IndiaMap({
     }
     return getContinuousScoreColor(place.overallScore);
   };
+
+  const getDisplayedScore = place =>
+    colorMode === "factor" ? place?.factorScores?.[activeFactor] : place?.overallScore;
+  const displayedScoreLabel = colorMode === "factor"
+    ? FACTOR_LABELS[activeFactor] || "Factor score"
+    : "Composite score";
 
   const adjustZoom = delta => {
     setZoom(current => {
@@ -365,22 +371,23 @@ export default function IndiaMap({
   const canReset = zoomedIn || Math.abs(pan.x) > 1 || Math.abs(pan.y) > 1;
 
   return (
-    <div ref={containerRef} className="surface relative flex h-full w-full flex-col overflow-hidden">
+    <div ref={containerRef} className="surface relative flex h-full w-full flex-col overflow-hidden bg-white">
+      {/* Map Header Controls */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2.5 sm:p-3">
-        <div className="pointer-events-auto flex max-w-[calc(100%-3.25rem)] items-center gap-1 rounded-xl border border-slate-700/70 bg-slate-900/90 p-1 shadow-lg backdrop-blur-md">
-          <span className="hidden items-center gap-1 rounded bg-cyan-500/20 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-300 sm:flex">
+        <div className="pointer-events-auto flex max-w-[calc(100%-3.25rem)] items-center gap-1 rounded-xl border border-[#E5E5E5] bg-white/95 p-1 shadow-sm backdrop-blur-md">
+          <span className="hidden items-center gap-1 rounded bg-[#FAFAF8] border border-[#E5E5E5] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#B51F3B] sm:flex">
             Step 2: Map
           </span>
-          <span className="hidden h-4 w-px bg-slate-700 sm:block" />
+          <span className="hidden h-4 w-px bg-[#E5E5E5] sm:block" />
           {VIEWS.map(view => (
             <button
               key={view.id}
               onClick={() => setViewType(view.id)}
               aria-pressed={viewType === view.id}
-              className={`min-h-8 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
+              className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
                 viewType === view.id
-                  ? "bg-emerald-500 text-slate-950 shadow-sm"
-                  : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
+                  ? "bg-[#111111] text-white shadow-xs"
+                  : "text-[#666666] hover:bg-[#FAFAF8] hover:text-[#111111]"
               }`}
             >
               {view.label}
@@ -388,40 +395,40 @@ export default function IndiaMap({
           ))}
         </div>
 
-        <div className="pointer-events-auto flex flex-col gap-1 rounded-xl border border-slate-700/70 bg-slate-900/90 p-1 shadow-lg backdrop-blur-md">
+        <div className="pointer-events-auto flex flex-col gap-1 rounded-xl border border-[#E5E5E5] bg-white/95 p-1 shadow-sm backdrop-blur-md text-[#555555]">
           <button
             title="Zoom in"
             onClick={() => adjustZoom(0.25)}
             disabled={zoom >= MAX_ZOOM - 0.001}
-            className="icon-btn h-7 w-7 disabled:cursor-not-allowed disabled:opacity-35"
+            className="icon-btn h-7 w-7 hover:bg-[#FAFAF8] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Zoom in"
           >
-            <ZoomIn size={15} />
+            <ZoomIn size={14} />
           </button>
           <button
             title="Zoom out"
             onClick={() => adjustZoom(-0.25)}
             disabled={zoom <= MIN_ZOOM + 0.001}
-            className="icon-btn h-7 w-7 disabled:cursor-not-allowed disabled:opacity-35"
+            className="icon-btn h-7 w-7 hover:bg-[#FAFAF8] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Zoom out"
           >
-            <ZoomOut size={15} />
+            <ZoomOut size={14} />
           </button>
           <button
             title="Reset map view"
             onClick={resetView}
             disabled={!canReset}
-            className="icon-btn h-7 w-7 disabled:cursor-not-allowed disabled:opacity-35"
+            className="icon-btn h-7 w-7 hover:bg-[#FAFAF8] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Reset map view"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={13} />
           </button>
-          <span className="mx-auto h-px w-4 bg-slate-700/80" />
+          <span className="mx-auto h-px w-4 bg-[#E5E5E5]" />
           <button
             title={showCityLabels ? "Hide city labels" : "Show city labels"}
             onClick={() => setShowCityLabels(value => !value)}
             aria-pressed={showCityLabels}
-            className={`icon-btn h-7 w-7 ${showCityLabels ? "text-emerald-300" : ""}`}
+            className={`icon-btn h-7 w-7 hover:bg-[#FAFAF8] ${showCityLabels ? "text-[#B51F3B]" : "text-[#777777]"}`}
             aria-label={showCityLabels ? "Hide city labels" : "Show city labels"}
           >
             <MapPin size={14} />
@@ -429,61 +436,55 @@ export default function IndiaMap({
         </div>
       </div>
 
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className={`h-full w-full touch-none select-none ${
-          dragging ? "cursor-grabbing" : "cursor-grab"
-        } ${dragging ? "" : "transition-transform duration-200 ease-out"}`}
-        style={{
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          transformOrigin: "center center",
-          touchAction: "none",
-          willChange: "transform"
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onDoubleClick={() => adjustZoom(0.35)}
-        role="img"
-        aria-label={`India livability map for ${year}, colored by ${legendTitle}`}
-      >
+      {/* SVG Canvas Container */}
+      <div className="relative flex-1 min-h-0 w-full overflow-hidden flex items-center justify-center">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
+          preserveAspectRatio="xMidYMid meet"
+          className={`h-full w-full max-h-full max-w-full touch-none select-none ${
+            dragging ? "cursor-grabbing" : "cursor-grab"
+          } ${dragging ? "" : "transition-transform duration-200 ease-out"}`}
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: "center center",
+            touchAction: "none",
+            willChange: "transform"
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onDoubleClick={() => adjustZoom(0.35)}
+          role="img"
+          aria-label={`India livability map for ${year}, colored by ${legendTitle}`}
+        >
         <defs>
           <filter id="map-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
           <filter id="pin-shadow" x="-80%" y="-80%" width="260%" height="260%">
-            <feDropShadow dx="0" dy="1.2" stdDeviation="1.3" floodColor="#020617" floodOpacity="0.9" />
+            <feDropShadow dx="0" dy="1.2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.15" />
           </filter>
-          <radialGradient id="map-ocean" cx="50%" cy="40%" r="72%">
-            <stop offset="0%" stopColor="#0b1729" stopOpacity="0.98" />
-            <stop offset="100%" stopColor="#020617" stopOpacity="1" />
-          </radialGradient>
-          <linearGradient id="map-halo" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity="0.16" />
-            <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-          </linearGradient>
           <pattern id="state-no-data" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="8" fill="#0b1220" />
-            <line x1="0" y1="0" x2="0" y2="8" stroke="#243249" strokeWidth="2" />
+            <rect width="8" height="8" fill="#F4F4F0" />
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#E5E5E5" strokeWidth="2" />
           </pattern>
         </defs>
 
-        <rect width={MAP_VIEWBOX.width} height={MAP_VIEWBOX.height} fill="url(#map-ocean)" rx="18" />
-        <ellipse cx="400" cy="150" rx="290" ry="165" fill="url(#map-halo)" />
+        <rect width={MAP_VIEWBOX.width} height={MAP_VIEWBOX.height} fill="#FAFAF8" rx="16" />
 
-        <g opacity="0.24" stroke="#334155" strokeWidth="0.6">
+        <g opacity="0.6" stroke="#E5E5E5" strokeWidth="0.8">
           {[150, 300, 450, 600, 750].map(line => (
-            <line key={`h-${line}`} x1="34" y1={line} x2="766" y2={line} strokeDasharray="2,6" />
+            <line key={`h-${line}`} x1="34" y1={line} x2="766" y2={line} strokeDasharray="3,6" />
           ))}
           {[150, 300, 450, 600].map(line => (
-            <line key={`v-${line}`} x1={line} y1="34" x2={line} y2="866" strokeDasharray="2,6" />
+            <line key={`v-${line}`} x1={line} y1="34" x2={line} y2="866" strokeDasharray="3,6" />
           ))}
         </g>
 
+        {/* States Layer */}
         <g id="states-layer">
           {INDIA_STATES.map(state => {
             const placeData = state.id ? scoreMap[state.id] : null;
@@ -498,15 +499,15 @@ export default function IndiaMap({
                 d={state.d}
                 fill={placeData ? color : "url(#state-no-data)"}
                 fillRule="evenodd"
-                fillOpacity={dimmed ? 0.16 : selected ? 0.98 : hovered ? 0.9 : 0.74}
-                stroke={selected ? "#f8fafc" : hovered ? "#94a3b8" : "#334155"}
-                strokeWidth={selected ? 2.2 : hovered ? 1.5 : 0.9}
+                fillOpacity={dimmed ? 0.2 : selected ? 1 : hovered ? 0.95 : 0.85}
+                stroke={selected ? "#111111" : hovered ? "#555555" : "#CBD5E1"}
+                strokeWidth={selected ? 2.4 : hovered ? 1.6 : 0.8}
                 strokeLinejoin="round"
                 className={`transition-all duration-200 ${
                   dimmed
                     ? "pointer-events-none"
                     : placeData
-                      ? "cursor-pointer hover:brightness-125"
+                      ? "cursor-pointer hover:brightness-105"
                       : "cursor-help"
                 }`}
                 onClick={() => {
@@ -534,16 +535,17 @@ export default function IndiaMap({
                 role={placeData ? "button" : undefined}
                 aria-label={
                   placeData
-                    ? `${state.name}, score ${placeData.overallScore}. Open details.`
+                    ? `${state.name}, ${displayedScoreLabel} ${getDisplayedScore(placeData) ?? "unavailable"}. Open details.`
                     : `${state.name}, no score available`
                 }
               >
-                <title>{`${state.name}${placeData ? ` — ${placeData.overallScore}` : " — no score"}`}</title>
+                <title>{`${state.name}${placeData ? ` — ${getDisplayedScore(placeData) ?? "no score"}` : " — no score"}`}</title>
               </path>
             );
           })}
         </g>
 
+        {/* Cities Layer */}
         {viewType !== "states" && (
           <g id="cities-layer">
             {[...cities].reverse().map(city => {
@@ -587,7 +589,7 @@ export default function IndiaMap({
                   }}
                   tabIndex={0}
                   role="button"
-                  aria-label={`${city.name}, score ${city.overallScore}. Open details.`}
+                  aria-label={`${city.name}, ${displayedScoreLabel} ${getDisplayedScore(city) ?? "unavailable"}. Open details.`}
                 >
                   {emphasized && (
                     <circle
@@ -603,7 +605,7 @@ export default function IndiaMap({
                     r={radius}
                     fill={color}
                     stroke="#ffffff"
-                    strokeWidth={toScreenUnits(selected ? 2 : 1.2)}
+                    strokeWidth={toScreenUnits(selected ? 2.2 : 1.4)}
                     filter="url(#pin-shadow)"
                     className="transition-all duration-200"
                   />
@@ -612,11 +614,11 @@ export default function IndiaMap({
                     y={textY}
                     textAnchor={placement === "right" ? "start" : placement === "left" ? "end" : "middle"}
                     dominantBaseline="central"
-                    fill={selected ? "#ffffff" : "#e2e8f0"}
+                    fill={selected ? "#B51F3B" : "#111111"}
                     fontSize={toScreenUnits(fontPx)}
                     fontWeight={selected ? 800 : 600}
-                    stroke="#030712"
-                    strokeWidth={toScreenUnits(emphasized ? 2.6 : 2)}
+                    stroke="#ffffff"
+                    strokeWidth={toScreenUnits(emphasized ? 3 : 2.4)}
                     paintOrder="stroke"
                     strokeLinejoin="round"
                     opacity={label ? 1 : 0}
@@ -630,48 +632,53 @@ export default function IndiaMap({
           </g>
         )}
 
-        <g opacity="0.7" transform="translate(738, 74)">
-          <circle r="16" fill="#0f172a" stroke="#475569" strokeWidth="0.8" />
-          <path d="M 0,-11 L 4,4 L 0,1 L -4,4 Z" fill="#34d399" />
-          <text y="27" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="700">N</text>
+        {/* North Compass Arrow */}
+        <g opacity="0.85" transform="translate(738, 74)">
+          <circle r="16" fill="#FFFFFF" stroke="#E5E5E5" strokeWidth="1" />
+          <path d="M 0,-11 L 4,4 L 0,1 L -4,4 Z" fill="#B51F3B" />
+          <text y="27" textAnchor="middle" fill="#666666" fontSize="9" fontWeight="700">N</text>
         </g>
       </svg>
+      </div>
 
-      {year !== 2024 && (
-        <div className="pointer-events-none absolute left-2.5 top-14 z-10 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-200 backdrop-blur sm:left-3">
-          {year > 2024
+      {/* Projection or Factor Notice */}
+      {year !== (DATA_COVERAGE.lastYearByFactor?.[activeFactor] ?? BASELINE_YEAR) && (
+        <div className="pointer-events-none absolute left-2.5 top-14 z-10 rounded-lg border border-[#E5E5E5] bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-[#B51F3B] shadow-sm backdrop-blur sm:left-3">
+          {DATA_COVERAGE.compositeAvailable && year > BASELINE_YEAR
             ? `OLS projection · ${year}`
-            : `Latest observation ≤ ${year}`}
+            : `Latest ${FACTOR_LABELS[activeFactor] || "factor"} observation ≤ ${year}`}
         </div>
       )}
 
+      {/* Drag & Zoom Info */}
       <div
-        className={`pointer-events-none absolute left-3 z-10 hidden items-center gap-1.5 rounded-lg border border-slate-800/70 bg-slate-950/70 px-2 py-1 text-[10px] text-slate-500 backdrop-blur sm:flex ${
-          year !== 2024 ? "top-[5.35rem]" : "top-14"
+        className={`pointer-events-none absolute left-3 z-10 hidden items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-white/90 px-2 py-1 text-[10px] text-[#666666] shadow-xs backdrop-blur sm:flex ${
+          year !== (DATA_COVERAGE.lastYearByFactor?.[activeFactor] ?? BASELINE_YEAR) ? "top-[5.35rem]" : "top-14"
         }`}
       >
         <Move size={11} />
-        Drag to pan · scroll to zoom
-        <span className="ml-0.5 rounded bg-slate-800/80 px-1 font-mono text-[9px] font-semibold text-slate-400">
+        <span>Drag to pan · scroll to zoom</span>
+        <span className="ml-0.5 rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1 font-mono text-[9px] font-semibold text-[#333333]">
           {Math.round(zoom * 100)}%
         </span>
       </div>
 
+      {/* Place Hover Tooltip */}
       {hoveredPlace && (
-        <div className="pointer-events-none absolute bottom-3 left-3 z-30 hidden w-[226px] rounded-xl border border-slate-700/90 bg-slate-950/95 p-3.5 shadow-2xl backdrop-blur-xl animate-fade-in sm:block">
+        <div className="pointer-events-none absolute bottom-3 left-3 z-30 hidden w-[230px] rounded-xl border border-[#E5E5E5] bg-white/98 p-3.5 shadow-xl backdrop-blur-xl animate-fade-in sm:block">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-white">
-              <MapPin size={13} className="shrink-0 text-emerald-400" />
+            <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-[#111111]">
+              <MapPin size={13} className="shrink-0 text-[#B51F3B]" />
               <span className="truncate">{hoveredPlace.name}</span>
             </span>
             <span
-              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black text-slate-950"
+              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black text-white shadow-xs"
               style={{ backgroundColor: getColorForPlace(hoveredPlace) }}
             >
-              {hoveredPlace.overallScore ?? "—"}
+              {getDisplayedScore(hoveredPlace) ?? "—"}
             </span>
           </div>
-          <div className="mb-2 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="mb-2 flex items-center justify-between text-[10px] text-[#777777]">
             <span className="truncate">
               {hoveredPlace.type === "city"
                 ? hoveredPlace.state
@@ -679,68 +686,56 @@ export default function IndiaMap({
                   ? `${hoveredPlace.region || "India"} region`
                   : "Union territory · outside scope"}
             </span>
-            <span className="shrink-0">{hoveredPlace.rank ? `Rank #${hoveredPlace.rank}` : "No data"}</span>
+            <span className="shrink-0 font-medium">{hoveredPlace.rank ? `Weighted rank #${hoveredPlace.rank}` : "No rank"}</span>
           </div>
           {hoveredPlace.factorScores && (
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-t border-slate-800 pt-2 text-[10px]">
-              <div className="text-slate-500">Air <span className="float-right font-semibold text-slate-200">{hoveredPlace.factorScores?.air ?? "—"}</span></div>
-              <div className="text-slate-500">Safety <span className="float-right font-semibold text-slate-200">{hoveredPlace.factorScores?.safety ?? "—"}</span></div>
-              <div className="text-slate-500">Health <span className="float-right font-semibold text-slate-200">{hoveredPlace.factorScores?.health ?? "—"}</span></div>
-              <div className="text-slate-500">Econ <span className="float-right font-semibold text-slate-200">{hoveredPlace.factorScores?.economy ?? "—"}</span></div>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-t border-[#E5E5E5] pt-2 text-[10px]">
+              <div className="text-[#666666]">Air <span className="float-right font-semibold text-[#111111]">{hoveredPlace.factorScores?.air ?? "—"}</span></div>
+              <div className="text-[#666666]">Safety <span className="float-right font-semibold text-[#111111]">{hoveredPlace.factorScores?.safety ?? "—"}</span></div>
+              <div className="text-[#666666]">Health <span className="float-right font-semibold text-[#111111]">{hoveredPlace.factorScores?.health ?? "—"}</span></div>
+              <div className="text-[#666666]">Econ <span className="float-right font-semibold text-[#111111]">{hoveredPlace.factorScores?.economy ?? "—"}</span></div>
+              <div className="text-[#666666]">Rent <span className="float-right font-semibold text-[#111111]">{hoveredPlace.factorScores?.col ?? "—"}</span></div>
             </div>
           )}
         </div>
       )}
 
+      {/* Map Legend */}
       <div
-        className={`pointer-events-none absolute z-20 rounded-xl border border-slate-800/90 bg-slate-950/90 shadow-xl backdrop-blur-md ${
+        className={`pointer-events-none absolute z-20 rounded-xl border border-[#E5E5E5] bg-white/95 shadow-md backdrop-blur-md ${
           compact
             ? "bottom-2 left-2 right-2 p-2"
-            : "bottom-3 left-3 right-3 p-2.5 sm:left-auto sm:right-3 sm:w-[196px]"
+            : "bottom-3 left-3 right-3 p-2.5 sm:left-auto sm:right-3 sm:w-[200px]"
         }`}
       >
         <div className={`flex items-center justify-between gap-2 ${compact ? "mb-1" : "mb-1.5"}`}>
-          <span className="truncate text-[10px] font-semibold text-slate-300">{legendTitle}</span>
-          {compact ? (
-            <span
-              className="flex shrink-0 items-center gap-1 text-[8px] text-slate-500"
-              title="Hatched states have no score"
-            >
-              <span
-                aria-hidden="true"
-                className="h-2 w-2 rounded-[2px] border border-slate-700"
-                style={{ background: "repeating-linear-gradient(45deg, #0b1220 0 2px, #243249 2px 3px)" }}
-              />
-              {year}
-            </span>
-          ) : (
-            <span className="shrink-0 text-[9px] text-slate-500">{year}</span>
-          )}
+          <span className="truncate text-[10px] font-bold text-[#111111]">{legendTitle}</span>
+          <span className="shrink-0 text-[9px] font-semibold text-[#777777]">{year}</span>
         </div>
-        <div className="mb-1 flex items-center justify-between text-[8px] font-bold uppercase tracking-wider">
+        <div className="mb-1 flex items-center justify-between text-[8px] font-bold uppercase tracking-wider text-[#666666]">
           {colorMode === "tier" ? (
             <>
-              <span className="text-orange-400">Developing</span>
-              <span className="text-emerald-400">High</span>
+              <span className="text-[#B51F3B]">Developing</span>
+              <span className="text-emerald-700">High</span>
             </>
           ) : (
             <>
-              <span className="text-red-400">Worse ←</span>
-              <span className="text-emerald-400">→ Better</span>
+              <span className="text-[#B51F3B]">Lower ←</span>
+              <span className="text-emerald-700">→ Higher</span>
             </>
           )}
         </div>
-        <div className="flex items-center gap-px overflow-hidden rounded-full ring-1 ring-inset ring-slate-950/50">
+        <div className="flex items-center gap-px overflow-hidden rounded-full ring-1 ring-[#E5E5E5]">
           {legendItems.map(item => (
             <span
               key={item.label}
-              className="h-3 flex-1"
+              className="h-2.5 flex-1"
               style={{ backgroundColor: item.color }}
               title={item.max !== undefined ? `${item.label}: ${item.min}–${item.max}` : item.label}
             />
           ))}
         </div>
-        <div className={`flex justify-between text-[9px] font-medium text-slate-500 ${compact ? "mt-0.5" : "mt-1"}`}>
+        <div className={`flex justify-between text-[9px] font-semibold text-[#888888] ${compact ? "mt-0.5" : "mt-1"}`}>
           {colorMode === "tier" ? (
             <>
               <span>Tier 3</span>
@@ -755,15 +750,6 @@ export default function IndiaMap({
             </>
           )}
         </div>
-        {!compact && (
-          <div className="mt-1.5 flex items-center gap-1 border-t border-slate-800/80 pt-1.5 text-[9px] text-slate-500">
-            <span
-              className="h-2 w-2.5 rounded-sm border border-slate-700"
-              style={{ background: "repeating-linear-gradient(45deg, #0b1220 0 2px, #243249 2px 3px)" }}
-            />
-            Hatched = no score
-          </div>
-        )}
       </div>
     </div>
   );

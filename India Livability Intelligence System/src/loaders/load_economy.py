@@ -22,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.constants import RAW_ECONOMY
+from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import (
     apply_name_standardization,
     load_alias_map,
@@ -45,9 +46,10 @@ def load_rbi_nsdp(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         state_name, year (reference year int), per_capita_nsdp_constant
     """
     files = sorted(
-        [f for f in raw_dir.iterdir()
-         if "nsdp" in f.name.lower() or "rbi" in f.name.lower()
-         and f.suffix.lower() in (".csv", ".xls", ".xlsx")]
+        f for f in raw_dir.iterdir()
+        if ("nsdp" in f.name.lower() or "rbi" in f.name.lower())
+        and f.suffix.lower() in (".csv", ".xls", ".xlsx")
+        and not is_known_generated_source(f)
     )
     if not files:
         logger.error("No RBI NSDP files found in %s", raw_dir)
@@ -143,9 +145,10 @@ def load_plfs_unemployment(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         state_name, year, unemployment_rate, period_type='survey'
     """
     files = sorted(
-        [f for f in raw_dir.iterdir()
-         if "plfs" in f.name.lower() or "unemployment" in f.name.lower()
-         and f.suffix.lower() in (".csv", ".xls", ".xlsx")]
+        f for f in raw_dir.iterdir()
+        if ("plfs" in f.name.lower() or "unemployment" in f.name.lower())
+        and f.suffix.lower() in (".csv", ".xls", ".xlsx")
+        and not is_known_generated_source(f)
     )
 
     if not files:

@@ -39,60 +39,62 @@ export const METHODOLOGY_DETAILS = {
       factor: "Air quality (PM2.5)",
       bounds: "10 to 150 µg/m³",
       direction: "Lower is better",
-      source: "CPCB / Kaggle urban monitors (WHO=15, NAAQS=60, 5th-95th percentile=35-122)",
+      source: "Local PM2.5 input; exact publisher file and values are not independently verified",
       license: "Unverified for the exact source files; see source register."
     },
     {
       factor: "Public safety (IPC crime rate)",
       bounds: "100 to 600 per lakh",
       direction: "Lower is better",
-      source: "NCRB Crime in India (5th-95th percentile=140-510)",
+      source: "NCRB Crime in India; configured scoring anchors",
       license: "Dataset-specific terms unverified; see source register."
     },
     {
       factor: "Healthcare (infant mortality)",
       bounds: "5 to 50 per 1,000 births",
       direction: "Lower is better",
-      source: "SRS, Registrar General of India (5th-95th percentile=10-46, min=5, max=50)",
+      source: "SRS, Registrar General of India; configured scoring anchors",
       license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Economy: NSDP per capita",
       bounds: "₹50,000 to ₹3,20,000",
       direction: "Higher is better",
-      source: "RBI Handbook of Statistics on Indian States (5th-95th percentile=₹54.2k-₹312k)",
+      source: "RBI Handbook of Statistics on Indian States; configured scoring anchors",
       license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Economy: unemployment",
       bounds: "2.0% to 10.0% of labour force",
       direction: "Lower is better",
-      source: "MoSPI Periodic Labour Force Survey (5th-95th percentile=2.4%-9.4%)",
+      source: "MoSPI Periodic Labour Force Survey; configured scoring anchors",
       license: "Publication-specific terms unverified; see source register."
     },
     {
       factor: "Cost of living (rent)",
       bounds: "₹10,000 to ₹90,000 / month",
       direction: "Lower is better",
-      source: "Kaggle house-rent snapshot (6 metros: Kolkata ₹11.6k to Mumbai ₹85.3k)",
-      license: "Unverified on the exact dataset page; previous CC BY-SA claim is unconfirmed."
+      source: "Local house-rent snapshot for six cities; exact publisher file and values are not independently verified",
+      license: "Unverified for the exact local file; see source register."
     }
   ],
   ethics: [
     "Transparency: scores are calculated from the local indicator tables using the displayed formulas and bounds.",
     "No synthetic fallbacks: missing observations stay missing and are shown as unavailable rather than replaced with invented values.",
-    "Inheritance is labelled: city safety, health and economy come from the surrounding state when city-level series do not exist.",
-    "Uncertainty is explicit: only observed years are scored directly; 2025–2034 values are OLS projections with approximate 95% intervals.",
+    "Safety, health, and economy inputs were quarantined after matching generated placeholder tables; they are unavailable in the current analysis.",
+    "The active air and rent files have not been independently matched to their upstream publisher releases or licenses.",
+    "Air observations currently cover 2015–2019 for a limited city sample. Any trend is a simple extrapolation from those observations, not a forecast of future conditions.",
     "Granularity protects privacy: the index stays at city and state level and does not rank wards or neighbourhoods."
   ]
 };
 
 export const DATA_GAPS = [
-  "State air scores are the annual mean of available city PM2.5 observations in that state; states without city coverage have no complete composite score.",
-  "Air quality has no processed observations for 2021 or 2022; the 2015–2019 Kaggle series and the 2023–2024 CPCB series are not joined as one continuous trend.",
-  "State safety, health and economy series end in 2022. Scores for 2023 and 2024 reuse those latest observations and label their source year.",
-  "Cost of living is a single 2022 rent snapshot for six metros, so it is never trended and applies only to those six cities.",
+  "The active local air file contains 40 matched city-year observations across 13 cities and 40 derived state-year city-sample means across 13 states, for 2015–2019. State means summarize matched cities and do not represent statewide monitoring coverage.",
+  "Safety, health, and economy are unavailable: their former local tables matched generated placeholders and were moved out of the active pipeline.",
+  "The local rent file provides one snapshot for six cities. Its exact upstream version and reuse terms are unverified; it is never trended.",
+  "The active air and rent files have not been independently matched to their cited public releases. Computed results are not source-certified factual comparisons.",
+  "No composite score or composite ranking can be calculated with the current active factors. Air-only and rent-only rankings use different populations and observation periods and must not be compared to each other.",
   "Population is not part of the processed dataset, so map pin sizes use a fixed scale rather than population.",
   "The state boundary paths and several data source licenses are not yet verified; the attribution register marks unresolved terms explicitly.",
-  "The clustering outputs are not used in the interface because the current cluster assignments are not consistent with the stored K-Means evaluation results."
+  "The app does not use old clustering outputs as current findings."
 ];

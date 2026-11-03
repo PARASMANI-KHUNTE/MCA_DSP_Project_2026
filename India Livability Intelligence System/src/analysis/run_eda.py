@@ -38,6 +38,20 @@ def run_eda():
     trends = pd.read_csv(TRENDS_CSV)
     clusters = pd.read_csv(CLUSTERS_CSV)
 
+    if "score" not in scores_wide or not scores_wide["score"].notna().any():
+        REPORTS.mkdir(parents=True, exist_ok=True)
+        (REPORTS / "findings.md").write_text(
+            "# Findings withdrawn\n\n"
+            "No composite scores can be calculated from the currently active inputs. "
+            "Known generated source tables were excluded; remaining input files are not independently "
+            "verified against their publishers. Rankings, composite statistical tests, and composite "
+            "figures are therefore not produced. Rebuild this report after the required indicators "
+            "are supplied from traceable source releases.\n",
+            encoding="utf-8",
+        )
+        print("No composite scores available; empirical findings and figures withheld.")
+        return
+
     merged = scores_wide.merge(places, on="place_id", how="left")
     scored_counts = merged.dropna(subset=["score"]).groupby("year").size()
     complete_years = scored_counts[scored_counts >= 50]

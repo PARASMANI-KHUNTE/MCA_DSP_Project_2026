@@ -6,7 +6,7 @@ Master pipeline runner (M3).  Called by `make data`.
 Stages:
   1. Load raw data from each source.
   2. Standardize names, types, calendar alignment.
-  3. Handle missing values (interpolate / exclude).
+  3. Preserve missing source values; do not interpolate or invent observations.
   4. Detect and flag outliers.
   5. Aggregate to place × year.
   6. Merge all factors into one tidy long table + wide table.
@@ -38,9 +38,8 @@ from src.utils.constants import (
     FACTOR_HEALTH,
     FACTOR_ECONOMY,
     FACTOR_COL,
-    MAX_MISSING_PCT_TO_IMPUTE,
 )
-from src.utils.helpers import setup_logging, interpolate_within_place, missing_summary
+from src.utils.helpers import setup_logging, missing_summary
 from src.loaders.load_air_kaggle import load_city_day, aggregate_to_city_year
 from src.loaders.load_air_cpcb import load_all_cpcb
 from src.loaders.load_safety import load_safety
@@ -194,19 +193,14 @@ def stage_missing(
     year_col: str = "year",
 ) -> pd.DataFrame:
     """
-    Apply the missing-value policy (M3.3).
-    Interpolates within place over time if < 20% missing; else leaves NaN.
+    Preserve missing source observations; do not interpolate or invent values.
     """
     logger.info("  Missing-value pass on '%s' (place='%s').", value_col, place_col)
     ms = missing_summary(df[[value_col]])
     if not ms.empty:
-        logger.info("  Before imputation: %s", ms.to_string())
-
-    df = interpolate_within_place(df, place_col, year_col, value_col, MAX_MISSING_PCT_TO_IMPUTE)
-
-    ms_after = missing_summary(df[[value_col]])
-    if not ms_after.empty:
-        logger.info("  After imputation (still missing — will be excluded): %s", ms_after.to_string())
+        logger.info("  Missing source values retained as missing: %s", ms.to_string())
+    df = df.copy()
+    df["is_imputed"] = False
     return df
 
 
@@ -274,6 +268,17 @@ def stage_build_tidy(
                 "gap_flag":     str(row.get("gap_flag", "")),
                 "source_id":    source_id,
             }
+            if factor == FACTOR_AIR and row.get("air_source"):
+                active_sources = sorted({
+                    source.strip().lower()
+                    for source in str(row["air_source"]).split("|")
+                    if source.strip()
+                })
+                if active_sources:
+                    entry["source_id"] = "|".join(
+                        [*(f"air_{source}" for source in active_sources),
+                         *( ["state_city_mean"] if "state_city_mean" in source_id else [] )]
+                    )
             if extra_cols:
                 entry.update({k: row.get(v) for k, v in extra_cols.items()})
             rows.append(entry)
@@ -295,6 +300,16 @@ def stage_build_tidy(
         )
         if not city_air.empty:
             aggregations = {"pm25_mean": ("pm25_mean", "mean")}
+            if "air_source" in city_air.columns:
+                aggregations["air_source"] = (
+                    "air_source",
+                    lambda values: "|".join(sorted({
+                        part.strip().lower()
+                        for value in values.dropna().astype(str)
+                        for part in value.split("|")
+                        if part.strip()
+                    })),
+                )
             for column in ("is_imputed", "series_break"):
                 if column in city_air.columns:
                     aggregations[column] = (column, "max")
@@ -458,8 +473,10 @@ def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
     }
     missing_core = required_factors - present_factors
     if missing_core:
-        issues.append(f"MISSING CORE INDICATORS: {sorted(missing_core)}")
-        logger.error(issues[-1])
+        logger.warning(
+            "Core indicators unavailable: %s. Composite scores using the configured core weights will remain unavailable.",
+            sorted(missing_core),
+        )
 
     # 1. No duplicate (place_id, year, factor) triplets
     dupes = tidy.duplicated(subset=["place_id", "year", "factor"])
@@ -581,12 +598,23 @@ def stage_export(
         f.write(f"**Places covered:** {tidy['place_id'].nunique()}\n\n")
         imputed = int(tidy.get("is_imputed", pd.Series([False])).sum())
         f.write(f"**Imputed values:** {imputed}\n\n")
+        present_factors = set(tidy.get("factor", pd.Series(dtype=str)).dropna().unique())
+        required_factors = {
+            FACTOR_AIR, FACTOR_SAFETY, FACTOR_HEALTH,
+            "per_capita_nsdp_constant", "unemployment_rate",
+        }
+        missing_core = sorted(required_factors - present_factors)
+        if missing_core:
+            f.write("## Composite score availability\n\n")
+            f.write("A complete composite cannot be calculated from the active inputs. Missing core indicators: ")
+            f.write(", ".join(missing_core) + ".\n\n")
         if issues:
             f.write("## Validation Issues\n\n")
             for issue in issues:
                 f.write(f"- {issue}\n")
         else:
-            f.write("## Validation: PASSED ✅\n")
+            f.write("## Structural validation: PASSED\n\n")
+            f.write("This confirms output structure only. Core indicator coverage is incomplete; see composite score availability above.\n")
     logger.info("Saved: %s", report_path)
 
 

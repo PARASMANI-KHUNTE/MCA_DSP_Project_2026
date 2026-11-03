@@ -6,6 +6,7 @@ Pydantic v2 request/response models for all API endpoints.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from pydantic import BaseModel, field_validator, model_validator
@@ -36,6 +37,8 @@ class FactorOut(BaseModel):
     trend_eligible: bool
     source_id: str | None = None
     notes: str | None = None
+    available: bool = False
+    observation_count: int = 0
 
 
 # ── Score endpoint ──────────────────────────────────────────────────────────
@@ -50,6 +53,8 @@ class ScoreRequest(BaseModel):
     def weights_not_empty(cls, v: dict) -> dict:
         if not v:
             raise ValueError("'weights' must not be empty.")
+        if any(not math.isfinite(w) or w < 0 for w in v.values()):
+            raise ValueError("Weights must be finite and non-negative.")
         if all(w == 0 for w in v.values()):
             raise ValueError("At least one weight must be non-zero.")
         return v
@@ -57,8 +62,9 @@ class ScoreRequest(BaseModel):
     @model_validator(mode="after")
     def normalize_weights(self) -> "ScoreRequest":
         total = sum(self.weights.values())
-        if total > 0:
-            self.weights = {k: v / total for k, v in self.weights.items()}
+        self.weights = {k: v / total for k, v in self.weights.items()}
+        if self.place_type not in (None, "state", "city"):
+            raise ValueError("place_type must be 'state', 'city', or null.")
         return self
 
 

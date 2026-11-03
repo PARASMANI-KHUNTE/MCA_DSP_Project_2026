@@ -51,17 +51,24 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def is_known_generated_source(path: Path, root: Path = ROOT) -> bool:
+    """Identify exact files emitted by the retired demonstration-data generator."""
+    path = Path(path)
+    try:
+        relative_path = path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return False
+    expected_digest = UNVERIFIED_GENERATED_SHA256.get(relative_path)
+    return bool(path.is_file() and expected_digest and _sha256(path) == expected_digest)
+
+
 def find_unverified_generated_sources(root: Path = ROOT) -> list[Path]:
     """Return raw files whose content exactly matches known generated placeholders."""
-    matches = []
-    for relative_path, expected_digest in UNVERIFIED_GENERATED_SHA256.items():
-        path = root / relative_path
-        if not path.is_file():
-            continue
-        digest = _sha256(path)
-        if digest == expected_digest:
-            matches.append(path)
-    return matches
+    return [
+        root / relative_path
+        for relative_path in UNVERIFIED_GENERATED_SHA256
+        if is_known_generated_source(root / relative_path, root)
+    ]
 
 
 def _pipeline_input_files(root: Path) -> list[Path]:

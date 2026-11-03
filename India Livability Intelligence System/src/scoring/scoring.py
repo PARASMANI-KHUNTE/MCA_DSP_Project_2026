@@ -168,7 +168,7 @@ def compute_scores(
         year = int(numeric_years.max())
     df = df.loc[numeric_years <= year].copy()
     if df.empty:
-        raise ValueError(f"No data available on or before year {year}.")
+        raise ValueError(f"No data for year {year}: no data available on or before that year.")
     df["year"] = pd.to_numeric(df["year"], errors="coerce")
     df = (
         df.sort_values("year")

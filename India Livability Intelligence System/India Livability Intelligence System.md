@@ -1,3 +1,4 @@
+﻿> **Current data correction (3 November 2026):** earlier sections describe a fuller dataset and outputs. Six inputs described there were confirmed as generated placeholders and are now quarantined. Current outputs contain air observations and rent snapshots only. The app and API support separate factor-only air and rent rankings; no composite score or composite ranking is available. The remaining files are not source-verified. See [fabrication audit](reports/data_fabrication_audit.md).
 # India Livability Intelligence System
 ### Software Requirements Specification, Architecture and Data Science Pipeline
 
@@ -5,7 +6,7 @@
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
 **Version:** 1.5 (local-data pipeline workflow, 3 November 2026)
 
-> **Implementation status update, 3 November 2026.** At the user's direction, the active workflow processes the datasets currently present in `data/raw/` without a source-review gate. The cleaning, scoring, trend/clustering, EDA, and frontend-export stages have been run; the API serves scores, and the frontend uses the regenerated data bundle. Technical pipeline checks validate structure and transformations, not agreement with a publisher's release. Review the current data coverage and interpretation notes in `reports/data_provenance_notice.md`.
+> **Current implementation status, 3 November 2026.** Six raw files were confirmed as generated placeholders and quarantined. The active pipeline now reads only local air and rent files, which remain independently unverified against their publishers. Safety, health, and economy are unavailable. The app/API provide factor-only air and rent rankings and eligible air-only trend projections, but no composite score, composite ranking, or composite projection. See `reports/data_fabrication_audit.md`. Sections below describe the broader intended design and should not be read as current data availability.
 
 > **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
 

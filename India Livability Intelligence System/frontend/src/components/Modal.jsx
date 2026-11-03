@@ -8,7 +8,7 @@ export default function Modal({ onClose, children, className = "", label = "Dial
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-md animate-fade-in sm:p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-black/40 p-3 backdrop-blur-sm animate-fade-in sm:p-4"
       onMouseDown={event => {
         if (event.target === event.currentTarget) onClose?.();
       }}
@@ -19,7 +19,7 @@ export default function Modal({ onClose, children, className = "", label = "Dial
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        className={`surface relative flex max-h-[92dvh] w-full flex-col overflow-hidden animate-scale-in ${className}`}
+        className={`surface relative flex max-h-[92dvh] w-full flex-col overflow-hidden bg-white text-[#111111] border border-[#E5E5E5] shadow-2xl rounded-2xl sm:rounded-3xl animate-scale-in ${className}`}
       >
         {children}
       </div>

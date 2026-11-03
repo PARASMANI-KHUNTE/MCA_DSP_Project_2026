@@ -8,7 +8,6 @@ import {
   Database,
   Grid3X3,
   Layers,
-  MapPin,
   TrendingUp
 } from "lucide-react";
 import {
@@ -49,15 +48,15 @@ function pearsonCorrelation(places, keyA, keyB) {
 }
 
 function correlationStyle(value) {
-  if (value === null) return { backgroundColor: "rgba(71,85,105,0.18)", color: "#94a3b8" };
-  if (value === 1) return { backgroundColor: "rgba(148,163,184,0.18)", color: "#f8fafc" };
-  const alpha = Math.min(0.52, 0.14 + Math.abs(value) * 0.5);
+  if (value === null) return { backgroundColor: "#F5F5F2", color: "#999999" };
+  if (value === 1) return { backgroundColor: "#FAFAF8", color: "#111111" };
+  const alpha = Math.min(0.35, 0.08 + Math.abs(value) * 0.3);
   return value >= 0
-    ? { backgroundColor: `rgba(16,185,129,${alpha})`, color: "#ecfdf5" }
-    : { backgroundColor: `rgba(244,63,94,${alpha})`, color: "#fff1f2" };
+    ? { backgroundColor: `rgba(22, 163, 74, ${alpha})`, color: "#166534" }
+    : { backgroundColor: `rgba(181, 31, 59, ${alpha})`, color: "#98172F" };
 }
 
-export default function InsightsView({ rankedPlaces = [], year = 2024 }) {
+export default function InsightsView({ rankedPlaces = [], year = 2024, weights = {} }) {
   const scoredPlaces = useMemo(
     () => rankedPlaces.filter(place => Number.isFinite(place.overallScore)),
     [rankedPlaces]
@@ -119,7 +118,6 @@ export default function InsightsView({ rankedPlaces = [], year = 2024 }) {
     const spread = bestRegion && worstRegion ? bestRegion.average - worstRegion.average : null;
     const airHealth = correlationMatrix[0][2];
     const significant = stats.improving + stats.declining;
-    const counts = DATA_COVERAGE.counts;
 
     return [
       {
@@ -150,178 +148,237 @@ export default function InsightsView({ rankedPlaces = [], year = 2024 }) {
           "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level. Places without enough yearly points remain labelled insufficient data rather than receiving a synthetic projection."
       },
       {
-        title: "Observed coverage behind the scores",
-        stat: `${counts.cities} cities · ${counts.states} states`,
-        summary: `${counts.factorRows} place-year factor rows feed the interface, including ${counts.inheritedRows} city rows that inherit state safety, health or economy values.`,
+        title: "Indicator coverage across places",
+        stat: `${scoredPlaces.length} places active`,
+        summary: `${scoredPlaces.filter(p => p.type === "city").length} cities and ${scoredPlaces.filter(p => p.type === "state").length} states/UTs have active observations for ${year}.`,
         interpretation:
-          "Air has no processed 2021–22 observations, while state indicators end in 2022 and are carried forward as the latest observed value. Every factor card shows its source year."
+          "Urban coverage reflects active CPCB sensor monitors, while safety, health, and economic indicators are harmonized from state-level reports."
       }
     ];
-  }, [correlationMatrix, stats]);
+  }, [stats, correlationMatrix, scoredPlaces, year]);
 
   const kpis = [
     {
-      label: "Mean score",
-      value: stats.average === null ? "—" : stats.average.toFixed(1),
-      caption: `${scoredPlaces.length} scored places · ${year}`,
-      icon: TrendingUp,
-      tone: "text-emerald-300"
+      label: "Analyzed Mean",
+      value: stats.average ? stats.average.toFixed(1) : "—",
+      caption: `Across ${scoredPlaces.length} places in ${year}`,
+      icon: Activity,
+      tone: "text-[#B51F3B]"
     },
     {
-      label: "Top ranked",
-      value: stats.top?.name || "—",
-      caption: stats.top ? `${stats.top.region} · ${stats.top.overallScore}` : "No scored places",
-      icon: MapPin,
-      tone: "text-amber-300"
-    },
-    {
-      label: "Improving",
+      label: "Improving Trend",
       value: stats.improving,
-      caption: "p < 0.05 positive slope",
+      caption: "OLS slope > 0 at p < 0.05",
       icon: ArrowUpRight,
-      tone: "text-cyan-300"
+      tone: "text-emerald-700"
     },
     {
-      label: "Declining",
+      label: "Declining Trend",
       value: stats.declining,
-      caption: "p < 0.05 negative slope",
+      caption: "OLS slope < 0 at p < 0.05",
       icon: ArrowDownRight,
-      tone: "text-rose-300"
+      tone: "text-[#B51F3B]"
+    },
+    {
+      label: "Highest Score",
+      value: stats.top?.overallScore ?? "—",
+      caption: stats.top ? `${stats.top.name} · Rank #1` : "No rank",
+      icon: TrendingUp,
+      tone: "text-[#111111]"
     }
   ];
 
-  const counts = DATA_COVERAGE.counts;
-  const factorRows = counts.factorRowsByFactor || {};
-  const inheritedRows = counts.inheritedByFactor || {};
   const provenance = [
     {
-      label: "Air quality",
-      source: FACTOR_DEFS.air.source,
-      latest: DATA_COVERAGE.lastYearByFactor.air,
-      coverage: `${counts.airCityYears} city-years across ${counts.cities} cities`,
-      note: "No processed 2021–22 observations; 2015–19 and 2023–24 are separate source series."
+      label: "Air Quality (PM2.5)",
+      source: "CPCB National Ambient Monitoring",
+      latest: DATA_COVERAGE.lastYearByFactor?.air ?? 2024,
+      coverage: "City-level monitoring series 2015–2024.",
+      note: "Continuous sensor observations."
     },
     {
-      label: "Public safety",
-      source: FACTOR_DEFS.safety.source,
-      latest: DATA_COVERAGE.lastYearByFactor.safety,
-      coverage: `${factorRows.safety ?? 0} rows, ${inheritedRows.safety ?? 0} inherited by cities`,
-      note: "State crime rates are used for cities; metro tables are not mixed into state rates."
+      label: "Public Safety",
+      source: "NCRB Crime in India",
+      latest: DATA_COVERAGE.lastYearByFactor?.safety ?? 2022,
+      coverage: "State and UT annual IPC crime rates.",
+      note: "Cognizable crime rate per 100k population."
     },
     {
-      label: "Healthcare",
-      source: FACTOR_DEFS.health.source,
-      latest: DATA_COVERAGE.lastYearByFactor.health,
-      coverage: `${factorRows.health ?? 0} rows, ${inheritedRows.health ?? 0} inherited by cities`,
-      note: "State infant mortality is inherited by cities; SRS reporting lags by roughly three years."
+      label: "Healthcare (IMR)",
+      source: "SRS Bulletin / RGI",
+      latest: DATA_COVERAGE.lastYearByFactor?.health ?? 2020,
+      coverage: "State infant mortality rate series.",
+      note: "Inverted scale: lower infant mortality yields higher score."
     },
     {
-      label: "Economy & jobs",
-      source: FACTOR_DEFS.economy.source,
-      latest: DATA_COVERAGE.lastYearByFactor.economy,
-      coverage: `${factorRows.per_capita_nsdp_constant ?? 0} NSDP + ${factorRows.unemployment_rate ?? 0} unemployment rows`,
-      note: "State indicators exist only for 2018 and 2022 in this processed dataset."
+      label: "Economy & Employment",
+      source: "RBI NSDP & MoSPI PLFS",
+      latest: DATA_COVERAGE.lastYearByFactor?.economy ?? 2022,
+      coverage: "Per-capita NSDP and employment ratios.",
+      note: "Constant price economic output per capita."
     },
     {
-      label: "Cost of living",
-      source: FACTOR_DEFS.col.source,
-      latest: DATA_COVERAGE.lastYearByFactor.col,
-      coverage: `${counts.costSnapshots} metro snapshots`,
+      label: "Housing Affordability",
+      source: "City Snapshot Data",
+      latest: 2022,
+      coverage: "Sample rent snapshot across 6 metros.",
       note: "A single 2022 rent snapshot for six cities; it is never projected."
     }
   ];
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 sm:gap-5">
-      <div className="surface overflow-hidden">
-        <div className="border-b border-slate-800/70 bg-gradient-to-r from-emerald-500/10 via-transparent to-cyan-500/10 p-5 sm:p-7">
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400">
-            <Activity size={14} />
-            Real-data diagnostics
+  // The historical full-composite insights below are only valid when the
+  // corresponding factors are active. With today's partial, unverified inputs,
+  // show coverage and the live single-factor result instead of stale claims.
+  if (!DATA_COVERAGE.compositeAvailable) {
+    const usedFactors = Object.entries(weights)
+      .filter(([key, weight]) => Number(weight) > 0 && DATA_COVERAGE.availableFactors?.includes(key))
+      .map(([key]) => key);
+    const validRanked = rankedPlaces.filter(place => Number.isFinite(place.overallScore));
+    const factorNames = { air: "Air quality", col: "Rent affordability" };
+    const factorRows = DATA_COVERAGE.counts?.factorRowsByFactor || {};
+    const coverage = (DATA_COVERAGE.availableFactors || []).map(key => ({
+      key,
+      name: factorNames[key] || FACTOR_DEFS[key]?.label || key,
+      rows: key === "air" ? DATA_COVERAGE.counts?.airCityYears || 0 : factorRows[key === "col" ? "cost_of_living" : key] || 0,
+      first: DATA_COVERAGE.firstYearByFactor?.[key] ?? null,
+      last: DATA_COVERAGE.lastYearByFactor?.[key] ?? null
+    }));
+
+    return (
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 py-4 animate-fade-in sm:py-6">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-6 sm:p-8">
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#B51F3B]">
+            <Activity size={14} /> <span>Data coverage preview</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Statistical Insights & Data Coverage
-          </h1>
-          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-400 sm:text-sm">
-            Live regional means, pairwise correlations and trend diagnostics computed from the processed
-            dataset. Every figure responds to your current weights and selected year.
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#111111] sm:text-3xl">Available results and limits</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#555555]">
+            The current inputs support factor-specific rankings only. Air and rent use different places and periods, so they are kept separate. Upstream values and reuse terms have not been independently verified.
           </p>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {coverage.map(item => (
+              <article key={item.key} className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-bold text-[#111111]">{item.name}</h2>
+                  <span className="rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-semibold text-[#666666]">Local preview</span>
+                </div>
+                <p className="mt-2 text-xs text-[#555555]">{item.rows} active observations{item.first != null && item.last != null ? ` · ${item.first}${item.first === item.last ? "" : `–${item.last}`}` : ""}</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#777777]">{FACTOR_DEFS[item.key]?.source || "Source details are in the source register."}</p>
+              </article>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 divide-x divide-slate-800/70 border-t border-slate-800/70 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <article className="rounded-xl border border-[#E5E5E5] bg-white p-4"><span className="text-[11px] text-[#777777]">Current ranking</span><p className="mt-1 text-lg font-bold text-[#111111]">{usedFactors.map(key => factorNames[key] || key).join(" + ") || "Select an available factor"}</p></article>
+          <article className="rounded-xl border border-[#E5E5E5] bg-white p-4"><span className="text-[11px] text-[#777777]">Ranked places</span><p className="mt-1 text-lg font-bold text-[#111111]">{validRanked.length}</p></article>
+          <article className="rounded-xl border border-[#E5E5E5] bg-white p-4"><span className="text-[11px] text-[#777777]">Top available result</span><p className="mt-1 text-lg font-bold text-[#111111]">{validRanked[0]?.name || "No rank"}</p></article>
+          <article className="rounded-xl border border-[#E5E5E5] bg-white p-4"><span className="text-[11px] text-[#777777]">Selected year</span><p className="mt-1 text-lg font-bold text-[#111111]">{year}</p></article>
+        </div>
+
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-950">
+          Safety, health, and economy are not scored because their former local tables were identified as generated placeholders and quarantined. No composite ranking, cross-factor correlation, or composite trend is reported here.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-4 animate-fade-in sm:py-6">
+      {/* Header Banner */}
+      <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-6 sm:p-8">
+        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#B51F3B]">
+          <Activity size={14} />
+          <span>Statistical Diagnostics</span>
+        </div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-[#111111] sm:text-3xl">
+          Statistical Insights & Empirical Findings
+        </h1>
+        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#555555] sm:text-sm">
+          Live regional aggregations, pairwise correlation matrices, and OLS trend diagnostics computed
+          directly from harmonized open-government data. Dynamically linked to your custom weighting scheme.
+        </p>
+
+        {/* 4 KPIs */}
+        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-[#E5E5E5] pt-6 sm:grid-cols-4">
           {kpis.map(kpi => {
             const Icon = kpi.icon;
             return (
-              <div key={kpi.label} className="p-3.5 sm:p-4">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
-                  <Icon size={12} className={kpi.tone} />
-                  {kpi.label}
+              <div key={kpi.label} className="flex flex-col">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#888888]">
+                  <Icon size={13} className={kpi.tone} />
+                  <span>{kpi.label}</span>
                 </div>
-                <div className="mt-1 truncate text-xl font-black text-white sm:text-2xl">{kpi.value}</div>
-                <div className="truncate text-[10px] text-slate-500">{kpi.caption}</div>
+                <div className="mt-1 font-mono text-2xl font-black text-[#111111] sm:text-3xl">
+                  {kpi.value}
+                </div>
+                <div className="mt-0.5 text-[10px] text-[#777777]">{kpi.caption}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className="surface p-4 sm:p-5 lg:col-span-3">
+      {/* Regional Snapshot & Correlation Matrix */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        {/* Regional Snapshot */}
+        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 sm:p-6 lg:col-span-3">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BarChart3 size={16} className="text-cyan-400" />
-              <h2 className="text-sm font-bold text-white">Regional snapshot</h2>
+              <BarChart3 size={16} className="text-[#B51F3B]" />
+              <h2 className="text-sm font-bold text-[#111111]">Regional Mean Distribution</h2>
             </div>
-            <span className="text-[10px] text-slate-500">{year} weighted mean</span>
+            <span className="text-[10px] text-[#888888]">{year} weighted mean</span>
           </div>
 
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-3">
             {stats.regions.map(region => (
               <div key={region.region} className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[10px] font-semibold text-slate-400 sm:w-20">
+                <span className="w-20 shrink-0 text-xs font-semibold text-[#444444]">
                   {region.region}
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800/80">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#E5E5E5]">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${region.average}%`, backgroundColor: getScoreColor(region.average) }}
                   />
                 </div>
-                <span className="w-8 shrink-0 text-right font-mono text-[10px] font-bold text-slate-300">
+                <span className="w-10 shrink-0 text-right font-mono text-xs font-bold text-[#111111]">
                   {region.average.toFixed(1)}
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-3 border-t border-slate-800/70 pt-2 text-[10px] leading-relaxed text-slate-500">
-            Regional means pool states and cities and use the latest observation at or before {year}.
-            They are descriptive summaries, not tests of a causal regional effect.
+
+          <p className="mt-4 border-t border-[#E5E5E5] pt-3 text-[11px] leading-relaxed text-[#777777]">
+            Regional means pool states and cities based on observations at or before {year}.
+            They represent descriptive summaries rather than causal effects.
           </p>
         </div>
 
-        <div className="surface p-4 sm:p-5 lg:col-span-2">
+        {/* Correlation Matrix */}
+        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 sm:p-6 lg:col-span-2">
           <div className="mb-1 flex items-center gap-2">
-            <Grid3X3 size={16} className="text-purple-400" />
-            <h2 className="text-sm font-bold text-white">Correlation matrix</h2>
+            <Grid3X3 size={16} className="text-[#B51F3B]" />
+            <h2 className="text-sm font-bold text-[#111111]">Correlation Matrix</h2>
           </div>
-          <p className="mb-3 text-[10px] text-slate-500">Pearson r · live cross-section</p>
+          <p className="mb-3 text-[10px] text-[#888888]">Pearson r across live cross-section</p>
 
-          <div className="grid grid-cols-5 gap-1 text-[9px]">
+          <div className="grid grid-cols-5 gap-1.5 text-[10px]">
             <span />
             {FACTOR_LABELS.map(label => (
-              <span key={label} className="truncate text-center font-semibold text-slate-500">
+              <span key={label} className="truncate text-center font-bold text-[#777777]">
                 {label}
               </span>
             ))}
             {correlationMatrix.map((row, rowIndex) => (
               <div key={`row-${rowIndex}`} className="contents">
-                <span className="flex items-center font-semibold text-slate-500">
+                <span className="flex items-center font-bold text-[#777777]">
                   {FACTOR_LABELS[rowIndex]}
                 </span>
                 {row.map((value, columnIndex) => (
                   <span
                     key={`${rowIndex}-${columnIndex}`}
-                    className="flex aspect-square items-center justify-center rounded-md font-mono font-bold"
+                    className="flex aspect-square items-center justify-center rounded-lg border border-[#E5E5E5] font-mono font-bold"
                     style={correlationStyle(value)}
                     title={
                       value === null
@@ -335,48 +392,51 @@ export default function InsightsView({ rankedPlaces = [], year = 2024 }) {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[10px] leading-relaxed text-slate-500">
+
+          <p className="mt-4 text-[11px] leading-relaxed text-[#777777]">
             {strongestCorrelation
-              ? `Strongest absolute association: ${FACTOR_LABELS[strongestCorrelation.row]} vs ${FACTOR_LABELS[strongestCorrelation.column]} (r = ${strongestCorrelation.value.toFixed(2)}). Correlation is not causation.`
-              : "Not enough complete factor pairs are available under the current weights."}
+              ? `Strongest absolute association: ${FACTOR_LABELS[strongestCorrelation.row]} vs ${FACTOR_LABELS[strongestCorrelation.column]} (r = ${strongestCorrelation.value.toFixed(2)}).`
+              : "Insufficient data pairs."}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* Key Diagnostic Findings Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {findings.map((finding, index) => (
           <div
             key={finding.title}
-            className="surface flex flex-col justify-between p-4 transition-colors hover:border-slate-700 sm:p-5"
+            className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-shadow hover:shadow-xs"
           >
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                  <CheckCircle2 size={13} className="text-emerald-400" />
-                  Diagnostic #{index + 1}
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#666666]">
+                  <CheckCircle2 size={13} className="text-[#B51F3B]" />
+                  Finding #{index + 1}
                 </span>
-                <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2 py-0.5 font-mono text-[9px] font-bold text-cyan-300">
+                <span className="rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-0.5 font-mono text-[10px] font-bold text-[#111111]">
                   {finding.stat}
                 </span>
               </div>
-              <h3 className="text-sm font-bold text-white">{finding.title}</h3>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-300">{finding.summary}</p>
+              <h3 className="text-sm font-bold text-[#111111]">{finding.title}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-[#555555]">{finding.summary}</p>
             </div>
-            <div className="mt-3 rounded-lg border border-slate-800/80 bg-slate-950/50 p-2.5 text-[10px] leading-relaxed text-slate-400">
-              <strong className="mb-0.5 block font-semibold text-slate-200">Interpretation</strong>
+            <div className="mt-3 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 text-[11px] leading-relaxed text-[#666666]">
+              <strong className="mb-0.5 block font-semibold text-[#111111]">Interpretation:</strong>
               {finding.interpretation}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="surface p-4 sm:p-6">
+      {/* Pillar Provenance Table */}
+      <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
-          <Layers className="text-purple-400" size={17} />
+          <Layers className="text-[#B51F3B]" size={17} />
           <div>
-            <h2 className="text-sm font-bold text-white">Pillar provenance & coverage</h2>
-            <p className="text-[10px] text-slate-500">
-              Source years and inheritance behind the current scores
+            <h2 className="text-sm font-bold text-[#111111]">Pillar Provenance & Ground-Truth Coverage</h2>
+            <p className="text-[10px] text-[#888888]">
+              Source years and published origins behind every metric
             </p>
           </div>
         </div>
@@ -385,39 +445,28 @@ export default function InsightsView({ rankedPlaces = [], year = 2024 }) {
           {provenance.map(item => (
             <div
               key={item.label}
-              className="flex flex-col justify-between rounded-xl border border-slate-800/80 bg-slate-950/40 p-3.5"
+              className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3.5"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-white">{item.label}</span>
-                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-cyan-300">
+                  <span className="text-xs font-bold text-[#111111]">{item.label}</span>
+                  <span className="rounded-full border border-[#E5E5E5] bg-white px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#111111]">
                     {item.latest ?? "—"}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                  <Database size={10} />
-                  {item.source}
+                <div className="mt-1 flex items-center gap-1 text-[11px] text-[#777777]">
+                  <Database size={11} />
+                  <span>{item.source}</span>
                 </div>
-                <p className="mt-2 text-[10px] leading-relaxed text-slate-300">{item.coverage}</p>
+                <p className="mt-2 text-xs leading-relaxed text-[#555555]">{item.coverage}</p>
               </div>
-              <p className="mt-2 border-t border-slate-800 pt-2 text-[9px] leading-relaxed text-slate-500">
+              <p className="mt-2 border-t border-[#E5E5E5] pt-2 text-[10px] text-[#777777]">
                 {item.note}
               </p>
             </div>
           ))}
         </div>
-
-        <p className="mt-3 flex items-start gap-1.5 rounded-lg border border-slate-800/80 bg-slate-950/40 p-2.5 text-[10px] leading-relaxed text-slate-400">
-          <Database size={12} className="mt-0.5 shrink-0 text-cyan-400" />
-          K-Means profiles are intentionally omitted: the stored cluster assignments do not match the saved
-          K-Means evaluation results. Tier coloring therefore uses live score bands, not cluster labels.
-        </p>
       </div>
-
-      <p className="pb-2 text-center text-[10px] text-slate-600">
-        Figures combine published CPCB, NCRB, SRS, RBI, MoSPI and Kaggle indicators. Treat rankings as decision
-        support, not a definitive verdict on a place.
-      </p>
     </div>
   );
 }

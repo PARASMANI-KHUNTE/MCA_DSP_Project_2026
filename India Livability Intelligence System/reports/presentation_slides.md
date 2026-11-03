@@ -1,5 +1,5 @@
-# India Livability Intelligence System (ILIS)
-> **Data verification hold (3 November 2026):** several input tables used for these findings are generated placeholders rather than source-verified observations. Do not present the reported results as empirical findings until validated data replaces them and the analysis is rerun.
+﻿# India Livability Intelligence System (ILIS)
+> **Withdrawn presentation (3 November 2026):** slides below contain historical findings from before six generated placeholder inputs were quarantined. Do not present these results. The current rebuild has no composite scores, and remaining local inputs are not independently source-verified. See `data_fabrication_audit.md`.
 
 ## Data-Driven Livability Index with Interactive Map and Trend Projection
 

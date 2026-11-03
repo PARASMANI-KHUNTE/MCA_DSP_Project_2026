@@ -7,40 +7,39 @@ import {
   RotateCcw,
   ShieldAlert,
   Sliders,
-  Sparkles,
   TrendingUp,
   Wind
 } from "lucide-react";
 import { PRESETS } from "../data/methodologyData";
-import { getScoreColor, SCORE_GRADIENT_CSS } from "../services/scoringService";
+import { SCORE_GRADIENT_CSS } from "../services/scoringService";
 
 const FACTORS = [
   {
-    key: "air", label: "Air Quality", source: "CPCB · PM2.5", icon: Wind, color: "#22d3ee", max: 100,
-    colorMeaning: "Green means a higher air score and lower PM2.5; red means a lower score and higher PM2.5."
+    key: "air", label: "Air Quality", source: "Local PM2.5 observations · source unverified", icon: Wind, color: "#0284c7", max: 100,
+    colorMeaning: "Higher score indicates cleaner ambient air with lower annual PM2.5 concentration."
   },
   {
-    key: "safety", label: "Public Safety", source: "NCRB", icon: ShieldAlert, color: "#fb7185", max: 100,
-    colorMeaning: "Green means a higher safety score and a lower recorded crime rate; red means a lower score and a higher recorded rate."
+    key: "safety", label: "Public Safety", source: "No active observations", icon: ShieldAlert, color: "#e11d48", max: 100,
+    colorMeaning: "Higher score indicates lower recorded cognizable crime rates per capita."
   },
   {
-    key: "health", label: "Healthcare", source: "SRS · IMR", icon: HeartPulse, color: "#34d399", max: 100,
-    colorMeaning: "Green means a higher health score and lower infant mortality; red means a lower score and higher infant mortality."
+    key: "health", label: "Healthcare", source: "No active observations", icon: HeartPulse, color: "#16a34a", max: 100,
+    colorMeaning: "Higher score indicates lower infant mortality and stronger healthcare resilience."
   },
   {
-    key: "economy", label: "Economy & Jobs", source: "RBI · NSDP", icon: TrendingUp, color: "#fbbf24", max: 100,
-    colorMeaning: "Green means a higher economy score, combining higher per-capita NSDP with lower unemployment; red means a lower combined score."
+    key: "economy", label: "Economy & Jobs", source: "No active observations", icon: TrendingUp, color: "#d97706", max: 100,
+    colorMeaning: "Higher score combines higher per-capita net state domestic product and employment rates."
   },
   {
-    key: "col", label: "Cost of Living", source: "6 metros · rent", icon: Coins, color: "#c084fc", max: 50,
-    colorMeaning: "Green means a higher affordability score and lower rent; red means a lower score and higher rent. Data covers six cities in one snapshot."
+    key: "col", label: "Cost of Living", source: "Local rent snapshot · source unverified", icon: Coins, color: "#9333ea", max: 100,
+    colorMeaning: "Higher score indicates higher affordability (lower relative rent). Applies to six metros."
   }
 ];
 
 const COLOR_MODES = [
   { id: "overall", label: "Overall" },
   { id: "factor", label: "Factor" },
-  { id: "tier", label: "Score bands" }
+  { id: "tier", label: "Bands" }
 ];
 
 const MAP_FACTORS = [
@@ -60,7 +59,9 @@ export default function WeightControls({
   onChangeColorMode,
   activeFactor,
   onChangeActiveFactor,
-  selectedPresetId
+  selectedPresetId,
+  availableFactors = [],
+  compositeAvailable = false
 }) {
   const [openInfoId, setOpenInfoId] = useState(null);
   const totalWeight =
@@ -77,135 +78,154 @@ export default function WeightControls({
 
   return (
     <div className="surface flex w-full flex-col gap-5 p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 border-b border-[#E5E5E5] pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 text-emerald-300 ring-1 ring-emerald-400/30">
-            <Sliders size={17} />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] text-[#111111]">
+            <Sliders size={15} />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="rounded bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">Step 1</span>
-              <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Set Priorities</h2>
+              <span className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#B51F3B]">
+                Step 1
+              </span>
+              <h2 className="truncate text-sm font-bold text-[#111111]">Set Priorities</h2>
             </div>
-            <p className="text-[10px] text-slate-500">Pick a preset or fine-tune weights</p>
+            <p className="text-[10px] text-[#666666]">Select preset or adjust weights</p>
           </div>
         </div>
         <button
           onClick={onReset}
-          className="flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition-all hover:bg-slate-800/70 hover:text-emerald-300 hover:scale-[1.02]"
+          className="flex min-h-8 shrink-0 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#555555] transition-colors hover:border-[#D4D4D4] hover:text-[#111111]"
           title="Reset to balanced default"
         >
-          <RotateCcw size={12} />
+          <RotateCcw size={11} />
           Reset
         </button>
       </div>
 
+      {/* Persona Presets */}
       <div>
-        <div className="mb-2 flex items-center gap-1.5">
-          <Sparkles size={12} className="text-amber-400" />
-          <span className="eyebrow">Persona presets</span>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="eyebrow text-[#888888]">Evaluation Presets</span>
+          <span className="text-[10px] text-[#888888]">1-Click Scenarios</span>
         </div>
-        <div className="grid grid-cols-1 gap-1.5">
-          {PRESETS.map(preset => {
-            const selected = selectedPresetId === preset.id;
-            return (
-              <button
-                key={preset.id}
-                onClick={() => onSelectPreset(preset)}
-                aria-pressed={selected}
-                className={`group relative flex items-start gap-2 rounded-xl border px-3 py-2.5 text-left transition-all ${
-                  selected
-                    ? "border-emerald-400/60 bg-gradient-to-r from-emerald-500/20 to-green-500/20 shadow-sm shadow-emerald-500/20"
-                    : "border-slate-800/80 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/60"
-                }`}
-              >
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
-                  {selected ? (
-                    <Check size={12} className="text-emerald-400" />
-                  ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-600 group-hover:bg-slate-400" />
-                  )}
-                </span>
-                <span className="min-w-0">
-                  <span className={`block text-xs font-semibold ${selected ? "text-emerald-300" : "text-slate-200"}`}>
-                    {preset.name}
+        {!compositeAvailable ? (
+          <div className="grid grid-cols-1 gap-1.5">
+            {FACTORS.filter(factor => availableFactors.includes(factor.key)).map(factor => {
+              const id = `${factor.key}_only`;
+              const selected = selectedPresetId === id;
+              const Icon = factor.icon;
+              return (
+                <button
+                  key={id}
+                  onClick={() => onSelectPreset({ id, weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, [factor.key]: 100 } })}
+                  aria-pressed={selected}
+                  className={`flex items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition-all ${selected ? "border-[#B51F3B] bg-white ring-1 ring-[#B51F3B]/30" : "border-[#E5E5E5] bg-[#FAFAF8] hover:bg-white"}`}
+                >
+                  <Icon size={14} className="mt-0.5 shrink-0" style={{ color: factor.color }} />
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold text-[#111111]">Rank by {factor.label.toLowerCase()}</span>
+                    <span className="mt-0.5 block text-[10px] leading-relaxed text-[#666666]">{factor.source}</span>
                   </span>
-                  <span className="mt-0.5 block truncate text-[10px] text-slate-500">{preset.desc}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-1.5">
+            {PRESETS.map(preset => {
+              const selected = selectedPresetId === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => compositeAvailable && onSelectPreset(preset)}
+                  disabled={!compositeAvailable}
+                  aria-pressed={selected}
+                  className={`group relative flex items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition-all ${
+                    selected
+                      ? "border-[#B51F3B] bg-white shadow-sm ring-1 ring-[#B51F3B]/30"
+                      : "border-[#E5E5E5] bg-[#FAFAF8] hover:border-[#D4D4D4] hover:bg-white"
+                  }`}
+                >
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
+                    {selected ? (
+                      <Check size={12} className="text-[#B51F3B]" />
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCCC] group-hover:bg-[#888888]" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className={`block text-xs font-semibold ${selected ? "text-[#111111]" : "text-[#333333]"}`}>
+                      {preset.name}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[10px] text-[#666666]">
+                      {preset.desc}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="border-t border-slate-800/70 pt-3">
+      {/* Factor Sliders */}
+      <div className="border-t border-[#E5E5E5] pt-3">
         <div className="mb-3 flex items-center justify-between">
-          <span className="eyebrow">Custom weights</span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-bold ${
+          <span className="eyebrow text-[#888888]">Custom Pillar Weights</span>
+          <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${
             totalWeight === 0
-              ? "bg-rose-500/10 text-rose-300"
-              : "bg-slate-800/80 text-slate-400"
+              ? "bg-rose-50 text-rose-700 border border-rose-200"
+              : "bg-[#FAFAF8] text-[#555555] border border-[#E5E5E5]"
           }`}>
             Σ {totalWeight}
           </span>
-        </div>
-
-        <div className="mb-3 flex items-center justify-between text-[9px] font-medium">
-          <span className="text-red-400">Low ←</span>
-          <span className="text-slate-500">slider range</span>
-          <span className="text-emerald-400">→ High</span>
         </div>
 
         <div className="flex flex-col gap-3.5">
           {FACTORS.map(factor => {
             const Icon = factor.icon;
             const value = Number(weights[factor.key] || 0);
-            const sliderPct = factor.max ? Math.round((value / factor.max) * 100) : 0;
-            const sliderColor = getScoreColor(sliderPct);
+            const isAvail = availableFactors.includes(factor.key);
+
             return (
-              <div key={factor.key} className="flex flex-col gap-1.5">
+              <div key={factor.key} className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2 text-xs">
-                  <span className="flex min-w-0 items-center gap-1.5 font-medium text-slate-200">
+                  <span className="flex min-w-0 items-center gap-1.5 font-medium text-[#222222]">
                     <Icon size={13} style={{ color: factor.color }} className="shrink-0" />
                     <span className="truncate">{factor.label}</span>
-                    <span className="hidden truncate text-[9px] font-normal text-slate-500 sm:inline">
-                      {factor.source}
-                    </span>
+                    {!isAvail && <span className="text-[9px] text-amber-600 font-normal">Unavailable</span>}
                     <button
                       type="button"
-                      aria-label={`Explain ${factor.label} score colors`}
+                      aria-label={`Explain ${factor.label}`}
                       aria-expanded={openInfoId === factor.key}
-                      aria-controls={`factor-info-${factor.key}`}
-                      title={`Explain ${factor.label} score colors`}
-                      onClick={() => setOpenInfoId(current => current === factor.key ? null : factor.key)}
-                      className="ml-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-300"
+                      onClick={() => setOpenInfoId(curr => curr === factor.key ? null : factor.key)}
+                      className="ml-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[#999999] hover:bg-[#E5E5E5] hover:text-[#111111]"
                     >
-                      <Info size={12} aria-hidden="true" />
+                      <Info size={11} />
                     </button>
                   </span>
-                  <span
-                    className="shrink-0 font-mono text-[11px] font-bold"
-                    style={{ color: getScoreColor(normalizedPct(value)) }}
-                  >
+                  <span className="shrink-0 font-mono text-xs font-bold text-[#111111]">
                     {normalizedPct(value)}%
                   </span>
                 </div>
+
                 <input
                   type="range"
                   min="0"
                   max={factor.max}
                   step="5"
                   value={value}
+                  disabled={!isAvail}
                   onChange={event => onChangeWeight(factor.key, Number(event.target.value))}
                   aria-label={`${factor.label} weight`}
                   className="my-1"
-                  style={{ "--slider-accent": sliderColor, "--slider-track": SCORE_GRADIENT_CSS }}
+                  style={{ "--slider-accent": "#111111", "--slider-track": SCORE_GRADIENT_CSS }}
                 />
+
                 {openInfoId === factor.key && (
-                  <p
-                    id={`factor-info-${factor.key}`}
-                    className="rounded-lg border border-slate-800 bg-slate-950/80 px-2.5 py-2 text-[10px] leading-relaxed text-slate-300"
-                  >
+                  <p className="rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] px-2.5 py-1.5 text-[10px] leading-relaxed text-[#555555]">
                     {factor.colorMeaning}
                   </p>
                 )}
@@ -215,64 +235,57 @@ export default function WeightControls({
         </div>
 
         {totalWeight === 0 && (
-          <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-rose-500/20 bg-rose-500/10 p-2 text-[10px] text-rose-200">
+          <div className="mt-3 flex items-start gap-1.5 rounded-lg border border-rose-200 bg-rose-50 p-2 text-[10px] text-rose-800">
             <Info size={12} className="mt-0.5 shrink-0" />
-            All weights are zero. Move at least one slider to rank places.
+            All weights are set to 0. Adjust at least one slider to calculate scores.
           </div>
         )}
-
-        <p className="mt-2 flex items-start gap-1.5 text-[10px] leading-relaxed text-slate-500">
-          <Info size={11} className="mt-0.5 shrink-0" />
-          Percentages are normalized automatically. Cost of living applies to six metro cities only.
-        </p>
       </div>
 
-      <div className="border-t border-slate-800/70 pt-3">
+      {/* Color Mode & Legend */}
+      <div className="border-t border-[#E5E5E5] pt-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="eyebrow">Map color</span>
-          <span className="text-[9px] text-slate-500">Red = low · Gray = mid · Green = high</span>
+          <span className="eyebrow text-[#888888]">Spatial Color Mode</span>
+          <span className="text-[10px] text-[#777777]">0 to 100</span>
         </div>
-        <div className="mb-2 px-0.5">
-          <div
-            className="h-2.5 rounded-full ring-1 ring-inset ring-slate-950/60"
-            style={{ background: SCORE_GRADIENT_CSS }}
-            role="img"
-            aria-label="Score color range from purple (low score) through blue and teal to yellow (high score)"
-          />
-          <div className="mt-1 flex justify-between text-[9px] font-medium text-slate-500">
-            <span className="text-red-400">Worse ← 0</span>
-            <span>50</span>
-            <span className="text-emerald-400">100 → Better</span>
-          </div>
+
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1">
+          {COLOR_MODES.map(mode => {
+            const enabled = mode.id === "factor" || compositeAvailable;
+            const active = colorMode === mode.id;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => enabled && onChangeColorMode(mode.id)}
+                disabled={!enabled}
+                aria-pressed={active}
+                className={`min-h-8 rounded-lg px-2 py-1 text-xs font-semibold transition-all ${
+                  active
+                    ? "bg-[#111111] text-white shadow-sm"
+                    : enabled
+                    ? "text-[#666666] hover:bg-white hover:text-[#111111]"
+                    : "cursor-not-allowed text-[#CCCCCC]"
+                }`}
+              >
+                {mode.label}
+              </button>
+            );
+          })}
         </div>
-        <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
-          {COLOR_MODES.map(mode => (
-            <button
-              key={mode.id}
-              onClick={() => onChangeColorMode(mode.id)}
-              aria-pressed={colorMode === mode.id}
-              className={`min-h-9 rounded-lg px-1 py-2 text-[11px] font-semibold transition-all ${
-                colorMode === mode.id
-                  ? "text-slate-950 shadow-md shadow-emerald-500/25"
-                  : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
-              }`}
-              style={colorMode === mode.id ? { backgroundImage: SCORE_GRADIENT_CSS } : undefined}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
+
         {colorMode === "factor" && (
-          <label className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
-            <span>Color by factor</span>
+          <label className="mt-2.5 flex items-center justify-between gap-2 text-xs text-[#555555]">
+            <span className="font-medium">Selected Factor:</span>
             <select
               value={activeFactor}
               onChange={event => onChangeActiveFactor(event.target.value)}
               aria-label="Select map color factor"
-              className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-slate-200"
+              className="rounded-lg border border-[#E5E5E5] bg-white px-2 py-1 text-xs font-semibold text-[#111111] focus:outline-none"
             >
               {MAP_FACTORS.map(factor => (
-                <option key={factor.id} value={factor.id}>{factor.label}</option>
+                <option key={factor.id} value={factor.id} disabled={!availableFactors.includes(factor.id)}>
+                  {factor.label}{!availableFactors.includes(factor.id) ? " (unavailable)" : ""}
+                </option>
               ))}
             </select>
           </label>

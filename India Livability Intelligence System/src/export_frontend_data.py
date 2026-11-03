@@ -22,6 +22,7 @@ from src.utils.constants import (
     FACTORS_WIDE,
     PLACES_CSV,
     RAW_COL,
+    SCORES_WIDE,
     SCORING_CONFIG,
 )
 
@@ -78,7 +79,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": air["direction"],
             "bounds": air["bounds"],
             "level": air["level"],
-            "source": "CPCB / Kaggle PM2.5",
+            "source": "Local air observations; upstream values unverified",
             "sourceId": air.get("source_id"),
             "unit": "µg/m³",
             "trend": air.get("trend"),
@@ -91,7 +92,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": safety["direction"],
             "bounds": safety["bounds"],
             "level": safety["level"],
-            "source": "NCRB crime rate",
+            "source": "No active input; former generated table quarantined",
             "sourceId": safety.get("source_id"),
             "unit": "per lakh",
             "trend": safety.get("trend"),
@@ -104,7 +105,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": health["direction"],
             "bounds": health["bounds"],
             "level": health["level"],
-            "source": "SRS infant mortality",
+            "source": "No active input; former generated table quarantined",
             "sourceId": health.get("source_id"),
             "unit": "per 1,000 births",
             "trend": health.get("trend"),
@@ -115,7 +116,7 @@ def _factor_definitions(config: dict) -> dict:
             "shortLabel": "Econ",
             "direction": "mixed",
             "level": economy["level"],
-            "source": "RBI NSDP / PLFS",
+            "source": "No active input; former generated tables quarantined",
             "trend": economy.get("trend"),
             "indicators": [
                 {
@@ -137,7 +138,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": col["direction"],
             "bounds": col["bounds"],
             "level": col["level"],
-            "source": "Kaggle housing snapshot",
+            "source": "Local rent snapshot; upstream version unverified",
             "sourceId": col.get("source_id"),
             "unit": "₹/month",
             "trend": col.get("trend"),
@@ -145,12 +146,13 @@ def _factor_definitions(config: dict) -> dict:
     }
 
 
-def _cost_snapshot_year() -> int:
+def _cost_snapshot_year() -> int | None:
     path = RAW_COL / "House_Rent_Dataset.csv"
     if not path.exists():
-        return 2022
+        return None
     posted = pd.read_csv(path, usecols=["Posted On"])["Posted On"]
-    return int(pd.to_datetime(posted, errors="coerce").dt.year.max())
+    years = pd.to_datetime(posted, errors="coerce").dt.year.dropna()
+    return int(years.max()) if not years.empty else None
 
 
 def build_payload() -> dict:
@@ -158,6 +160,7 @@ def build_payload() -> dict:
     factors = pd.read_csv(FACTORS_WIDE)
     tidy = pd.read_parquet(FACTORS_TIDY)
     config = yaml.safe_load(SCORING_CONFIG.read_text(encoding="utf-8"))
+    scores = pd.read_csv(SCORES_WIDE) if SCORES_WIDE.exists() else pd.DataFrame()
 
     for column in [
         "year", "air_quality", "safety", "health",
@@ -193,13 +196,18 @@ def build_payload() -> dict:
     cost_year = _cost_snapshot_year()
     cost_rows = []
     for _, row in tidy[tidy["factor"] == "cost_of_living"].iterrows():
+        if cost_year is None:
+            continue
         cost_rows.append({
             "placeId": str(row["place_id"]),
             "year": cost_year,
             "value": _number(row["value_raw"]),
         })
 
-    years = sorted({row["year"] for row in factor_rows})
+    years = sorted(
+        {row["year"] for row in factor_rows}
+        | ({cost_year} if cost_year is not None else set())
+    )
     last_year = {}
     first_year = {}
     for factor_key, column in {
@@ -219,6 +227,29 @@ def build_payload() -> dict:
         tidy[tidy["is_inherited"] == True].groupby("factor").size().astype(int).to_dict()
     )
 
+    available_factors = []
+    if factors.get("air_quality", pd.Series(dtype=float)).notna().any():
+        available_factors.append("air")
+    if factors.get("safety", pd.Series(dtype=float)).notna().any():
+        available_factors.append("safety")
+    if factors.get("health", pd.Series(dtype=float)).notna().any():
+        available_factors.append("health")
+    if (
+        factors.get("per_capita_nsdp_constant", pd.Series(dtype=float)).notna().any()
+        and factors.get("unemployment_rate", pd.Series(dtype=float)).notna().any()
+    ):
+        available_factors.append("economy")
+    if any(row["value"] is not None for row in cost_rows):
+        available_factors.append("col")
+    observed_air_sources = sorted({
+        source_id
+        for source_id in tidy.loc[tidy["factor"] == "air_quality", "source_id"].dropna().astype(str)
+        for source_id in source_id.split("|")
+    })
+    factor_definitions = _factor_definitions(config)
+    if observed_air_sources:
+        factor_definitions["air"]["source"] = "Local air observations; upstream values unverified"
+
     counts = {
         "places": int(len(places)),
         "states": int((places["place_type"] == "state").sum()),
@@ -227,7 +258,14 @@ def build_payload() -> dict:
         "costSnapshots": len(cost_rows),
         "inheritedRows": int(tidy["is_inherited"].sum()),
         "imputedRows": int(tidy["is_imputed"].sum()),
-        "airCityYears": int((tidy["factor"] == "air_quality").sum()),
+        "airCityYears": int((
+            (tidy["factor"] == "air_quality")
+            & ~tidy["source_id"].astype(str).str.contains("state_city_mean", na=False)
+        ).sum()),
+        "airStateYears": int((
+            (tidy["factor"] == "air_quality")
+            & tidy["source_id"].astype(str).str.contains("state_city_mean", na=False)
+        ).sum()),
         "factorRowsByFactor": factor_rows_by_factor,
         "inheritedByFactor": inherited_by_factor,
     }
@@ -236,8 +274,14 @@ def build_payload() -> dict:
         "meta": {
             "generated": date.today().isoformat(),
             "sourceStatus": "local_pipeline_data",
-            "baselineYear": 2024,
-            "projectionEndYear": 2034,
+            "availableFactors": available_factors,
+            "compositeAvailable": bool(
+                not scores.empty
+                and "score" in scores
+                and pd.to_numeric(scores["score"], errors="coerce").notna().any()
+            ),
+            "baselineYear": max(years) if years else None,
+            "projectionEndYear": max(years) if years else None,
             "years": years,
             "firstYearByFactor": first_year,
             "lastYearByFactor": last_year,
@@ -246,17 +290,18 @@ def build_payload() -> dict:
                 "data/processed/places.csv",
                 "data/processed/factors_wide.csv",
                 "data/processed/factors_tidy.parquet",
+                "data/raw/air_kaggle/city_day.csv",
                 "data/raw/cost_of_living/House_Rent_Dataset.csv",
                 "src/scoring/factors_config.yaml",
             ],
             "note": (
-                "Scores use the latest real observation at or before the selected year. "
-                "City safety, health and economy are inherited from the city's state and "
-                "keep their observed source years. No synthetic values are used."
+                "Only observed input rows and explicitly identified aggregates are exported. "
+                "Missing values are retained; composite scores remain unavailable when a "
+                "positively weighted core factor lacks usable observations."
             ),
         },
         "places": [_clean_place(row) for _, row in places.iterrows()],
-        "factorDefs": _factor_definitions(config),
+        "factorDefs": factor_definitions,
         "rows": factor_rows,
         "costSnapshots": cost_rows,
     }

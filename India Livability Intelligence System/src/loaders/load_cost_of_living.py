@@ -3,7 +3,7 @@ src/loaders/load_cost_of_living.py
 ────────────────────────────────────
 Load the Kaggle House Rent Prediction Dataset (snapshot for 6 cities).
 
-License: CC BY-SA 4.0 — attribution and share-alike apply.
+License: Not confirmed for the exact local file; see data/raw/source_register.csv.
 Important: This is a SNAPSHOT (one time period), never trended.
 Available only for: Kolkata, Mumbai, Bengaluru, Delhi, Chennai, Hyderabad.
 
@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 # The 6 cities available in the dataset (after name standardization)
 COL_CITIES = ["Kolkata", "Mumbai", "Bengaluru", "Delhi", "Chennai", "Hyderabad"]
 
-# Attribution required by CC BY-SA 4.0
 ATTRIBUTION = (
     "House Rent Prediction Dataset by Sourav Banerjee, Kaggle. "
-    "License: CC BY-SA 4.0. https://www.kaggle.com/datasets/iamsouravbanerjee/house-rent-prediction-dataset"
+    "Exact dataset license and local file version have not been verified. "
+    "https://www.kaggle.com/datasets/iamsouravbanerjee/house-rent-prediction-dataset"
 )
 
 
@@ -44,7 +44,8 @@ def load_cost_of_living(raw_dir: Path = RAW_COL) -> pd.DataFrame:
     pd.DataFrame with columns:
         city, avg_rent, median_rent, n_listings, factor='cost_of_living',
         trend='never', snapshot=True
-    Attribution is logged for compliance.
+    A candidate source URL is retained, but the exact file and reuse terms are
+    unverified; this is not a licensing compliance claim.
     """
     files = list(raw_dir.glob("*.csv"))
     if not files:
@@ -53,7 +54,7 @@ def load_cost_of_living(raw_dir: Path = RAW_COL) -> pd.DataFrame:
 
     path = files[0]  # expect one file
     logger.info("Loading cost-of-living: %s", path.name)
-    logger.info("ATTRIBUTION: %s", ATTRIBUTION)
+    logger.info("SOURCE NOTE: %s", ATTRIBUTION)
 
     df = pd.read_csv(path, dtype=str)
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]

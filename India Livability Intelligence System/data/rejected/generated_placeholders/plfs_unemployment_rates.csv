@@ -1,0 +1,65 @@
+state_name,year,unemployment_rate
+Andhra Pradesh,2018,5.3
+Andhra Pradesh,2022,4.2
+Assam,2018,7.9
+Assam,2022,6.0
+Bihar,2018,7.2
+Bihar,2022,5.8
+Chhattisgarh,2018,3.3
+Chhattisgarh,2022,2.4
+Goa,2018,9.8
+Goa,2022,7.8
+Gujarat,2018,3.4
+Gujarat,2022,2.2
+Haryana,2018,8.6
+Haryana,2022,6.1
+Himachal Pradesh,2018,5.5
+Himachal Pradesh,2022,4.4
+Jharkhand,2018,5.2
+Jharkhand,2022,3.8
+Karnataka,2018,3.6
+Karnataka,2022,2.4
+Kerala,2018,9.0
+Kerala,2022,7.0
+Madhya Pradesh,2018,3.5
+Madhya Pradesh,2022,2.4
+Maharashtra,2018,4.9
+Maharashtra,2022,3.1
+Odisha,2018,7.1
+Odisha,2022,4.8
+Punjab,2018,6.9
+Punjab,2022,6.4
+Rajasthan,2018,5.0
+Rajasthan,2022,4.5
+Tamil Nadu,2018,6.2
+Tamil Nadu,2022,4.4
+Telangana,2018,7.6
+Telangana,2022,5.2
+Uttar Pradesh,2018,6.4
+Uttar Pradesh,2022,3.7
+Uttarakhand,2018,7.0
+Uttarakhand,2022,5.6
+West Bengal,2018,4.6
+West Bengal,2022,3.6
+Delhi,2018,9.4
+Delhi,2022,6.8
+Chandigarh,2018,8.2
+Chandigarh,2022,5.9
+Arunachal Pradesh,2018,7.9
+Arunachal Pradesh,2022,5.6
+Manipur,2018,11.2
+Manipur,2022,8.4
+Meghalaya,2018,3.2
+Meghalaya,2022,2.4
+Mizoram,2018,8.5
+Mizoram,2022,5.1
+Nagaland,2018,18.2
+Nagaland,2022,12.8
+Sikkim,2018,4.8
+Sikkim,2022,3.2
+Tripura,2018,10.5
+Tripura,2022,6.8
+Jammu and Kashmir,2018,8.2
+Jammu and Kashmir,2022,6.2
+Ladakh,2018,7.0
+Ladakh,2022,5.5

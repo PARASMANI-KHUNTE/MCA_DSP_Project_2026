@@ -20,15 +20,15 @@ const FILTERS = [
 
 function OutlookIcon({ outlook }) {
   if (outlook === "Improving") {
-    return <ArrowUpRight size={12} className="text-emerald-400" title="Improving outlook" />;
+    return <ArrowUpRight size={12} className="text-emerald-700" title="Improving outlook" />;
   }
   if (outlook === "Declining") {
-    return <ArrowDownRight size={12} className="text-rose-400" title="Declining outlook" />;
+    return <ArrowDownRight size={12} className="text-[#B51F3B]" title="Declining outlook" />;
   }
   return (
     <Minus
       size={12}
-      className="text-amber-400"
+      className="text-amber-600"
       title={outlook === "Insufficient data" ? "Insufficient data for a trend" : "Stable or uncertain"}
     />
   );
@@ -40,7 +40,8 @@ export default function Leaderboard({
   selectedPlaceId,
   compareIds,
   onToggleCompare,
-  year
+  year,
+  compositeAvailable = false
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("city");
@@ -64,56 +65,62 @@ export default function Leaderboard({
 
   return (
     <div className="surface flex h-full w-full flex-col overflow-hidden p-4">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 border-b border-[#E5E5E5] pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-300 ring-1 ring-amber-400/30">
-            <Trophy size={17} />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] text-[#111111]">
+            <Trophy size={15} />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="rounded bg-gradient-to-r from-amber-500/30 to-orange-500/30 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-200">Step 3</span>
-              <h2 className="truncate text-sm font-bold tracking-wide text-slate-100">Live Rankings</h2>
+              <span className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#B51F3B]">
+                Step 3
+              </span>
+              <h2 className="truncate text-sm font-bold text-[#111111]">Rankings</h2>
             </div>
-            <p className="truncate text-[10px] text-slate-500">{year} weighted index · Click for details</p>
+            <p className="truncate text-[10px] text-[#666666]">
+              {compositeAvailable ? `${year} Livability Index` : `${year} · Single factor ranking`}
+            </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400">
-          {filteredPlaces.length} shown
+        <span className="shrink-0 rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-2.5 py-0.5 text-[10px] font-semibold text-[#666666]">
+          {filteredPlaces.length} places
         </span>
       </div>
 
+      {/* Search & Filter */}
       <div className="my-3 flex flex-col gap-2">
         <div className="relative">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#888888]" />
           <input
             type="text"
-            placeholder="Search by city, state, or region..."
+            placeholder="Search city, state, or region..."
             value={searchTerm}
             onChange={event => setSearchTerm(event.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-9 text-base text-slate-200 placeholder:text-slate-500 transition-all focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:text-xs"
+            className="w-full rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] py-2 pl-8 pr-8 text-xs text-[#111111] placeholder:text-[#999999] transition-all focus:border-[#111111] focus:bg-white focus:outline-none"
             aria-label="Search places"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#888888] hover:text-[#111111]"
               aria-label="Clear search"
             >
-              <X size={13} />
+              <X size={12} />
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1">
           {FILTERS.map(filter => (
             <button
               key={filter.id}
               onClick={() => setFilterType(filter.id)}
               aria-pressed={filterType === filter.id}
-              className={`min-h-9 rounded-lg px-1 py-2 text-[11px] font-semibold transition-all ${
+              className={`min-h-8 rounded-lg px-2 py-1 text-xs font-semibold transition-all ${
                 filterType === filter.id
-                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md shadow-emerald-500/25"
-                  : "text-slate-400 hover:bg-slate-800/70 hover:text-white"
+                  ? "bg-[#111111] text-white shadow-sm"
+                  : "text-[#666666] hover:bg-white hover:text-[#111111]"
               }`}
             >
               {filter.label}
@@ -122,6 +129,7 @@ export default function Leaderboard({
         </div>
       </div>
 
+      {/* Place List */}
       <div className="custom-scrollbar -mr-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
         {filteredPlaces.map(place => {
           const isSelected = selectedPlaceId === place.id;
@@ -142,37 +150,37 @@ export default function Leaderboard({
                 }
               }}
               aria-label={`Open details for ${place.name}, score ${hasScore ? place.overallScore : "unavailable"}`}
-              className={`group relative flex flex-col gap-2 rounded-xl border p-3 transition-all ${
+              className={`group relative flex flex-col gap-2 rounded-xl border p-2.5 transition-all ${
                 isSelected
-                  ? "border-emerald-500/60 bg-slate-800/90 shadow-md ring-1 ring-emerald-500/20"
-                  : "border-slate-800/70 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-800/50"
+                  ? "border-[#B51F3B] bg-[#FAFAF8] shadow-sm ring-1 ring-[#B51F3B]/30"
+                  : "border-[#E5E5E5] bg-white hover:border-[#D4D4D4] hover:bg-[#FAFAF8]"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex min-w-0 items-center gap-2">
                   <span
-                    className={`flex h-6 min-w-6 shrink-0 items-center justify-center rounded-lg px-1 text-[10px] font-bold ${
+                    className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold ${
                       place.rank === 1
-                        ? "bg-amber-400 text-slate-950"
+                        ? "bg-amber-100 text-amber-900 border border-amber-300"
                         : place.rank === 2
-                          ? "bg-slate-300 text-slate-950"
-                          : place.rank === 3
-                            ? "bg-amber-700 text-white"
-                            : "bg-slate-800 text-slate-400"
+                        ? "bg-slate-100 text-slate-800 border border-slate-300"
+                        : place.rank === 3
+                        ? "bg-orange-100 text-orange-900 border border-orange-300"
+                        : "bg-[#FAFAF8] text-[#777777] border border-[#E5E5E5]"
                     }`}
                   >
                     {place.rank ?? "—"}
                   </span>
 
                   <div className="flex min-w-0 flex-col">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-200 transition-colors group-hover:text-emerald-300">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#111111] transition-colors group-hover:text-[#B51F3B]">
                       <span className="truncate">{place.name}</span>
                       <OutlookIcon outlook={place.outlook} />
                     </span>
-                    <span className="flex items-center gap-1 truncate text-[10px] text-slate-500">
-                      {place.type === "city" ? <Map size={9} /> : <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />}
+                    <span className="flex items-center gap-1 truncate text-[10px] text-[#777777]">
+                      {place.type === "city" ? <Map size={9} /> : <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCCC]" />}
                       {place.type === "city" ? place.state : `${place.region} region`}
-                      <span className="text-slate-700">·</span>
+                      <span>·</span>
                       {place.type}
                     </span>
                   </div>
@@ -186,25 +194,28 @@ export default function Leaderboard({
                       onToggleCompare(place);
                     }}
                     aria-label={isComparing ? `Remove ${place.name} from comparison` : `Add ${place.name} to comparison`}
-                    className={`rounded-md p-1.5 transition-colors ${
+                    className={`rounded-lg p-1.5 transition-colors ${
                       isComparing
-                        ? "bg-emerald-500 text-slate-950"
-                        : "text-slate-600 hover:bg-slate-800 hover:text-slate-200"
+                        ? "bg-[#B51F3B] text-white"
+                        : "text-[#888888] hover:bg-[#E5E5E5] hover:text-[#111111]"
                     }`}
                   >
-                    {isComparing ? <Check size={12} /> : <Scale size={12} />}
+                    {isComparing ? <Check size={11} /> : <Scale size={11} />}
                   </button>
 
                   <span
-                    className="min-w-[38px] rounded-lg px-2 py-1 text-center text-[11px] font-black text-slate-950 shadow-sm"
-                    style={{ backgroundColor: scoreColor }}
+                    className="min-w-[34px] rounded-lg px-1.5 py-0.5 text-center text-[11px] font-black shadow-xs"
+                    style={{
+                      backgroundColor: scoreColor,
+                      color: "#FFFFFF"
+                    }}
                   >
                     {hasScore ? place.overallScore : "—"}
                   </span>
                 </div>
               </div>
 
-              <div className="h-0.5 w-full overflow-hidden rounded-full bg-slate-800/80">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-[#E5E5E5]">
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${hasScore ? place.overallScore : 0}%`, backgroundColor: scoreColor }}
@@ -215,15 +226,15 @@ export default function Leaderboard({
         })}
 
         {filteredPlaces.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
-            <Search size={22} className="text-slate-700" />
-            <p className="text-xs font-semibold text-slate-400">No matching places</p>
-            <p className="max-w-[180px] text-[10px] leading-relaxed text-slate-500">
-              Try a different spelling, region or place type.
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+            <Search size={20} className="text-[#CCCCCC]" />
+            <p className="text-xs font-semibold text-[#666666]">No matching places</p>
+            <p className="max-w-[180px] text-[10px] text-[#999999]">
+              Try a different spelling or change the filter tab.
             </p>
             <button
               onClick={clearFilters}
-              className="mt-1 rounded-lg border border-slate-700 px-3 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-emerald-500/50 hover:text-emerald-300"
+              className="mt-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-medium text-[#111111] hover:bg-[#FAFAF8]"
             >
               Reset filters
             </button>
@@ -231,8 +242,8 @@ export default function Leaderboard({
         )}
       </div>
 
-      <div className="mt-2 border-t border-slate-800/70 pt-2 text-[10px] text-slate-500">
-        Ranked live from your current pillar weights. Select a place for full detail.
+      <div className="mt-2 border-t border-[#E5E5E5] pt-2 text-[10px] text-[#777777]">
+        Dynamically evaluated from active weights. Select a place to open deep dive modal.
       </div>
     </div>
   );

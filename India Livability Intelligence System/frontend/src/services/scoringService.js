@@ -5,11 +5,14 @@ const API_BASE_URL = "http://localhost:8000/api";
 export const PLACES = DATA.places;
 export const FACTOR_DEFS = DATA.factorDefs;
 export const DATA_COVERAGE = DATA.meta;
-export const BASELINE_YEAR = DATA.meta.baselineYear;
-export const PROJECTION_END_YEAR = DATA.meta.projectionEndYear;
+// The main time-series projection is anchored to the latest active air year.
+// Snapshot factors (currently rent) have their own observation year and are
+// never treated as a time series.
+export const BASELINE_YEAR = DATA.meta.lastYearByFactor?.air ?? DATA.meta.baselineYear;
+export const PROJECTION_END_YEAR = BASELINE_YEAR == null ? null : BASELINE_YEAR + 10;
 export const OBSERVED_YEARS = DATA.meta.years;
 export const PROJECTION_YEARS = Array.from(
-  { length: PROJECTION_END_YEAR - BASELINE_YEAR },
+  { length: PROJECTION_END_YEAR == null ? 0 : PROJECTION_END_YEAR - BASELINE_YEAR },
   (_, index) => BASELINE_YEAR + index + 1
 );
 
@@ -322,6 +325,7 @@ function projectPoint(trend, targetYear) {
 
 function tierForScore(score) {
   if (!Number.isFinite(score)) return "Unclassified";
+  if (!DATA_COVERAGE.compositeAvailable) return "Factor score";
   if (score >= 70) return "Tier 1: High Livability";
   if (score >= 50) return "Tier 2: Moderate Livability";
   return "Tier 3: Developing Livability";
@@ -338,9 +342,11 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
     const baselinePoint = history.find(point => point.year === BASELINE_YEAR) || null;
     const observedPoint = history.find(point => point.year === year) || null;
     const selectedPoint =
-      year > BASELINE_YEAR ? projectPoint(trend, year) : observedPoint;
-    const factorPoint =
-      year > BASELINE_YEAR || !observedPoint ? baselinePoint : observedPoint;
+      year > BASELINE_YEAR && trend ? projectPoint(trend, year) : observedPoint;
+    // Keep the latest as-of observations visible in the factor breakdown even
+    // when the overall air trend is projected. This also lets a 2022 rent
+    // snapshot appear at its actual observation year.
+    const factorPoint = observedPoint || baselinePoint;
     const projections = trend
       ? PROJECTION_YEARS.map(projectionYear =>
           projectPoint(trend, projectionYear)

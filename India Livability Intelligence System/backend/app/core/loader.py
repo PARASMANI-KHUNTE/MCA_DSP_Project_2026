@@ -93,7 +93,30 @@ class DataStore:
 
 
 @lru_cache(maxsize=1)
+def _cached_store(signature: tuple[tuple[str, int, int], ...]) -> DataStore:
+    """Cache a store only while the processed inputs have the same file stats."""
+    return DataStore(settings.data_dir)
+
+
 def get_store() -> DataStore:
-    """Return the singleton DataStore (loaded once, cached forever)."""
-    store = DataStore(settings.data_dir)
-    return store
+    """Reload processed inputs after a pipeline rebuild changes their files."""
+    data_dir = settings.data_dir
+    paths = [
+        data_dir / name for name in (
+            "places.csv", "factors_tidy.parquet", "factors_wide.csv",
+            "scores_wide.csv", "trends.csv", "clusters.csv",
+        )
+    ]
+    paths.extend([
+        data_dir.parent / "raw" / "source_register.csv",
+        data_dir.parent.parent / "models" / "metrics.json",
+        SCORING_CONFIG,
+    ])
+    signature = []
+    for path in paths:
+        try:
+            stat = path.stat()
+            signature.append((str(path), stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            signature.append((str(path), -1, -1))
+    return _cached_store(tuple(signature))

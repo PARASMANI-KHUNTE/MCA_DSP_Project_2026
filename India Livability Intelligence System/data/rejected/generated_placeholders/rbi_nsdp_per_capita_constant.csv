@@ -1,0 +1,97 @@
+state_name,year,per_capita_nsdp_constant
+Andhra Pradesh,2015,108002
+Andhra Pradesh,2018,142125
+Andhra Pradesh,2022,172350
+Assam,2015,60817
+Assam,2018,74251
+Assam,2022,88450
+Bihar,2015,30441
+Bihar,2018,38120
+Bihar,2022,44250
+Chhattisgarh,2015,72936
+Chhattisgarh,2018,89450
+Chhattisgarh,2022,102450
+Goa,2015,334575
+Goa,2018,412500
+Goa,2022,485000
+Gujarat,2015,139254
+Gujarat,2018,197450
+Gujarat,2022,245000
+Haryana,2015,150290
+Haryana,2018,204500
+Haryana,2022,238000
+Himachal Pradesh,2015,130067
+Himachal Pradesh,2018,168450
+Himachal Pradesh,2022,195000
+Jharkhand,2015,52402
+Jharkhand,2018,65420
+Jharkhand,2022,74500
+Karnataka,2015,130898
+Karnataka,2018,188250
+Karnataka,2022,235000
+Kerala,2015,136827
+Kerala,2018,174500
+Kerala,2022,205000
+Madhya Pradesh,2015,56182
+Madhya Pradesh,2018,72450
+Madhya Pradesh,2022,85400
+Maharashtra,2015,137340
+Maharashtra,2018,185400
+Maharashtra,2022,225000
+Odisha,2015,64835
+Odisha,2018,85400
+Odisha,2022,104500
+Punjab,2015,115048
+Punjab,2018,142500
+Punjab,2022,162000
+Rajasthan,2015,75555
+Rajasthan,2018,94500
+Rajasthan,2022,110500
+Tamil Nadu,2015,128372
+Tamil Nadu,2018,178500
+Tamil Nadu,2022,222000
+Telangana,2015,126606
+Telangana,2018,185000
+Telangana,2022,235000
+Uttar Pradesh,2015,42267
+Uttar Pradesh,2018,54200
+Uttar Pradesh,2022,65400
+Uttarakhand,2015,135881
+Uttarakhand,2018,178450
+Uttarakhand,2022,210000
+West Bengal,2015,68876
+West Bengal,2018,89450
+West Bengal,2022,108500
+Delhi,2015,234407
+Delhi,2018,312000
+Delhi,2022,385000
+Chandigarh,2015,225400
+Chandigarh,2018,298000
+Chandigarh,2022,360000
+Arunachal Pradesh,2015,85000
+Arunachal Pradesh,2018,105000
+Arunachal Pradesh,2022,125000
+Manipur,2015,50000
+Manipur,2018,62000
+Manipur,2022,72000
+Meghalaya,2015,68000
+Meghalaya,2018,82000
+Meghalaya,2022,95000
+Mizoram,2015,98000
+Mizoram,2018,128000
+Mizoram,2022,155000
+Nagaland,2015,75000
+Nagaland,2018,92000
+Nagaland,2022,108000
+Sikkim,2015,220000
+Sikkim,2018,310000
+Sikkim,2022,390000
+Tripura,2015,78000
+Tripura,2018,98000
+Tripura,2022,120000
+Jammu and Kashmir,2015,72000
+Jammu and Kashmir,2018,90000
+Jammu and Kashmir,2022,105000
+Ladakh,2015,75000
+Ladakh,2018,92000
+Ladakh,2022,110000

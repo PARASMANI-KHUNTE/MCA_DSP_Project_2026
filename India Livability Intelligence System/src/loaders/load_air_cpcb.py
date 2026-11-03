@@ -24,6 +24,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils.constants import RAW_AIR_CPCB
+from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import apply_name_standardization, load_alias_map, profile_dataframe
 
 logger = logging.getLogger(__name__)
@@ -190,7 +191,13 @@ def load_all_cpcb(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
     Returns a combined DataFrame for all available years.
     """
     pdfs = sorted(raw_dir.glob("*.pdf"))
-    csvs = sorted(raw_dir.glob("*.csv"))
+    csvs = sorted(
+        path for path in raw_dir.glob("*.csv")
+        if not is_known_generated_source(path)
+    )
+    rejected_csvs = [path for path in raw_dir.glob("*.csv") if is_known_generated_source(path)]
+    for path in rejected_csvs:
+        logger.error("Excluding known generated placeholder from CPCB inputs: %s", path)
 
     if not pdfs and not csvs:
         logger.error("No PDF or CSV files found in %s", raw_dir)

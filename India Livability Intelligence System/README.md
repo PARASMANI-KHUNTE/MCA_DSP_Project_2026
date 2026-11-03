@@ -32,12 +32,18 @@ See [reports/findings.md](reports/findings.md), [reports/project_report.md](repo
 
 ## Run the dashboard
 
-Requirements: Node.js compatible with the Vite version in `frontend/package.json` (Node 20.19+ recommended) and npm.
+Requirements: PowerShell, Node.js compatible with the Vite version in `frontend/package.json` (Node 20.19+ recommended), and npm. Install the frontend dependencies once:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+cd ..
+```
+
+Start the dashboard from the repository root:
+
+```powershell
+.\start.ps1
 ```
 
 Open the URL printed by Vite (configured for port `5173`, usually `http://localhost:5173`). To create and serve a production build locally:
@@ -72,14 +78,13 @@ make notebooks  # execute analysis notebooks in order
 
 `make notebooks` executes notebooks `00_coverage_check` through `05_ml_trend_clustering`; the coverage notebook may rebuild the place master. The pipeline writes processed tables and updates `reports/data_quality_report.md`.
 
-## Tests and containers
+## Tests and local startup
 
 ```bash
 make test        # pytest suite with coverage
-make docker      # Docker Compose: frontend on :3000, API on :8000
 ```
 
-The Docker frontend is served as a static site on port 3000. Docker Compose waits for the API health check before starting the frontend container; the dashboard itself can also run without the API using the local development instructions above.
+The start script runs the frontend only. The API is optional; start it separately with the command above when API behavior is needed.
 
 ## Project structure
 
@@ -93,6 +98,7 @@ notebooks/        Coverage, profiling, cleaning, EDA, scoring, ML analysis
 reports/          Findings, project report, application guide, audit reports
 src/              Data loaders, cleaning, scoring, analysis, and models
 tests/            Pytest suite
+start.ps1         Start the local frontend from PowerShell
 ```
 
 ## Sources and methodology

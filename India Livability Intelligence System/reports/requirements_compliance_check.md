@@ -2,7 +2,7 @@
 
 **Scope:** Checked the implementation against `India Livability Intelligence System.md` (SRS version 1.2, including the 3 November 2026 provenance update), with emphasis on M1 functional/non-functional requirements and M2–M10 deliverables.  
 **Date:** 3 November 2026  
-**Method:** Source and data inspection, full pytest suite, frontend production build, and frontend lint. The data pipeline, notebook sequence, Docker stack, and browser interactions were not run as part of this check.
+**Method:** Source and data inspection, full pytest suite, frontend production build, and frontend lint. The data pipeline, notebook sequence, local startup script, and browser interactions were not run as part of this check.
 
 ## Overall result
 
@@ -17,7 +17,7 @@ The application code builds and the automated tests pass, but the project's **em
 | Frontend: `npm run build` | **Passed** | Vite 8 production build completed from `frontend/`. |
 | Frontend: `npm run lint` | **Passed** | Run from `frontend/`; the previously reported unused-variable warnings were resolved. |
 | `git diff --check` | **Passed** | Checked earlier README update; not a functional SRS test. |
-| Full pipeline/notebooks, Docker, browser flows/performance/accessibility | **Not run** | These require separate, potentially write-producing or interactive runs. |
+| Full pipeline/notebooks, local startup script, browser flows/performance/accessibility | **Not run** | These require separate, potentially write-producing or interactive runs. |
 
 ## Functional requirements
 
@@ -67,7 +67,7 @@ Status meanings: **Pass** = supported by code and/or the executed tests; **Parti
 | NFR-07 New factor needs only loader/config | **Gap** | A new factor also requires changes to scoring keys, frontend definitions/export, and likely presentation code; this is not config-only. |
 | NFR-08 Methodology describes every formula/source | **Partial** | Formula, bounds, and major source names are shown. A complete source/license register is not demonstrated in the app. |
 | NFR-09 Read-only, validated API, no secrets | **Partial** | Routes are read-only and Pydantic schemas/CORS are used. Test coverage does not exercise every endpoint/error case; the invalid local `DEBUG` env value prevents startup unless overridden. |
-| NFR-10 Local Docker or start script | **Pass by configuration** | Make targets and Compose files exist. Docker build/start was not run. |
+| NFR-10 Single local start script | **Partial** | `start.ps1` starts the Vite dashboard from the repository root after frontend dependencies are installed. It has not been executed in this check; the optional API starts separately. |
 | NFR-11 Color-blind-safe colors and numeric labels | **Partial** | The score palette is now purple/blue/teal/yellow with numeric score labels and aria text. No formal contrast or assistive-technology audit was run. |
 | NFR-12 Dataset licensing/attribution recorded and displayed | **Partial** | The methodology now displays per-factor attribution and explicit unresolved license statuses. The exact licenses, complete source URLs, download records, and boundary geometry provenance still need verification. |
 

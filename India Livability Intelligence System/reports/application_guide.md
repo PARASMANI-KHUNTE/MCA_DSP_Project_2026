@@ -88,14 +88,13 @@ These bands are not K-Means clusters. Offline K-Means output is retained for ana
 
 ### 4.1 Frontend Only (Recommended)
 
-From the `frontend/` directory:
+From the project root, after installing the frontend dependencies once with `cd frontend; npm install; cd ..`:
 
-```bash
-npm install
-npm run dev
+```powershell
+.\start.ps1
 ```
 
-Vite prints the local development URL, typically `http://localhost:5173`.
+The script starts Vite and prints the local development URL, typically `http://localhost:5173`.
 
 For a production build:
 

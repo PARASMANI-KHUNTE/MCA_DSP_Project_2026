@@ -67,7 +67,7 @@
 - **Backend (FastAPI):** In-memory DataStore, async request handling, auto OpenAPI docs at `/docs`.
 - **Frontend (React + Vite):** Interactive vector India map, dynamic weight recalculation in milliseconds, radar charts, and detail views.
 - **Automated Testing:** 59 pytest tests passed, 1 skipped, 0 failures.
-- **Docker Compose:** Multi-container orchestration ready for production deployment.
+- **Local startup:** `start.ps1` launches the Vite dashboard; the API is optional and can be started separately.
 
 ---
 

@@ -3,11 +3,13 @@
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
-**Version:** 1.2 (provenance and scope update, 3 November 2026)
+**Version:** 1.3 (provenance and local startup update, 3 November 2026)
 
 > **Implementation status update, 3 November 2026.** A code/data audit found that state crime, health, economy, and 2023–2024 CPCB CSVs currently in `data/raw/` exactly match hard-coded values from the retired `src/loaders/populate_official_data.py`. These files are unverified placeholders, not source-derived observations. The pipeline and frontend exporter now block those exact files. All scores, statistical findings, clusters, trends, and the embedded dashboard data derived from them are invalid for empirical interpretation until real source records replace them and the analyses are regenerated. The 32-state/UT and 29-city place master is a candidate inventory; city inclusion remains subject to a fresh coverage check.
 
 > **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
+
+> **Revision 1.3 summary.** Docker and Docker Compose configuration was removed. The Windows project now uses `start.ps1` to launch the local frontend; the FastAPI service remains optional and is started separately. CI/CD is not configured.
 
 ---
 
@@ -165,7 +167,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 | NFR-07 | Maintainability | Adding a new factor shall require only a new loader file and one config entry. |
 | NFR-08 | Transparency | The methodology page shall describe every formula and data source. |
 | NFR-09 | Security | The API shall be read-only, validate all inputs and expose no secrets. |
-| NFR-10 | Portability | The system shall run locally via Docker or a single start script. |
+| NFR-10 | Portability | The system shall provide a single local start script for the dashboard. |
 | NFR-11 | Accessibility | Colors shall be color-blind-safe and every color shall also have a numeric label. |
 | NFR-12 | Licensing | Every dataset's license and attribution shall be recorded and displayed. |
 
@@ -764,7 +766,6 @@ backend/
     services/scoring.py   # imports the M5 function
     schemas/              # Pydantic models
   tests/
-  Dockerfile
   requirements.txt
 ```
 
@@ -942,7 +943,7 @@ flowchart LR
 | Domain logic | Scoring, ranking, trend lookup | Python module shared with the notebook |
 | Data | Processed tables, source register | Parquet or CSV, optionally SQLite or PostgreSQL |
 | Offline analytics | Cleaning, statistics, ML | Pandas, NumPy, SciPy, statsmodels, scikit-learn, Matplotlib, Seaborn |
-| Infrastructure | Containers, CI, hosting | Docker, GitHub Actions, Render or similar, Vercel or Netlify |
+| Infrastructure | Local startup, CI, hosting | PowerShell start script, GitHub Actions (planned), Render or similar, Vercel or Netlify |
 
 ## 9.3 Technology stack summary
 
@@ -958,7 +959,7 @@ flowchart LR
 | Frontend | React, Vite, MapLibre GL or Leaflet, Recharts or Plotly |
 | Storage | Parquet or CSV, optionally SQLite or PostgreSQL |
 | Testing | pytest, Vitest or Jest |
-| DevOps | Docker, Docker Compose, GitHub Actions |
+| DevOps | PowerShell start script; GitHub Actions planned, not configured |
 | Version control | Git, GitHub |
 
 ## 9.4 Data storage choice
@@ -1029,20 +1030,14 @@ CREATE TABLE sources (
 | Component | Option | Notes |
 |---|---|---|
 | Notebooks | Google Colab or local Jupyter | Add an "Open in Colab" badge |
-| Backend | Render, Railway or a small VM, run through Docker | Free tiers may sleep when idle |
+| Backend | Run locally or deploy to Render, Railway or a small VM | Free tiers may sleep when idle; no container setup is maintained |
 | Frontend | Vercel or Netlify | Static build |
 | Quick demo path | Streamlit Community Cloud | One file, minimal setup |
 
-**Docker Compose layout**
-```
-services:
-  backend:  FastAPI, port 8000, mounts data/processed read-only
-  frontend: built static files served by Nginx, port 3000
-```
-
 ## 9.7 CI and automation
 
-- GitHub Actions on every push: lint, run unit tests, run the pipeline on a small sample dataset, build the frontend.
+- **Current status:** no CI workflow is configured.
+- **Recommended future setup:** GitHub Actions on every push to lint, run unit tests, and build the frontend. Run the data pipeline only against a small verified fixture, not the current unverified local tables.
 - A `Makefile` or script with the commands: `make data`, `make notebooks`, `make api`, `make web`, `make test`.
 
 ## 9.8 Scalability note (supports the "big data and cloud" course objective)
@@ -1348,7 +1343,7 @@ make notebooks   # execute notebooks in order
 make test        # run all tests
 make api         # start FastAPI on port 8000
 make web         # start the frontend dev server
-make docker      # build and run everything with Docker Compose
+.\start.ps1      # start the local frontend (PowerShell)
 ```
 
 ## Appendix C. Suggested README outline

@@ -12,7 +12,7 @@ NPM    = npm
 BASE   = "India Livability Intelligence System"
 NB_DIR = notebooks
 
-.PHONY: install data notebooks api web test docker clean help
+.PHONY: install data notebooks api web test clean help
 
 help:
 	@echo ""
@@ -22,7 +22,6 @@ help:
 	@echo "  make api         Start FastAPI backend on port 8000"
 	@echo "  make web         Start frontend dev server"
 	@echo "  make test        Run the full pytest suite"
-	@echo "  make docker      Build and run everything via Docker Compose"
 	@echo "  make clean       Remove generated data and cache files"
 	@echo ""
 
@@ -55,9 +54,6 @@ web:
 
 test:
 	$(PYTEST) tests/ -v --tb=short --cov=src --cov-report=term-missing
-
-docker:
-	docker compose up --build
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

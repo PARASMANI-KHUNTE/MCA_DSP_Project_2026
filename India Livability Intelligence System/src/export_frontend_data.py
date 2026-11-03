@@ -1,7 +1,7 @@
 """
 Export the processed project data to a frontend ES module.
 
-The frontend is intentionally static (Vite preview / Docker), so it consumes
+The frontend is intentionally static (Vite dev server or preview), so it consumes
 a generated module rather than querying a development-only API. Every value
 written here comes from data/processed or the scoring configuration; no
 placeholder or synthetic observations are added.

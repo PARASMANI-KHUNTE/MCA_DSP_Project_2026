@@ -26,7 +26,7 @@ class Settings(BaseSettings):
                 return False
         return value
 
-    # Path to the processed data directory (mounted read-only in Docker)
+    # Path to the processed data directory
     data_dir: Path = Path(__file__).resolve().parents[3] / "data" / "processed"
 
     # API metadata

@@ -1,1 +1,25 @@
 place_id,cluster_id,tier_label
+IN-KA,2,High livability
+IN-KA-BLR,2,High livability
+IN-WB-KOL,4,High livability
+IN-WB,4,High livability
+IN-MH,4,High livability
+IN-MH-MUM,4,High livability
+IN-AP,0,Medium livability
+IN-AP-VIS,0,Medium livability
+IN-TG,0,Medium livability
+IN-TG-HYD,0,Medium livability
+IN-AS,0,Medium livability
+IN-AS-GUW,0,Medium livability
+IN-TN,5,Medium livability
+IN-TN-CHE,5,Medium livability
+IN-RJ,6,Medium livability
+IN-RJ-JAI,6,Medium livability
+IN-BR-PAT,3,Medium livability
+IN-BR,3,Medium livability
+IN-DL,3,Medium livability
+IN-DL-DEL,3,Medium livability
+IN-UP-LKO,1,Low livability
+IN-UP,1,Low livability
+IN-HR,1,Low livability
+IN-HR-GUR,1,Low livability

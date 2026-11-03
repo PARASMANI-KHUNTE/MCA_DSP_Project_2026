@@ -1,18 +1,19 @@
 {
   "input_source_status": "local files not independently verified against publishers",
   "analysis_scope": "factor-level exploratory trends only; no composite score is available",
-  "composite_available": false,
+  "composite_available": true,
   "clustering": {
-    "status": "skipped",
-    "year": 2019,
-    "n_places": 0
+    "status": "complete",
+    "k_chosen": 7,
+    "year": 2023,
+    "n_places": 24
   },
   "trends": {
-    "n_fitted": 0,
-    "n_insufficient": 104,
-    "improving": 0,
+    "n_fitted": 26,
+    "n_insufficient": 218,
+    "improving": 10,
     "declining": 0,
-    "stable": 0
+    "stable": 16
   },
   "holdout_evaluation": {
     "target": "air_quality_score",
@@ -24,30 +25,30 @@
     },
     "validation": {
       "ols": {
-        "n": 0,
-        "mse": null,
-        "rmse": null,
-        "r2": null
+        "n": 14,
+        "mse": 107.81262104016365,
+        "rmse": 10.383285657255302,
+        "r2": 0.7612688693371642
       },
       "naive_last_value": {
-        "n": 0,
-        "mse": null,
-        "rmse": null,
-        "r2": null
+        "n": 14,
+        "mse": 71.85578270892947,
+        "rmse": 8.476779029143644,
+        "r2": 0.8408886447127996
       }
     },
     "test": {
       "ols": {
-        "n": 0,
-        "mse": null,
-        "rmse": null,
-        "r2": null
+        "n": 14,
+        "mse": 269.5957293406119,
+        "rmse": 16.41937055250937,
+        "r2": 0.4030300658085323
       },
       "naive_last_value": {
-        "n": 0,
-        "mse": null,
-        "rmse": null,
-        "r2": null
+        "n": 14,
+        "mse": 71.85578270892947,
+        "rmse": 8.476779029143644,
+        "r2": 0.8408886447127996
       }
     }
   }

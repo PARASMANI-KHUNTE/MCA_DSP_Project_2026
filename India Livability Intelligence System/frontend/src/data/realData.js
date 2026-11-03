@@ -698,9 +698,9 @@ export const DATA = {
           "sourceId": "economy_rbi_nsdp"
         },
         {
-          "key": "nsdp",
+          "key": "unemployment",
           "column": "unemployment_rate",
-          "label": "NSDP per capita",
+          "label": "Unemployment rate",
           "direction": "lower_is_better",
           "bounds": [
             2.0,

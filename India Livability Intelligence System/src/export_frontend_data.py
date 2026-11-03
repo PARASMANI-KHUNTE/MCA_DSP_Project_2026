@@ -120,9 +120,9 @@ def _factor_definitions(config: dict) -> dict:
             "trend": economy.get("trend"),
             "indicators": [
                 {
-                    "key": "nsdp",
+                    "key": "unemployment" if "unemployment" in indicator["column"] else "nsdp",
                     "column": indicator["column"],
-                    "label": "NSDP per capita",
+                    "label": "Unemployment rate" if "unemployment" in indicator["column"] else "NSDP per capita",
                     "direction": indicator["direction"],
                     "bounds": indicator["bounds"],
                     "sourceId": indicator.get("source_id"),

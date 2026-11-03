@@ -280,6 +280,8 @@ def sensitivity_analysis(
         except Exception:
             continue
         for _, row in res.iterrows():
+            if pd.isna(row["rank"]):
+                continue
             pid = row["place_id"]
             all_ranks.setdefault(pid, []).append(int(row["rank"]))
 
@@ -295,4 +297,7 @@ def sensitivity_analysis(
             "robust": bool(int(arr.max() - arr.min()) <= 3),
         })
 
+    columns = ["place_id", "median_rank", "min_rank", "max_rank", "rank_range", "robust"]
+    if not rows:
+        return pd.DataFrame(columns=columns)
     return pd.DataFrame(rows).sort_values("median_rank").reset_index(drop=True)

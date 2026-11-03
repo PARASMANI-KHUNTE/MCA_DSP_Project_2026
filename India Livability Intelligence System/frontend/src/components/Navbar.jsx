@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Activity, BookOpen, CalendarRange, Compass, HelpCircle, Info, Map, Radio, RefreshCw } from "lucide-react";
-import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
 
 const TABS = [
   { id: "map", label: "Explorer", icon: Map },
@@ -8,11 +8,10 @@ const TABS = [
   { id: "methodology", label: "Method", icon: BookOpen }
 ];
 
-const FIRST_YEAR = OBSERVED_YEARS[0];
-const YEARS = Array.from(
-  { length: PROJECTION_END_YEAR - FIRST_YEAR + 1 },
-  (_, index) => FIRST_YEAR + index
-);
+const FIRST_YEAR = OBSERVED_YEARS[0] ?? BASELINE_YEAR;
+const YEARS = DATA_COVERAGE.compositeAvailable && PROJECTION_END_YEAR > BASELINE_YEAR
+  ? Array.from({ length: PROJECTION_END_YEAR - FIRST_YEAR + 1 }, (_, index) => FIRST_YEAR + index)
+  : OBSERVED_YEARS;
 
 export default function Navbar({
   activeTab,
@@ -24,14 +23,17 @@ export default function Navbar({
   onOpenTour,
   dataAvailable
 }) {
-  const isProjected = selectedYear > BASELINE_YEAR;
+  const hasProjections = DATA_COVERAGE.compositeAvailable && PROJECTION_END_YEAR > BASELINE_YEAR;
+  const isProjected = hasProjections && selectedYear > BASELINE_YEAR;
   const [showYearInfo, setShowYearInfo] = useState(false);
-  const projectionInfo = `Projected years are ${BASELINE_YEAR + 1}–${PROJECTION_END_YEAR}: a ${PROJECTION_END_YEAR - BASELINE_YEAR}-year OLS projection from observed ${FIRST_YEAR}–${BASELINE_YEAR} history.`;
+  const projectionInfo = hasProjections
+    ? `Projected years are ${BASELINE_YEAR + 1}–${PROJECTION_END_YEAR}, from observed data ending ${BASELINE_YEAR}.`
+    : `Choose a year with available observations. Missing years are not filled in.`;
   const backendOnline = backendStatus === "ok";
-  const backendLabel = backendOnline ? "API Live" : "Local Engine";
+  const backendLabel = backendOnline ? "API Reachable" : "Local Data";
   const backendDescription = backendOnline
-      ? "FastAPI backend connected. Click to re-check."
-      : "Running on the embedded scoring engine. Click to retry the API.";
+      ? "API health check succeeded; score availability depends on indicator coverage. Click to re-check."
+      : "Showing embedded local data. Click to retry the API.";
 
   return (
     <>
@@ -55,7 +57,11 @@ export default function Navbar({
                 </span>
               </span>
               <span className="hidden text-[10px] text-neutral-400 md:block">
-                {dataAvailable ? "Data science pipeline • Place comparisons • Trends" : "Preparing local data"}
+                {dataAvailable
+                  ? DATA_COVERAGE.compositeAvailable
+                    ? "Data science pipeline • Place comparisons • Trends"
+                    : "Local factor explorer • Composite score unavailable"
+                  : "Preparing local data"}
               </span>
             </span>
           </button>
@@ -102,7 +108,7 @@ export default function Navbar({
               </select>
             </label>}
 
-            {dataAvailable && <span className="relative flex items-center">
+            {dataAvailable && OBSERVED_YEARS.length > 1 && <span className="relative flex items-center">
               <button
                 type="button"
                 onClick={() => setShowYearInfo(value => !value)}
@@ -124,7 +130,7 @@ export default function Navbar({
               )}
             </span>}
 
-            {dataAvailable && <button
+            {dataAvailable && DATA_COVERAGE.compositeAvailable && <button
               onClick={onOpenTour}
               className="group flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 to-green-500/15 px-2.5 py-1.5 text-xs font-bold text-emerald-200 shadow-sm shadow-emerald-500/15 transition-all hover:scale-[1.02] hover:border-emerald-300/60 hover:from-emerald-500/25 hover:to-green-500/25 hover:text-white"
               title="Learn how to use the system"

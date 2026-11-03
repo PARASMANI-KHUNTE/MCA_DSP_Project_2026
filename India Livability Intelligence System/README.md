@@ -1,88 +1,103 @@
 # India Livability Intelligence System
 
+An MCA data science project that explores livability across Indian states/UTs and major cities using published data. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
+
 > **Course:** Data Science using Python (CAPCTD3 Elective-V)  
 > **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
 
----
+## Project status
 
-## Live Demo
-🔗 _Link to be added after deployment_
+- The dashboard covers **61 places**: 32 states/UTs and 29 cities.
+- Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
+- The dashboard has embedded data and computes scores in the browser. The FastAPI backend is available for API use, but is not required to run the dashboard.
+- There is no hosted demo linked at present.
 
-## Key Findings
-- **Regional Disparity (2022 cross-section, One-Way ANOVA $F = 7.23, p = 2.89 \times 10^{-5}$):** Mean composite scores range from **72.5 in the West** to **43.2 in the Central region** across 61 scored places. This is the latest year with complete state-level safety, health and economy coverage.
-- **Economic Output & Infant Mortality ($r = -0.63, p < 0.001, n = 122$):** Higher per-capita NSDP is strongly associated with lower infant mortality. The PM2.5–IMR overlap is smaller and **not statistically significant** ($r = 0.25, p = 0.121, n = 40$), so the app does not claim a significant air–health correlation.
-- **Observed Trends and OLS Outlooks:** Trend models fit observed 2015–2024 series and project to **2034** only when at least five yearly points exist. Across place-factor series, 28 improve, 21 decline, 5 are stable/uncertain, and 190 have insufficient data.
-- **Offline K-Means ($k=5$, silhouette $= 0.647$):** Cluster profiles span mean scores from 22.9 to 81.3. The interactive interface deliberately uses explicit score bands instead of cluster labels because the clustering output is retained as offline analysis.
-- **Data Gaps Are Explicit:** Air observations exist for 2015–2019 and 2023–2024; state safety, health and economy end in 2022; cost of living is a 2022 rent snapshot for six metros; population is not part of the processed dataset.
+## Findings
 
-## Generated Reports & Deliverables
-- 📄 **Academic Project Report:** [`reports/project_report.pdf`](reports/project_report.pdf) (10–15 pages, MCA capstone format)
-- 📊 **Presentation Slides:** [`reports/presentation_slides.pdf`](reports/presentation_slides.pdf) (5-minute viva presentation deck)
-- 📈 **Statistical Findings & Figures:** [`reports/findings.md`](reports/findings.md) & [`reports/figures/`](reports/figures/)
-- 🌐 **Interactive Dashboard:** Run locally on `http://localhost:5173/` (FastAPI backend on `http://localhost:8000/docs`)
+- The 2022 composite-score cross-section covers 61 places. Regional means range from **72.5 (West)** to **43.2 (Central)**; one-way ANOVA: **F = 7.23, p = 2.89 × 10⁻⁵**.
+- Per-capita NSDP and infant mortality are negatively associated (**r = −0.63, p < 0.001, n = 122**). The PM2.5–infant mortality association is not statistically significant (**r = 0.25, p = 0.121, n = 40**).
+- The offline trend analysis classifies 28 place-factor series as improving, 21 declining, 5 stable/uncertain, and 190 as having insufficient data. Trend fits require at least five yearly observations; projections are exploratory, not predictions.
+- Offline K-Means analysis uses k = 5 (silhouette = 0.647). The dashboard displays explicit score bands rather than those cluster assignments.
 
-## How to Run Locally
+See [reports/findings.md](reports/findings.md), [reports/project_report.md](reports/project_report.md), [reports/presentation_slides.md](reports/presentation_slides.md), and [reports/application_guide.md](reports/application_guide.md) for the current written deliverables. PDF versions and `reports/figures/` are not currently included.
 
-### 1. Clone & install
+## Data coverage and limitations
+
+- City PM2.5 observations cover 2015–2019 and 2023–2024; there are no processed observations for 2021–2022.
+- State safety, health, and economy observations end in 2022. City scores inherit those state values and expose their source years.
+- Cost of living is a 2022 rent snapshot for six cities, not a time series. Population is not in the processed data, so map markers use a fixed visual scale.
+- City scores for safety, health, and economy represent their associated state-level observations. Air quality is city-level.
+- Linear trend projections are based on limited and sometimes discontinuous histories. See the application guide for the scoring rules and additional caveats.
+
+## Run the dashboard
+
+Requirements: Node.js compatible with the Vite version in `frontend/package.json` (Node 20.19+ recommended) and npm.
+
 ```bash
-git clone <repo-url>
-cd "India Livability Intelligence System"
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL printed by Vite (configured for port `5173`, usually `http://localhost:5173`). To create and serve a production build locally:
+
+```bash
+npm run build
+npm run preview
+```
+
+## Run the optional API
+
+From the repository root, install the backend dependencies and start FastAPI:
+
+```bash
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-pip install -r requirements.txt        # full data/notebook stack
-# API-only (much smaller, no notebook/PDF/geospatial deps):
-# pip install -r backend/requirements.txt
+# Activate the environment for your shell, then:
+pip install -r backend/requirements.txt
+uvicorn backend.app.main:app --reload --port 8000
 ```
 
-### 2. Add raw data
-Download datasets listed in `data/raw/source_register.csv` and place them in the corresponding subfolders under `data/raw/`.
+The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It reads the processed tables and scoring configuration. The frontend is configured to try the API at `http://localhost:8000/api` for score synchronization and falls back to its embedded scoring data if the API is unavailable.
 
-### 3. Run the pipeline
+## Data pipeline and analysis
+
+The full Python stack is listed in the root `requirements.txt`. Raw source files are expected under `data/raw/` as described by [`data/raw/source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`.
+
 ```bash
-make data       # clean + merge
-make notebooks  # execute notebooks in order
-make api        # start FastAPI on port 8000
-make web        # start frontend dev server
-make test       # run all tests
-make docker     # build + run everything via Docker Compose
+pip install -r requirements.txt
+make data       # regenerate processed tables from raw source files
+make notebooks  # execute analysis notebooks in order
 ```
 
-## Data Sources & Licenses
-See `data/raw/source_register.csv` for the full register with licenses and attribution.
+`make notebooks` executes notebooks `00_coverage_check` through `05_ml_trend_clustering`; the coverage notebook may rebuild the place master. The pipeline writes processed tables and updates `reports/data_quality_report.md`.
 
-| Dataset | Publisher | License |
-|---|---|---|
-| Air Quality 2015–2020 | Kaggle / CPCB | _check Kaggle page_ |
-| Crime in India | NCRB | Open Government Data |
-| Infant Mortality (SRS) | Registrar General of India | Open |
-| Per Capita NSDP | RBI | Open |
-| PLFS Unemployment | MoSPI | Open |
-| House Rent Snapshot | Kaggle | CC BY-SA 4.0 |
-| State Boundaries | DataMeet / open repo | _verify before use_ |
+## Tests and containers
 
-## Methodology
-- **Scoring:** `docs/` → M5 in the SRS document
-- **ML:** `docs/` → M6 in the SRS document
-
-## Limitations
-- City scores for safety, health and economy inherit state-level data.
-- Air series joins two sources across a multi-year gap including COVID 2020.
-- Projections are naive linear trends from limited yearly data — not predictions.
-- Weights are subjective; see sensitivity analysis.
-
-## Project Structure
+```bash
+make test        # pytest suite with coverage
+make docker      # Docker Compose: frontend on :3000, API on :8000
 ```
-data/raw/           ← untouched downloads + source_register.csv
-data/interim/       ← partially cleaned files
-data/processed/     ← final analytical tables (CSV / Parquet)
-src/                ← Python modules (loaders, cleaning, scoring, models)
-notebooks/          ← 00_coverage_check to 05_ml_trend_clustering
-reports/            ← data quality report, findings, figures
-tests/              ← pytest suite
-backend/            ← FastAPI app
-frontend/           ← React + Vite app (or Streamlit fallback)
-models/             ← saved model artifacts + metrics.json
+
+The Docker frontend is served as a static site on port 3000. Docker Compose waits for the API health check before starting the frontend container; the dashboard itself can also run without the API using the local development instructions above.
+
+## Project structure
+
+```text
+backend/          FastAPI application, schemas, scoring service
+data/raw/         Source downloads, source register, and aliases (gitignored)
+data/processed/   Processed place, factor, score, trend, and cluster tables
+frontend/         React + Vite dashboard and embedded data
+models/           Model metrics
+notebooks/        Coverage, profiling, cleaning, EDA, scoring, ML analysis
+reports/          Findings, project report, application guide, audit reports
+src/              Data loaders, cleaning, scoring, analysis, and models
+tests/            Pytest suite
 ```
+
+## Sources and methodology
+
+See [`data/raw/source_register.csv`](data/raw/source_register.csv) for source URLs, publishers, license notes, and attribution. Scoring bounds, factor directions, trend eligibility, and default weight presets are defined in [`src/scoring/factors_config.yaml`](src/scoring/factors_config.yaml). Analysis notebooks and the application guide describe the statistical and dashboard methodology.
 
 ## Author
+
 **Parasmani Khunte** — MCA, 2026

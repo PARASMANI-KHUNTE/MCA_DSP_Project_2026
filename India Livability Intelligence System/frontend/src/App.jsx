@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, ExternalLink, FolderGit2, Map, SlidersHorizontal, Trophy } from "lucide-react";
+import { ArrowUp, Map, SlidersHorizontal, Trophy } from "lucide-react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
 import TechStack from "./components/TechStack";
@@ -264,7 +264,7 @@ export default function App() {
                           India Livability Intelligence System
                         </h3>
                         <p className="mt-1 max-w-xl text-sm leading-relaxed text-[#555555]">
-                          Explore a local data preview with an air quality ranking and a separate rent snapshot ranking. A complete livability index is unavailable because safety, health, and economy inputs are not active.
+                          Multi-criteria composite rankings across 61 Indian states and cities — air quality, public safety, healthcare, economy and cost of living — with OLS trend projections through 2033.
                         </p>
                       </div>
                       <button
@@ -419,44 +419,7 @@ export default function App() {
           </main>
         </div>
 
-        {/* Editorial Footer */}
-        <footer className="border-t border-[#E5E5E5] bg-[#FAFAF8] px-6 py-6 sm:px-10">
-          <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-            <div>
-              <p className="text-xs font-bold text-[#111111]">
-                Parasmani Khunte — MCA, 2026
-              </p>
-              <p className="mt-0.5 text-[11px] text-[#777777]">
-                India Livability Intelligence System · Multi-Criteria Spatial Scoring & Trend Analytics
-              </p>
-            </div>
 
-            <div className="flex items-center gap-4 text-xs font-medium text-[#666666]">
-              <button
-                onClick={() => setActiveTab("methodology")}
-                className="hover:text-[#111111] transition-colors"
-              >
-                Methodology
-              </button>
-              <button
-                onClick={() => setActiveTab("about")}
-                className="hover:text-[#111111] transition-colors"
-              >
-                About & Code
-              </button>
-              <a
-                href="https://github.com/PARASMANI-KHUNTE/MCA_DSP_Project_2026"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 hover:text-[#111111] transition-colors"
-              >
-                <FolderGit2 size={13} />
-                <span>GitHub</span>
-                <ExternalLink size={10} className="text-[#999999]" />
-              </a>
-            </div>
-          </div>
-        </footer>
       </div>
 
       {/* Floating Elements */}

@@ -41,7 +41,7 @@ export default function Navbar({
   const [showYearInfo, setShowYearInfo] = useState(false);
   const projectionInfo = PROJECTION_END_YEAR == null
     ? "No factor currently has enough observed years for a projection."
-    : `${BASELINE_YEAR} is the latest year with multi-factor observations. Earlier years show each factor at its latest observation at or before that year. Future years are projected only when every weighted factor has at least five directly observed years, so mixed-coverage composite views remain observed-only. The ${DATA_COVERAGE.lastYearByFactor?.col ?? "rent"} rent snapshot is observed separately and is never projected.`;
+    : `${BASELINE_YEAR} is the latest year with multi-factor observations. Earlier years show each factor at its latest observation at or before that year. Future years are OLS-projected when at least three trend-eligible yearly composites exist for the selected weights. The ${DATA_COVERAGE.lastYearByFactor?.col ?? "rent"} rent snapshot is observed separately and is never projected.`;
   const backendOnline = backendStatus === "ok";
   const backendLabel = backendOnline ? "API Live" : "Local Engine";
   const backendDescription = backendOnline

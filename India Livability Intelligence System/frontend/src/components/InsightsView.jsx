@@ -144,7 +144,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
         stat: `${significant} of ${stats.trended} at p < 0.05`,
         summary: `${stats.improving} places are flagged improving and ${stats.declining} declining using OLS over years where every weighted factor is observed.`,
         interpretation:
-          "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level and at least five eligible yearly points exist. Mixed-coverage composites therefore remain insufficient data rather than receiving a synthetic projection."
+          "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level and at least three trend-eligible yearly composites exist. Mixed-coverage composites still contribute if carry-forward values cover all weighted factors."
       },
       {
         title: "Indicator coverage across places",

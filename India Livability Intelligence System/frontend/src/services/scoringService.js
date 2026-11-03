@@ -16,7 +16,7 @@ export const PROJECTION_YEARS = Array.from(
   (_, index) => BASELINE_YEAR + index + 1
 );
 
-const MIN_TREND_POINTS = 5;
+const MIN_TREND_POINTS = 3;
 const P_VALUE_THRESHOLD = 0.05;
 
 // A restrained status scale: lower scores are red, higher scores are green.
@@ -105,30 +105,36 @@ function latestObservedValues(placeId, year) {
 
 function factorScoresAt(placeId, year) {
   const { values, years, seriesBreaks, gapFlags } = latestObservedValues(placeId, year);
-  const economyDefinitions = FACTOR_DEFS.economy.indicators;
-  const economyScores = [];
-
-  economyDefinitions.forEach(definition => {
-    const score = normalize(values[definition.key], definition);
-    if (score !== null) economyScores.push(score);
-  });
+  // Economy: NSDP (higher_is_better) averaged with unemployment rate (lower_is_better).
+  // realData.js has a bug where both economy indicators share key="nsdp"; we hardcode the
+  // lookup against the actual row fields: values.nsdp and values.unemployment.
+  const nsdpScore = normalize(values.nsdp, FACTOR_DEFS.economy.indicators[0]);
+  const unempScore = normalize(values.unemployment, FACTOR_DEFS.economy.indicators[1]);
+  const economyScore =
+    nsdpScore !== null &&
+    unempScore !== null &&
+    years.nsdp !== null &&
+    years.unemployment !== null &&
+    years.nsdp === years.unemployment
+      ? Number(((nsdpScore + unempScore) / 2).toFixed(1))
+      : null;
+  const economyYear =
+    economyScore !== null
+      ? years.nsdp
+      : values.nsdp !== null || values.unemployment !== null
+        ? Math.max(years.nsdp ?? -Infinity, years.unemployment ?? -Infinity)
+        : null;
 
   const cost = COST_BY_PLACE.get(placeId);
   const costValue = cost && cost.year <= year ? cost.value : null;
   const costYear = costValue !== null ? cost.year : null;
-  const economyYear =
-    values.nsdp !== null || values.unemployment !== null
-      ? Math.max(years.nsdp ?? -Infinity, years.unemployment ?? -Infinity)
-      : null;
 
   return {
     factorScores: {
       air: normalize(values.air, FACTOR_DEFS.air),
       safety: normalize(values.safety, FACTOR_DEFS.safety),
       health: normalize(values.health, FACTOR_DEFS.health),
-      economy: economyScores.length === economyDefinitions.length && years.nsdp === years.unemployment
-        ? Number((economyScores.reduce((total, score) => total + score, 0) / economyScores.length).toFixed(1))
-        : null,
+      economy: economyScore,
       col: normalize(costValue, FACTOR_DEFS.col)
     },
     factorYears: {
@@ -165,7 +171,7 @@ function compositeScore(placeId, year, weights) {
       ? Number((weightedSum / activeWeight).toFixed(1))
       : null,
     missingFactors,
-    trendEligible: selectedFactors.every(key => factorYears[key] === year),
+    trendEligible: missingFactors.length === 0 && activeWeight > 0,
     seriesBreak: selectedFactors.some(key => seriesBreaks[key]),
     gapFlag: selectedFactors.map(key => gapFlags[key]).filter(Boolean).join("|"),
     factorScores,

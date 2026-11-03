@@ -1,4 +1,5 @@
-import { Activity, BookOpen, CalendarRange, Compass, HelpCircle, Map, Radio, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Activity, BookOpen, CalendarRange, Compass, HelpCircle, Info, Map, Radio, RefreshCw } from "lucide-react";
 import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
 
 const TABS = [
@@ -24,6 +25,8 @@ export default function Navbar({
   dataAvailable
 }) {
   const isProjected = selectedYear > BASELINE_YEAR;
+  const [showYearInfo, setShowYearInfo] = useState(false);
+  const projectionInfo = `Projected years are ${BASELINE_YEAR + 1}–${PROJECTION_END_YEAR}: a ${PROJECTION_END_YEAR - BASELINE_YEAR}-year OLS projection from observed ${FIRST_YEAR}–${BASELINE_YEAR} history.`;
   const backendOnline = backendStatus === "ok";
   const backendLabel = backendOnline ? "API Live" : "Local Engine";
   const backendDescription = backendOnline
@@ -98,6 +101,28 @@ export default function Navbar({
                 ))}
               </select>
             </label>}
+
+            {dataAvailable && <span className="relative flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowYearInfo(value => !value)}
+                onBlur={() => setShowYearInfo(false)}
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-neutral-700 text-neutral-400 transition-colors hover:border-amber-300/60 hover:text-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60"
+                title={projectionInfo}
+                aria-label={projectionInfo}
+                aria-expanded={showYearInfo}
+              >
+                <Info size={11} />
+              </button>
+              {showYearInfo && (
+                <span
+                  role="tooltip"
+                  className="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-[11px] font-normal leading-relaxed text-neutral-300 shadow-xl"
+                >
+                  {projectionInfo}
+                </span>
+              )}
+            </span>}
 
             {dataAvailable && <button
               onClick={onOpenTour}

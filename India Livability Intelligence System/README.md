@@ -106,6 +106,47 @@ start.ps1         Start the local frontend from PowerShell
 
 See [`data/raw/source_register.csv`](data/raw/source_register.csv) for source URLs, publishers, license notes, and attribution. Scoring bounds, factor directions, trend eligibility, and default weight presets are defined in [`src/scoring/factors_config.yaml`](src/scoring/factors_config.yaml). Analysis notebooks and the application guide describe the statistical and dashboard methodology.
 
+
+
+
+## 🚀 Quick Start Guide
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/PARASMANI-KHUNTE/MCA_DSP_Project_2026.git
+cd MCA_DSP_Project_2026/"India Livability Intelligence System"
+```
+
+### 2. Set Up Python Environment
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+
+# On Windows:
+.venv\Scripts\activate
+
+# On Linux / macOS:
+source .venv/bin/activate
+
+# Install required dependencies
+pip install -r requirements.txt
+```
+
+### 3. Launch Backend API (FastAPI)
+```bash
+# From within "India Livability Intelligence System"
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload   
+```
+- Interactive API Docs (Swagger UI): **`http://localhost:8000/docs`**
+- Alternative Docs (ReDoc): **`http://localhost:8000/redoc`**
+
+### 4. Launch Frontend Web App (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev
+
+
 ## Author
 
 **Parasmani Khunte** — MCA, 2026

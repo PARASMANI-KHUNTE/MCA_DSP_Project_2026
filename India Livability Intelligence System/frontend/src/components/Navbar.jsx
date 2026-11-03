@@ -18,11 +18,19 @@ export default function Navbar({
   onSelectTab,
   selectedYear,
   onChangeYear,
-  backendOnline,
+  backendStatus,
   onRetryBackend,
   onOpenTour
 }) {
   const isProjected = selectedYear > BASELINE_YEAR;
+  const backendOnline = backendStatus === "ok" || backendStatus === "data_unverified";
+  const dataUnverified = backendStatus === "data_unverified";
+  const backendLabel = dataUnverified ? "API Data Unverified" : backendOnline ? "API Live" : "Local Engine";
+  const backendDescription = dataUnverified
+    ? "FastAPI is reachable, but source data is unverified and score endpoints are disabled. Click to re-check."
+    : backendOnline
+      ? "FastAPI backend connected. Click to re-check."
+      : "Running on the embedded scoring engine. Click to retry the API.";
 
   return (
     <>
@@ -107,15 +115,20 @@ export default function Navbar({
             <button
               onClick={onRetryBackend}
               className={`flex items-center gap-1.5 rounded-xl border px-2 py-1.5 text-[10px] font-semibold transition-colors sm:px-2.5 ${
-                backendOnline
+                dataUnverified
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                  : backendOnline
                   ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
                   : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-slate-200"
               }`}
-              title={backendOnline ? "FastAPI backend connected. Click to re-check." : "Running on the embedded scoring engine. Click to retry the API."}
-              aria-label={backendOnline ? "Backend online. Re-check connection" : "Backend offline. Retry connection"}
+              title={backendDescription}
+              aria-label={backendDescription}
             >
-              <Radio size={12} className={backendOnline ? "animate-pulse text-emerald-400" : "text-slate-500"} />
-              <span className="hidden md:inline">{backendOnline ? "API Live" : "Local Engine"}</span>
+              <Radio
+                size={12}
+                className={dataUnverified ? "text-amber-300" : backendOnline ? "animate-pulse text-emerald-400" : "text-slate-500"}
+              />
+              <span className="hidden md:inline">{backendLabel}</span>
               <RefreshCw size={10} className="hidden text-slate-500 md:inline" />
             </button>
           </div>

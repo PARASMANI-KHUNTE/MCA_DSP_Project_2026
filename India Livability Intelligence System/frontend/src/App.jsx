@@ -42,7 +42,7 @@ export default function App() {
   const [compareIds, setCompareIds] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
-  const [backendOnline, setBackendOnline] = useState(false);
+  const [backendStatus, setBackendStatus] = useState("offline");
   const [showTourModal, setShowTourModal] = useState(false);
 
   const [toast, setToast] = useState(null);
@@ -138,12 +138,14 @@ export default function App() {
     try {
       const response = await fetch("http://localhost:8000/api/health", { method: "GET" });
       const health = response.ok ? await response.json() : null;
-      const online = health?.status === "ok";
-      setBackendOnline(online);
-      return online;
+      const status = ["ok", "data_unverified"].includes(health?.status)
+        ? health.status
+        : "offline";
+      setBackendStatus(status);
+      return status;
     } catch {
-      setBackendOnline(false);
-      return false;
+      setBackendStatus("offline");
+      return "offline";
     }
   }, []);
 
@@ -153,7 +155,7 @@ export default function App() {
     const probe = async () => {
       const online = await checkHealth();
       if (!mounted) return;
-      setBackendOnline(online);
+      setBackendStatus(online);
     };
 
     probe();
@@ -166,12 +168,14 @@ export default function App() {
   }, [checkHealth]);
 
   const handleRetryBackend = async () => {
-    const online = await checkHealth();
+    const status = await checkHealth();
     notify(
-      online
-        ? "FastAPI backend connected. Scores can sync with the API."
-        : "Backend offline. The embedded scoring engine keeps working.",
-      online ? "success" : "info"
+      status === "ok"
+        ? "FastAPI backend connected."
+        : status === "data_unverified"
+          ? "FastAPI is reachable, but score endpoints are disabled while source data is unverified."
+          : "Backend offline. The embedded scoring engine keeps working.",
+      status === "offline" ? "info" : status === "ok" ? "success" : "warning"
     );
   };
 
@@ -186,7 +190,7 @@ export default function App() {
         onSelectTab={setActiveTab}
         selectedYear={selectedYear}
         onChangeYear={setSelectedYear}
-        backendOnline={backendOnline}
+        backendStatus={backendStatus}
         onRetryBackend={handleRetryBackend}
         onOpenTour={() => setShowTourModal(true)}
       />

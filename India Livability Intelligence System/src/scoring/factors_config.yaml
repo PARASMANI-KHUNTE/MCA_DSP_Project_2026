@@ -1,0 +1,103 @@
+# factors_config.yaml
+# Scoring engine configuration for every factor.
+# Bounds below are fixed analyst-selected normalization anchors. They are not
+# calculated from the active raw inputs and should not be described as empirical
+# percentiles unless a separate calibration step computes and records them.
+
+factors:
+  air_quality:
+    column: air_quality             # wide-table column: normalized PM2.5 (µg/m³)
+    direction: lower_is_better      # lower PM2.5 = better air = higher score
+    level: city
+    trend: eligible                  # needs >= 5 valid yearly points, no unflagged series break
+    bounds: [10, 150]               # µg/m³; fixed normalization anchors
+    source_id: air_kaggle
+    notes: "Historic Kaggle/CPCB series plus enriched 2025-2026 station data. Flag covid_year for 2020 and sparse_observations for thin recent coverage. Source changes start a new trend segment."
+
+  safety:
+    column: safety                   # wide-table column: crime rate per lakh population
+    direction: lower_is_better
+    level: state                     # metro-city NCRB rates NOT mixed with state rates
+    trend: eligible_with_break_flag  # IPC→BNS break in 2024 may invalidate straight-line fit
+    bounds: [100, 600]              # crimes per lakh; fixed normalization anchors
+    source_id: safety_ncrb
+    notes: "Crime rate reflects reporting practices as well as actual crime. Series break in 2024."
+
+  health:
+    column: health                   # wide-table column: NFHS-5 state composite (0-100)
+    direction: higher_is_better     # better maternal/child health = higher score
+    level: state
+    trend: never                    # single NFHS-5 survey round (2019-21)
+    bounds: [0, 100]                # composite index; fixed normalization anchors
+    source_id: health_nfhs5
+    notes: "NFHS-5 district factsheets aggregated to states (household-weighted). Composite of institutional births, full vaccination, child stunting and women's anaemia. Source year 2021."
+
+  economy:
+    level: state
+    trend: eligible
+    indicators:
+      - column: per_capita_nsdp_constant
+        direction: higher_is_better
+        bounds: [50000, 320000]     # ₹ at 2011-12 prices; fixed normalization anchors
+        source_id: economy_rbi_nsdp
+      - column: unemployment_rate
+        direction: lower_is_better
+        bounds: [2.0, 10.0]         # % of labour force; fixed normalization anchors
+        source_id: economy_plfs
+    notes: "Normalize each indicator separately then average inside the factor. Only years where both exist."
+
+  cost_of_living:                   # OPTIONAL
+    column: cost_of_living
+    direction: lower_is_better
+    level: city
+    trend: never                    # modelled/estimated city-year rents — never project
+    bounds: [3000, 40000]           # ₹/month for a 1BHK; fixed normalization anchors
+    source_id: cost_of_living_longitudinal
+    notes: "Optional toggle. 2010-2024 city rents (average of city-centre and outside-centre 1BHK). PLFS-modelled rows are flagged modeled_estimate; Numbeo-derived rows are flagged reference_estimate. Show 'no trend available'."
+
+  water_quality:                    # OPTIONAL — single 2021 snapshot
+    column: water_quality           # 0-100 composite from BOD and dissolved oxygen
+    direction: higher_is_better
+    level: state
+    trend: never
+    bounds: [0, 100]                # composite index; fixed normalization anchors
+    source_id: water_quality_cpcb
+    notes: "Optional state-level factor. CPCB water-body quality snapshot (2021): mean BOD (lower is better) and dissolved oxygen (higher is better), rescaled to 0-100. Coliform readings retained for context only."
+
+# ── Eligibility rules ──────────────────────────────────────
+eligibility:
+  min_valid_points_for_trend: 5
+  snapshot_label: "No trend available"
+  insufficient_label: "Insufficient data"
+
+# ── Default weight presets (must sum to 100) ────────────────
+presets:
+  balanced:
+    air_quality: 35
+    safety: 25
+    health: 25
+    economy: 15
+
+  clean_air_first:
+    air_quality: 55
+    safety: 15
+    health: 20
+    economy: 10
+
+  family:
+    air_quality: 20
+    safety: 30
+    health: 30
+    economy: 20
+
+  career:
+    air_quality: 15
+    safety: 15
+    health: 10
+    economy: 60
+
+  retirement:
+    air_quality: 30
+    safety: 15
+    health: 45
+    economy: 10

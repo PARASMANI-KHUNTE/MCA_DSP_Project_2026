@@ -891,7 +891,7 @@ export const DATA = {
     {
       "placeId": "IN-AP",
       "year": 2026,
-      "air": 106.23333333333333,
+      "air": 106.23333333333332,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -1248,7 +1248,7 @@ export const DATA = {
     {
       "placeId": "IN-AP-VIJ",
       "year": 2026,
-      "air": 59.666666666666664,
+      "air": 59.66666666666666,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2235,7 +2235,7 @@ export const DATA = {
     {
       "placeId": "IN-BR",
       "year": 2019,
-      "air": 104.36576923076923,
+      "air": 104.36576923076925,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -2550,7 +2550,7 @@ export const DATA = {
     {
       "placeId": "IN-BR-PAT",
       "year": 2019,
-      "air": 104.36576923076923,
+      "air": 104.36576923076925,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -3222,7 +3222,7 @@ export const DATA = {
     {
       "placeId": "IN-DL",
       "year": 2015,
-      "air": 117.34082191780823,
+      "air": 117.34082191780824,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -3264,7 +3264,7 @@ export const DATA = {
     {
       "placeId": "IN-DL",
       "year": 2017,
-      "air": 125.09071625344353,
+      "air": 125.09071625344352,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -3537,7 +3537,7 @@ export const DATA = {
     {
       "placeId": "IN-DL-DEL",
       "year": 2015,
-      "air": 117.34082191780823,
+      "air": 117.34082191780824,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -3579,7 +3579,7 @@ export const DATA = {
     {
       "placeId": "IN-DL-DEL",
       "year": 2017,
-      "air": 125.09071625344353,
+      "air": 125.09071625344352,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -4692,7 +4692,7 @@ export const DATA = {
     {
       "placeId": "IN-GJ-SUR",
       "year": 2026,
-      "air": 103.97999999999999,
+      "air": 103.98,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -4818,7 +4818,7 @@ export const DATA = {
     {
       "placeId": "IN-HR",
       "year": 2018,
-      "air": 116.58097421203439,
+      "air": 116.5809742120344,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -5280,7 +5280,7 @@ export const DATA = {
     {
       "placeId": "IN-HR-GUR",
       "year": 2018,
-      "air": 116.58097421203439,
+      "air": 116.5809742120344,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -5471,7 +5471,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 155.3,
-      "health": 45.213078660903754,
+      "health": 45.21307866090376,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -5576,7 +5576,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 155.3,
-      "health": 45.213078660903754,
+      "health": 45.21307866090376,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -5742,7 +5742,7 @@ export const DATA = {
     {
       "placeId": "IN-KA",
       "year": 2015,
-      "air": 28.725244755244756,
+      "air": 28.72524475524476,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -5763,7 +5763,7 @@ export const DATA = {
     {
       "placeId": "IN-KA",
       "year": 2016,
-      "air": 47.109692307692306,
+      "air": 47.10969230769231,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -6057,7 +6057,7 @@ export const DATA = {
     {
       "placeId": "IN-KA-BLR",
       "year": 2015,
-      "air": 28.725244755244756,
+      "air": 28.72524475524476,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -6078,7 +6078,7 @@ export const DATA = {
     {
       "placeId": "IN-KA-BLR",
       "year": 2016,
-      "air": 47.109692307692306,
+      "air": 47.10969230769231,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -6710,7 +6710,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 186.3,
-      "health": 57.177759740259745,
+      "health": 57.17775974025975,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -6855,7 +6855,7 @@ export const DATA = {
     {
       "placeId": "IN-MH",
       "year": 2025,
-      "air": 207.41666666666666,
+      "air": 207.41666666666663,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -8159,7 +8159,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 554.1,
-      "health": 58.389658582924184,
+      "health": 58.38965858292418,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -8495,7 +8495,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 554.1,
-      "health": 58.389658582924184,
+      "health": 58.38965858292418,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -8577,7 +8577,7 @@ export const DATA = {
     {
       "placeId": "IN-MP-BHO",
       "year": 2025,
-      "air": 126.96666666666665,
+      "air": 126.96666666666664,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -8852,7 +8852,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 554.1,
-      "health": 58.389658582924184,
+      "health": 58.38965858292418,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -9249,7 +9249,7 @@ export const DATA = {
     {
       "placeId": "IN-OD",
       "year": 2026,
-      "air": 94.76666666666667,
+      "air": 94.76666666666668,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -9606,7 +9606,7 @@ export const DATA = {
     {
       "placeId": "IN-OD-BHU",
       "year": 2026,
-      "air": 94.76666666666667,
+      "air": 94.76666666666668,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -9711,7 +9711,7 @@ export const DATA = {
     {
       "placeId": "IN-PB",
       "year": 2025,
-      "air": 228.35000000000002,
+      "air": 228.35,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -10068,7 +10068,7 @@ export const DATA = {
     {
       "placeId": "IN-PB-LUD",
       "year": 2025,
-      "air": 228.35000000000002,
+      "air": 228.35,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -11433,7 +11433,7 @@ export const DATA = {
     {
       "placeId": "IN-TN",
       "year": 2025,
-      "air": 110.89999999999999,
+      "air": 110.9,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -11790,7 +11790,7 @@ export const DATA = {
     {
       "placeId": "IN-TN-CHE",
       "year": 2025,
-      "air": 110.89999999999999,
+      "air": 110.9,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -11855,7 +11855,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 116.2,
-      "health": 50.225323279162225,
+      "health": 50.22532327916223,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -11937,7 +11937,7 @@ export const DATA = {
     {
       "placeId": "IN-UP",
       "year": 2016,
-      "air": 124.04069565217391,
+      "air": 124.04069565217392,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -11979,7 +11979,7 @@ export const DATA = {
     {
       "placeId": "IN-UP",
       "year": 2018,
-      "air": 119.24553424657535,
+      "air": 119.24553424657536,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -12105,7 +12105,7 @@ export const DATA = {
     {
       "placeId": "IN-UP",
       "year": 2025,
-      "air": 110.46666666666665,
+      "air": 110.46666666666664,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -12987,7 +12987,7 @@ export const DATA = {
     {
       "placeId": "IN-UP-LKO",
       "year": 2016,
-      "air": 124.04069565217391,
+      "air": 124.04069565217392,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -13029,7 +13029,7 @@ export const DATA = {
     {
       "placeId": "IN-UP-LKO",
       "year": 2018,
-      "air": 119.24553424657535,
+      "air": 119.24553424657536,
       "safety": null,
       "health": null,
       "nsdp": null,
@@ -13682,7 +13682,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 184.1,
-      "health": 57.274486205955114,
+      "health": 57.27448620595512,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -13808,7 +13808,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 184.1,
-      "health": 57.274486205955114,
+      "health": 57.27448620595512,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {
@@ -14123,7 +14123,7 @@ export const DATA = {
       "year": 2021,
       "air": null,
       "safety": 184.1,
-      "health": 57.274486205955114,
+      "health": 57.27448620595512,
       "nsdp": null,
       "unemployment": null,
       "seriesBreak": {

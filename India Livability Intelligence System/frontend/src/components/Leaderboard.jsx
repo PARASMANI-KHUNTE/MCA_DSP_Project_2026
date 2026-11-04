@@ -182,6 +182,17 @@ export default function Leaderboard({
                       {place.type === "city" ? place.state : `${place.region} region`}
                       <span>·</span>
                       {place.type}
+                      {place.partialData && (
+                        <>
+                          <span>·</span>
+                          <span
+                            className="rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-800 border border-amber-200"
+                            title={`Reweighted across available indicators (missing: ${place.missingFactors?.join(", ")})`}
+                          >
+                            partial
+                          </span>
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>

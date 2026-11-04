@@ -47,8 +47,8 @@ const LIMITATIONS = [
     body: "A two-point gap is rarely meaningful. Use bands and confidence intervals rather than treating rank as precise."
   },
   {
-    title: "Tier colors are score bands",
-    body: "The map colors by the live weighted score. Places missing a weighted factor remain unscored rather than receiving a synthetic value."
+    title: "Tier colors & score bands",
+    body: "The map colors by the live weighted score. Places missing a weighted factor are transparently reweighted across their available observed indicators and flagged with a partial tag, avoiding synthetic imputation."
   }
 ];
 

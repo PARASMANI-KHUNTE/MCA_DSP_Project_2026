@@ -166,13 +166,15 @@ function compositeScore(placeId, year, weights) {
     }
   });
 
+  const hasScore = activeWeight > 0;
+  const isPartial = missingFactors.length > 0;
+
   return {
     year,
-    score: missingFactors.length === 0 && activeWeight > 0
-      ? Number((weightedSum / activeWeight).toFixed(1))
-      : null,
+    score: hasScore ? Number((weightedSum / activeWeight).toFixed(1)) : null,
+    partialData: isPartial && hasScore,
     missingFactors,
-    trendEligible: missingFactors.length === 0 && activeWeight > 0,
+    trendEligible: !isPartial && hasScore,
     seriesBreak: selectedFactors.some(key => seriesBreaks[key]),
     gapFlag: selectedFactors.map(key => gapFlags[key]).filter(Boolean).join("|"),
     factorScores,
@@ -364,6 +366,8 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
       ...place,
       overallScore: selectedPoint?.score ?? null,
       baseScore: baselinePoint?.score ?? null,
+      partialData: selectedPoint?.partialData ?? false,
+      missingFactors: selectedPoint?.missingFactors ?? [],
       factorScores: factorPoint?.factorScores || {},
       factorYears: factorPoint?.factorYears || {},
       availablePillars: Object.values(factorPoint?.factorScores || {}).filter(

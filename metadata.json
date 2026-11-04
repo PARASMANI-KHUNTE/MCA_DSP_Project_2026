@@ -1,0 +1,8 @@
+{
+  "name": "India Livability Intelligence System",
+  "description": "A professional Data Science portfolio and decision-support system evaluating multi-criteria quality of life across 36 Indian States and Union Territories.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

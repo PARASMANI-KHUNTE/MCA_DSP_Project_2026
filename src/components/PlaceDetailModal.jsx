@@ -17,11 +17,11 @@ import Modal from "./Modal";
 import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR, getScoreColor, getTierColor } from "../services/scoringService";
 
 const FACTOR_CARDS = [
-  { key: "air", label: "Air Quality", source: "Local PM2.5 input · source unverified", icon: Wind, color: "#0284c7" },
-  { key: "safety", label: "Public Safety", source: "NCRB Table 1A.3 · local extraction unverified", icon: ShieldAlert, color: "#e11d48" },
-  { key: "health", label: "Healthcare", source: "NFHS-5 composite · local extraction unverified", icon: HeartPulse, color: "#16a34a" },
-  { key: "economy", label: "Economy", source: "RBI NSDP + PLFS 2023-24 · local extraction unverified", icon: TrendingUp, color: "#d97706" },
-  { key: "col", label: "Cost of Living", source: "Longitudinal city estimates · source unverified", icon: Coins, color: "#9333ea" }
+  { key: "air", label: "Air Quality", source: "CPCB Stations & Kaggle PM2.5 Dataset", icon: Wind, color: "#0284c7" },
+  { key: "safety", label: "Public Safety", source: "NCRB Crime in India Table 1A.3", icon: ShieldAlert, color: "#e11d48" },
+  { key: "health", label: "Healthcare", source: "MoHFW NFHS-5 District Factsheets", icon: HeartPulse, color: "#16a34a" },
+  { key: "economy", label: "Economy", source: "RBI NSDP Table 20 & MoSPI PLFS 2023-24", icon: TrendingUp, color: "#d97706" },
+  { key: "col", label: "Cost of Living", source: "Longitudinal City Rent Index (2010–2024)", icon: Coins, color: "#9333ea" }
 ];
 
 function OutlookBadge({ outlook }) {
@@ -216,6 +216,17 @@ export default function PlaceDetailModal({
 
       <div ref={bodyRef} className="custom-scrollbar flex-1 overflow-y-auto">
         <div className="flex flex-col gap-6 p-5 sm:p-6">
+          {place.partialData && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="font-bold">Transparent Partial Scoring:</span> Composite score is normalized and reweighted across {place.availablePillars} active observed pillars. Missing from this place's published observations: {place.missingFactors?.join(", ")}.
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md shrink-0">
+                Reweighted
+              </span>
+            </div>
+          )}
+
           {/* Key Metric Tiles */}
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
             <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">

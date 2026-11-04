@@ -17,7 +17,7 @@ export const PROJECTION_YEARS = Array.from(
   (_, index) => BASELINE_YEAR + index + 1
 );
 
-const MIN_TREND_POINTS = 3;
+const MIN_TREND_POINTS = 5;
 const P_VALUE_THRESHOLD = 0.05;
 
 // A restrained status scale: lower scores are red, higher scores are green.

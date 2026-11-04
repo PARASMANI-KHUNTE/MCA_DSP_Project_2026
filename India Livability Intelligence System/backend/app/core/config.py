@@ -38,7 +38,10 @@ class Settings(BaseSettings):
     )
 
     # CORS — restrict to your frontend origin in production
-    allowed_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    allowed_origins: list[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ]
 
     # Set to True to print SQL / verbose logs
     debug: bool = False

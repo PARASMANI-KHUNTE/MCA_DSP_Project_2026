@@ -5,6 +5,8 @@ Loads processed data files ONCE at startup and exposes them as module-level
 objects.  All routes import from here — no file I/O at request time.
 """
 
+import hashlib
+import os
 import json
 import logging
 from functools import lru_cache
@@ -92,14 +94,36 @@ class DataStore:
         self.data_version = str(data_dir)
 
 
+def _file_signature(path: Path) -> tuple[str, int, int]:
+    """Return (path, mtime_ns, size) for a file, with optional content hash."""
+    try:
+        stat = path.stat()
+        # Include content hash for key files to make cache resilient to
+        # deployments that preserve mtime but change content (Docker/CI).
+        # Hash only small files (< 1MB) to avoid performance impact.
+        if stat.st_size > 0 and stat.st_size < 1_000_000:
+            with path.open("rb") as f:
+                content_hash = hashlib.md5(f.read()).hexdigest()[:8]
+        else:
+            content_hash = ""
+        return (str(path), stat.st_mtime_ns, stat.st_size, content_hash)
+    except OSError:
+        return (str(path), -1, -1, "")
+
+
 @lru_cache(maxsize=1)
-def _cached_store(signature: tuple[tuple[str, int, int], ...]) -> DataStore:
+def _cached_store(signature: tuple[tuple[str, int, int, str], ...]) -> DataStore:
     """Cache a store only while the processed inputs have the same file stats."""
     return DataStore(settings.data_dir)
 
 
 def get_store() -> DataStore:
     """Reload processed inputs after a pipeline rebuild changes their files."""
+    # Allow forced reload via environment variable
+    if os.getenv("FORCE_DATASTORE_RELOAD"):
+        logger.info("FORCE_DATASTORE_RELOAD set — rebuilding data store without cache.")
+        _cached_store.cache_clear()
+    
     data_dir = settings.data_dir
     paths = [
         data_dir / name for name in (
@@ -115,8 +139,8 @@ def get_store() -> DataStore:
     signature = []
     for path in paths:
         try:
-            stat = path.stat()
-            signature.append((str(path), stat.st_mtime_ns, stat.st_size))
+            sig = _file_signature(path)
+            signature.append(tuple(sig))
         except OSError:
-            signature.append((str(path), -1, -1))
+            signature.append((str(path), -1, -1, ""))
     return _cached_store(tuple(signature))

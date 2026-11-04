@@ -9,7 +9,6 @@ PIP    = pip
 PYTEST = pytest
 NPM    = npm
 
-BASE   = "India Livability Intelligence System"
 NB_DIR = notebooks
 
 .PHONY: install data notebooks api web test clean help
@@ -52,10 +51,10 @@ web:
 	cd frontend && $(NPM) run dev
 
 test:
-	$(PYTEST) tests/ -v --tb=short --cov=src --cov-report=term-missing
+	$(PYTEST) tests/ backend/tests/ -v --tb=short --cov=src --cov-report=term-missing
 
 clean:
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -name "*.pyc" -delete 2>/dev/null || true
-	find . -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@powershell -Command "Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+	@powershell -Command "Get-ChildItem -Recurse -Filter *.pyc | Remove-Item -ErrorAction SilentlyContinue"
+	@powershell -Command "Get-ChildItem -Recurse -Directory -Filter .pytest_cache | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
 	@echo "✅ Cleaned."

@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Map, SlidersHorizontal, Trophy } from "lucide-react";
+import { Map, SlidersHorizontal, Trophy } from "lucide-react";
 import Navbar from "./components/Navbar";
-import HeroSection from "./components/HeroSection";
-import TechStack from "./components/TechStack";
-import StatsSection from "./components/StatsSection";
-import AboutView from "./components/AboutView";
 import WeightControls from "./components/WeightControls";
 import IndiaMap from "./components/IndiaMap";
 import Leaderboard from "./components/Leaderboard";
@@ -15,8 +11,7 @@ import Toast from "./components/Toast";
 import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
-import MethodologyView from "./components/MethodologyView";
-import { BASELINE_YEAR, DATA_COVERAGE, PROJECTION_END_YEAR, calculateScores } from "./services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
@@ -223,17 +218,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F2] p-2 sm:p-4 lg:p-6 text-[#111111] flex flex-col font-sans">
-      {/* Centered Portfolio Container */}
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[#E5E5E5] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] overflow-hidden">
         {/* Navigation Bar */}
         <Navbar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
-          selectedYear={selectedYear}
-          onChangeYear={setSelectedYear}
           backendStatus={backendStatus}
           onRetryBackend={handleRetryBackend}
-          onOpenTour={() => setShowTourModal(true)}
           dataAvailable={dataAvailable}
         />
 
@@ -241,71 +232,11 @@ export default function App() {
         <div className="flex-1 px-4 sm:px-8 lg:px-10 py-4 sm:py-6">
           {/* Interactive Views */}
           <main className="flex-1">
-            {/* View 0: Portfolio Showcase */}
-            {activeTab === "portfolio" && (
-              <div className="flex flex-col animate-fade-in">
-                <HeroSection
-                  onExplore={() => setActiveTab("map")}
-                  onOpenMethodology={() => setActiveTab("methodology")}
-                />
-                <TechStack />
-                <StatsSection />
-
-                {/* Featured Project Card */}
-                {dataAvailable && (
-                  <div className="mt-8 rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-6 sm:p-8">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[11px] font-semibold text-[#666666]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#B51F3B]" />
-                          Featured Project
-                        </div>
-                        <h3 className="mt-3 text-xl font-extrabold text-[#111111]">
-                          India Livability Intelligence System
-                        </h3>
-                        <p className="mt-1 max-w-xl text-sm leading-relaxed text-[#555555]">
-                          Multi-criteria composite rankings across 61 Indian states and cities — air quality, public safety, healthcare, economy and cost of living — with OLS trend projections through {PROJECTION_END_YEAR ?? "the latest horizon"}.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("map")}
-                        className="group inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#111111] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#B51F3B] hover:shadow-md"
-                      >
-                        <Map size={14} />
-                        <span>Open Explorer</span>
-                        <ArrowUp size={14} className="rotate-90 transition-transform group-hover:translate-x-0.5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-8">
-                  <AboutView
-                    onOpenExplorer={() => setActiveTab("map")}
-                    onOpenMethodology={() => setActiveTab("methodology")}
-                  />
-                </div>
-              </div>
-            )}
-
             {/* View 1: Explorer (Decision System) */}
             {dataAvailable && activeTab === "map" && (
-              <div className="flex flex-col">
-                <div className="mb-3 flex flex-col gap-1">
-                  <div className="inline-flex items-center gap-2 self-start rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-3 py-1 text-[11px] font-semibold text-[#666666]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#B51F3B]" />
-                    Interactive Decision Platform
-                  </div>
-                  <h2 className="text-xl font-extrabold tracking-tight text-[#111111] sm:text-2xl">
-                    Spatial Explorer & Livability Rankings
-                  </h2>
-                  <p className="text-xs text-[#666666] sm:text-sm">
-                    Rank places by available observations, inspect their coverage, and view eligible air trend projections.
-                  </p>
-                </div>
+              <div className="flex flex-col">    
 
                 <QuickStartBanner
-                  onOpenTour={() => setShowTourModal(true)}
                   onSelectPreset={handleSelectPreset}
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}
@@ -399,23 +330,12 @@ export default function App() {
               </div>
             )}
 
-            {/* View 2: Insights */}
+{/* View 2: Insights */}
             {dataAvailable && activeTab === "insights" && (
               <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} weights={weights} />
             )}
 
-            {/* View 3: Methodology */}
-            {activeTab === "methodology" && (
-              <MethodologyView />
-            )}
-
-            {/* View 4: About & Code */}
-            {activeTab === "about" && (
-              <AboutView
-                onOpenExplorer={() => setActiveTab("map")}
-                onOpenMethodology={() => setActiveTab("methodology")}
-              />
-            )}
+            {/* About section removed — kept only Explorer and Insights views */}
           </main>
         </div>
 

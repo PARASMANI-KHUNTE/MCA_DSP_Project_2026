@@ -1,44 +1,22 @@
-import { useState } from "react";
 import {
   Activity,
-  BookOpen,
-  CalendarRange,
   Compass,
-  HelpCircle,
-  Info,
   Map,
   Radio,
-  RefreshCw,
-  User
+  RefreshCw
 } from "lucide-react";
-import { BASELINE_YEAR, DATA_COVERAGE, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
-
 const TABS = [
   { id: "map", label: "Explorer", icon: Map },
   { id: "insights", label: "Insights", icon: Activity }
 ];
 
-const FIRST_YEAR = OBSERVED_YEARS[0];
-const YEARS = Array.from(
-  { length: PROJECTION_END_YEAR - FIRST_YEAR + 1 },
-  (_, index) => FIRST_YEAR + index
-);
-
 export default function Navbar({
   activeTab,
   onSelectTab,
-  selectedYear,
-  onChangeYear,
   backendStatus,
   onRetryBackend,
-  onOpenTour,
   dataAvailable
 }) {
-  const isProjected = selectedYear > BASELINE_YEAR;
-  const [showYearInfo, setShowYearInfo] = useState(false);
-  const projectionInfo = PROJECTION_END_YEAR == null
-    ? "No factor currently has enough observed years for a projection."
-    : `${BASELINE_YEAR} is the baseline year in the embedded bundle. Earlier years show each factor at its latest observation at or before that year. Future years are OLS-projected when at least three trend-eligible yearly composites exist for the selected weights. Cost of living is a modelled/estimated city series ending in ${DATA_COVERAGE.lastYearByFactor?.col ?? "2024"} and is never projected.`;
   const backendOnline = backendStatus === "ok";
   const backendLabel = backendOnline ? "API Live" : "Local Engine";
   const backendDescription = backendOnline
@@ -100,66 +78,8 @@ export default function Navbar({
             })}
           </nav>
 
-          {/* Right: Year Selector & Controls */}
+          {/* Right: Backend status */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {dataAvailable && (
-              <label className="flex min-h-8 sm:min-h-9 items-center gap-1 sm:gap-1.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-2 sm:px-2.5 py-1 text-xs">
-                <CalendarRange size={12} className={isProjected ? "text-[#B51F3B]" : "text-[#777777]"} />
-                <span className="hidden text-[11px] font-semibold text-[#888888] sm:inline">Year</span>
-                <select
-                  value={selectedYear}
-                  onChange={event => onChangeYear(Number(event.target.value))}
-                  aria-label="Select analysis year"
-                  className={`cursor-pointer bg-transparent text-xs font-bold focus:outline-none ${
-                    isProjected ? "text-[#B51F3B]" : "text-[#111111]"
-                  }`}
-                >
-                  {YEARS.map(year => (
-                    <option key={year} value={year} className="bg-white text-[#111111]">
-                      {year > BASELINE_YEAR
-                        ? `${year} (projection if eligible)`
-                        : `${year} (observed)`}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {dataAvailable && OBSERVED_YEARS.length > 1 && (
-              <div className="relative flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setShowYearInfo(value => !value)}
-                  onBlur={() => setShowYearInfo(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] text-[#777777] transition-colors hover:border-[#D4D4D4] hover:text-[#111111]"
-                  title={projectionInfo}
-                  aria-label={projectionInfo}
-                  aria-expanded={showYearInfo}
-                >
-                  <Info size={12} />
-                </button>
-                {showYearInfo && (
-                  <div
-                    role="tooltip"
-                    className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-[#E5E5E5] bg-white p-3 text-[11px] leading-relaxed text-[#555555] shadow-lg animate-fade-in"
-                  >
-                    {projectionInfo}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {dataAvailable && (
-              <button
-                onClick={onOpenTour}
-                className="hidden lg:inline-flex items-center gap-1.5 rounded-xl border border-[#E5E5E5] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#333333] transition-colors hover:border-[#D4D4D4] hover:bg-[#FAFAF8]"
-                title="How the decision system works"
-              >
-                <HelpCircle size={13} className="text-[#B51F3B]" />
-                <span>Guide</span>
-              </button>
-            )}
-
             {dataAvailable && (
               <button
                 onClick={onRetryBackend}
@@ -190,7 +110,7 @@ export default function Navbar({
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Mobile Navigation"
       >
-        <div className="mx-auto grid grid-cols-5 px-1">
+        <div className="mx-auto grid grid-cols-2 px-1">
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;

@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Map, SlidersHorizontal, Trophy } from "lucide-react";
+import { Map, SlidersHorizontal, Trophy } from "lucide-react";
 import Navbar from "./components/Navbar";
-import HeroSection from "./components/HeroSection";
-import TechStack from "./components/TechStack";
-import StatsSection from "./components/StatsSection";
 import WeightControls from "./components/WeightControls";
 import IndiaMap from "./components/IndiaMap";
 import Leaderboard from "./components/Leaderboard";
@@ -14,7 +11,7 @@ import Toast from "./components/Toast";
 import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
-import { BASELINE_YEAR, DATA_COVERAGE, PROJECTION_END_YEAR, calculateScores } from "./services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
@@ -226,11 +223,8 @@ export default function App() {
         <Navbar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
-          selectedYear={selectedYear}
-          onChangeYear={setSelectedYear}
           backendStatus={backendStatus}
           onRetryBackend={handleRetryBackend}
-          onOpenTour={() => setShowTourModal(true)}
           dataAvailable={dataAvailable}
         />
 
@@ -243,7 +237,6 @@ export default function App() {
               <div className="flex flex-col">    
 
                 <QuickStartBanner
-                  onOpenTour={() => setShowTourModal(true)}
                   onSelectPreset={handleSelectPreset}
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}

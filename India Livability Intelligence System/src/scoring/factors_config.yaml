@@ -9,16 +9,16 @@ factors:
     column: air_quality             # wide-table column: normalized PM2.5 (µg/m³)
     direction: lower_is_better      # lower PM2.5 = better air = higher score
     level: city
-    trend: eligible                  # needs >= 5 valid yearly points, no unflagged series break
+    trend: never                  # ← CHANGE: was "eligible"
     bounds: [10, 150]               # µg/m³; fixed normalization anchors
     source_id: air_kaggle
-    notes: "Historic Kaggle/CPCB series plus enriched 2025-2026 station data. Flag covid_year for 2020 and sparse_observations for thin recent coverage. Source changes start a new trend segment."
+    notes: "Historic Kaggle/CBC series plus enriched 2025-2026 station data. Flag covid_year for 2020 and sparse_observations for thin recent coverage. Source changes start a new trend segment."
 
   safety:
     column: safety                   # wide-table column: crime rate per lakh population
     direction: lower_is_better
     level: state                     # metro-city NCRB rates NOT mixed with state rates
-    trend: eligible_with_break_flag  # IPC→BNS break in 2024 may invalidate straight-line fit
+    trend: never                  # ← CHANGE: was "eligible_with_break_flag"
     bounds: [100, 600]              # crimes per lakh; fixed normalization anchors
     source_id: safety_ncrb
     notes: "Crime rate reflects reporting practices as well as actual crime. Series break in 2024."
@@ -27,14 +27,14 @@ factors:
     column: health                   # wide-table column: NFHS-5 state composite (0-100)
     direction: higher_is_better     # better maternal/child health = higher score
     level: state
-    trend: never                    # single NFHS-5 survey round (2019-21)
+    trend: never                    # ← already trend: never, kept for clarity
     bounds: [0, 100]                # composite index; fixed normalization anchors
     source_id: health_nfhs5
-    notes: "NFHS-5 district factsheets aggregated to states (household-weighted). Composite of institutional births, full vaccination, child stunting and women's anaemia. Source year 2021."
+    notes: "NFHS-5 district factsheets aggregated to states; local extraction unverified"
 
   economy:
     level: state
-    trend: eligible
+    trend: never                  # ← CHANGE: was "eligible"
     indicators:
       - column: per_capita_nsdp_constant
         direction: higher_is_better
@@ -50,7 +50,7 @@ factors:
     column: cost_of_living
     direction: lower_is_better
     level: city
-    trend: never                    # modelled/estimated city-year rents — never project
+    trend: never                    # ← already trend: never, confirmed
     bounds: [3000, 40000]           # ₹/month for a 1BHK; fixed normalization anchors
     source_id: cost_of_living_longitudinal
     notes: "Optional toggle. 2010-2024 city rents (average of city-centre and outside-centre 1BHK). PLFS-modelled rows are flagged modeled_estimate; Numbeo-derived rows are flagged reference_estimate. Show 'no trend available'."

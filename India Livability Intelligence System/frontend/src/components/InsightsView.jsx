@@ -17,7 +17,7 @@ import {
 } from "../services/scoringService";
 
 const CORRELATION_KEYS = ["air", "safety", "health", "economy"];
-const FACTOR_LABELS = ["Air", "Safety", "Health", "Economy"];
+const FACTOR_LABELS = ["Air quality", "Public safety", "Healthcare", "Economy & jobs"];
 
 function pearsonCorrelation(places, keyA, keyB) {
   const pairs = [];
@@ -51,8 +51,8 @@ function correlationStyle(value) {
   if (value === 1) return { backgroundColor: "#FAFAF8", color: "#111111" };
   const alpha = Math.min(0.35, 0.08 + Math.abs(value) * 0.3);
   return value >= 0
-    ? { backgroundColor: `rgba(22, 163, 74, ${alpha})`, color: "#166534" }
-    : { backgroundColor: `rgba(181, 31, 59, ${alpha})`, color: "#98172F" };
+    ? { backgroundColor: "rgba(22, 163, 74, " + alpha + ")", color: "#166534" }
+    : { backgroundColor: "rgba(181, 31, 59, " + alpha + ")", color: "#98172F" };
 }
 
 export default function InsightsView({ rankedPlaces = [], year = 2024, weights = {} }) {
@@ -120,68 +120,68 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
 
     return [
       {
-        title: "Regional spread in the live composite",
+        title: "Regional differences in livability",
         stat: bestRegion && worstRegion
-          ? `${bestRegion.region} +${spread.toFixed(1)} pts`
-          : "No regional sample",
+          ? bestRegion.region + " scores " + spread.toFixed(1) + " points higher"
+          : "Not enough data",
         summary: bestRegion && worstRegion
-          ? `${bestRegion.region} has the highest weighted regional mean (${bestRegion.average.toFixed(1)}); ${worstRegion.region} has the lowest (${worstRegion.average.toFixed(1)}).`
-          : "Regional means cannot be computed for the current selection.",
+          ? bestRegion.region + " has the highest overall score (" + bestRegion.average.toFixed(1) + "); " + worstRegion.region + " has the lowest (" + worstRegion.average.toFixed(1) + ")."
+          : "Regional scores cannot be computed for the current selection.",
         interpretation:
-          "Regional means pool states and cities, so they describe this dataset rather than establish a causal regional effect. Change the weights to test how sensitive the ordering is."
+          "Regional scores pool all states and cities together. They show overall patterns but do not prove one region is better than another."
       },
       {
-        title: "Air and health association",
-        stat: Number.isFinite(airHealth) ? `r = ${airHealth.toFixed(2)}` : "No overlap",
+        title: "Air quality and health connection",
+        stat: Number.isFinite(airHealth) ? "r = " + airHealth.toFixed(2) : "No overlap",
         summary: Number.isFinite(airHealth)
-          ? `Pearson r between the normalized air and health pillars is ${airHealth.toFixed(2)} across places where both are observed.`
-          : "Too few places have both air and health pillars in the current view.",
+          ? "Places that score higher on air quality also tend to score higher on health, and vice versa."
+          : "Too few places have both air and health data in the current view.",
         interpretation:
-          "State places have no city air observation, so this coefficient is effectively city-weighted. Correlation is not causation; income, industry and reporting quality can move both pillars."
+          "This shows a pattern across the current selection of places. It does not mean air quality causes better health. Other factors like income and education also play a role."
       },
       {
-        title: "Statistically flagged trends",
-        stat: `${significant} of ${stats.trended} at p < 0.05`,
-        summary: `${stats.improving} places are flagged improving and ${stats.declining} declining using OLS over years where every weighted factor is observed.`,
+        title: "Places with noticeable changes",
+        stat: significant + " of " + stats.trended + " places show a change",
+        summary: stats.improving + " places are flagged as improving and " + stats.declining + " declining.",
         interpretation:
-          "A trend is flagged only when the OLS slope is statistically distinguishable from zero at the 5% level and at least three trend-eligible yearly composites exist. Mixed-coverage composites still contribute if carry-forward values cover all weighted factors."
+          "A change is flagged only when the statistical test shows a real difference from zero, not just random variation. Fewer than half the places may show a flagged change."
       },
       {
-        title: "Indicator coverage across places",
-        stat: `${scoredPlaces.length} places active`,
-        summary: `${scoredPlaces.filter(p => p.type === "city").length} cities and ${scoredPlaces.filter(p => p.type === "state").length} states/UTs have active observations for ${year}.`,
+        title: "How many places are included",
+        stat: scoredPlaces.length + " places active",
+        summary: (scoredPlaces.filter(p => p.type === "city").length) + " cities and " + (scoredPlaces.filter(p => p.type === "state").length) + " states/UTs have data for " + year + ".",
         interpretation:
-          "Urban coverage reflects active CPCB sensor monitors, while safety, health, and economic indicators are harmonized from state-level reports."
+          "Urban coverage reflects active monitoring sites. Rural and remote areas may have fewer observations."
       }
     ];
   }, [stats, correlationMatrix, scoredPlaces, year]);
 
-  const kpis = [
+const kpis = [
     {
-      label: "Analyzed Mean",
+      label: "Analyzed mean",
       value: stats.average ? stats.average.toFixed(1) : "—",
-      caption: `Across ${scoredPlaces.length} places in ${year}`,
+      caption: "Average across " + scoredPlaces.length + " places for " + year,
       icon: Activity,
       tone: "text-[#B51F3B]"
     },
     {
-      label: "Improving Trend",
+      label: "Improving",
       value: stats.improving,
-      caption: "OLS slope > 0 at p < 0.05",
+      caption: "More places are getting better",
       icon: ArrowUpRight,
       tone: "text-emerald-700"
     },
     {
-      label: "Declining Trend",
+      label: "Declining",
       value: stats.declining,
-      caption: "OLS slope < 0 at p < 0.05",
+      caption: "More places are getting worse",
       icon: ArrowDownRight,
       tone: "text-[#B51F3B]"
     },
     {
-      label: "Highest Score",
+      label: "Highest score",
       value: stats.top?.overallScore ?? "—",
-      caption: stats.top ? `${stats.top.name} · Rank #1` : "No rank",
+      caption: stats.top ? stats.top.name + " is ranked #1" : "No rank",
       icon: TrendingUp,
       tone: "text-[#111111]"
     }
@@ -296,9 +296,9 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
         <h1 className="text-2xl font-extrabold tracking-tight text-[#111111] sm:text-3xl">
           Statistical Insights & Empirical Findings
         </h1>
-        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#555555] sm:text-sm">
-          Live regional aggregations, pairwise correlation matrices, and OLS trend diagnostics computed
-          directly from harmonized open-government data. Dynamically linked to your custom weighting scheme.
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#555555] sm:text-sm">
+          Live regional scores, simple correlation views, and change flags computed
+          directly from the data you selected. Linked to your custom weighting scheme.
         </p>
 
         {/* 4 KPIs */}

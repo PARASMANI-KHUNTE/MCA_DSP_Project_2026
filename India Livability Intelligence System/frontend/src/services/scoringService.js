@@ -1,7 +1,5 @@
 import { DATA } from "../data/realData.js";
 
-const API_BASE_URL = "http://localhost:8000/api";
-
 export const PLACES = DATA.places;
 export const FACTOR_DEFS = DATA.factorDefs;
 export const DATA_COVERAGE = DATA.meta;
@@ -10,15 +8,10 @@ export const DATA_COVERAGE = DATA.meta;
 // cost-of-living index have their own observation year and are never treated
 // as a time series.
 export const BASELINE_YEAR = DATA.meta.baselineYear;
-export const PROJECTION_END_YEAR = BASELINE_YEAR == null ? null : BASELINE_YEAR + 10;
 export const OBSERVED_YEARS = DATA.meta.years;
-export const PROJECTION_YEARS = Array.from(
-  { length: PROJECTION_END_YEAR == null ? 0 : PROJECTION_END_YEAR - BASELINE_YEAR },
-  (_, index) => BASELINE_YEAR + index + 1
-);
-
-const MIN_TREND_POINTS = 5;
-const P_VALUE_THRESHOLD = 0.05;
+// Projections are disabled — all factors have trend: never in the config.
+export const PROJECTION_END_YEAR = null;
+export const PROJECTION_YEARS = [];
 
 // A restrained status scale: lower scores are red, higher scores are green.
 export const SCORE_BANDS = [
@@ -182,156 +175,6 @@ function compositeScore(placeId, year, weights) {
   };
 }
 
-function logGamma(value) {
-  const coefficients = [
-    76.1800917294715, -86.5053203294168, 24.0140982408309,
-    -1.23173957245015, 0.00120865097386618, -0.00000539523938495
-  ];
-  let x = value;
-  let y = value;
-  let temp = x + 5.5;
-  temp -= (x + 0.5) * Math.log(temp);
-  let series = 1.00000000019;
-  coefficients.forEach(coefficient => {
-    y += 1;
-    series += coefficient / y;
-  });
-  return -temp + Math.log((2.506628274631 * series) / x);
-}
-
-function betaContinuedFraction(a, b, x) {
-  const maxIterations = 200;
-  const epsilon = 3e-12;
-  const tiny = 1e-300;
-  const qab = a + b;
-  const qap = a + 1;
-  const qam = a - 1;
-  let c = 1;
-  let d = 1 - (qab * x) / qap;
-  if (Math.abs(d) < tiny) d = tiny;
-  d = 1 / d;
-  let h = d;
-
-  for (let iteration = 1; iteration <= maxIterations; iteration += 1) {
-    const m2 = 2 * iteration;
-    let aa = (iteration * (b - iteration) * x) / ((qam + m2) * (a + m2));
-    d = 1 + aa * d;
-    if (Math.abs(d) < tiny) d = tiny;
-    c = 1 + aa / c;
-    if (Math.abs(c) < tiny) c = tiny;
-    d = 1 / d;
-    h *= d * c;
-
-    aa = (-(a + iteration) * (qab + iteration) * x) / ((a + m2) * (qap + m2));
-    d = 1 + aa * d;
-    if (Math.abs(d) < tiny) d = tiny;
-    c = 1 + aa / c;
-    if (Math.abs(c) < tiny) c = tiny;
-    d = 1 / d;
-    const delta = d * c;
-    h *= delta;
-    if (Math.abs(delta - 1) < epsilon) break;
-  }
-
-  return h;
-}
-
-function incompleteBeta(a, b, x) {
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-  const factor = Math.exp(
-    logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log1p(-x)
-  );
-  if (x < (a + 1) / (a + b + 2)) {
-    return (factor * betaContinuedFraction(a, b, x)) / a;
-  }
-  return 1 - (factor * betaContinuedFraction(b, a, 1 - x)) / b;
-}
-
-function twoSidedStudentP(value, degreesOfFreedom) {
-  if (!Number.isFinite(value) || degreesOfFreedom <= 0) return null;
-  const x = degreesOfFreedom / (degreesOfFreedom + value * value);
-  return clamp(incompleteBeta(degreesOfFreedom / 2, 0.5, x), 0, 1);
-}
-
-function fitTrend(history) {
-  const lastBreak = history.reduce(
-    (latest, point, index) => point.seriesBreak ? index : latest,
-    -1
-  );
-  const latestSegment = history.slice(lastBreak >= 0 ? lastBreak : 0);
-  const points = latestSegment.filter(
-    point => Number.isFinite(point.score) && point.trendEligible
-  );
-  if (points.length < MIN_TREND_POINTS) return null;
-
-  const n = points.length;
-  const meanX = points.reduce((total, point) => total + point.year, 0) / n;
-  const meanY = points.reduce((total, point) => total + point.score, 0) / n;
-  let sxx = 0;
-  let sxy = 0;
-  let syy = 0;
-
-  points.forEach(point => {
-    const dx = point.year - meanX;
-    sxx += dx * dx;
-    sxy += dx * (point.score - meanY);
-    syy += (point.score - meanY) ** 2;
-  });
-
-  if (sxx === 0) return null;
-
-  const slope = sxy / sxx;
-  const intercept = meanY - slope * meanX;
-  const residualSum = points.reduce(
-    (total, point) => total + (point.score - (intercept + slope * point.year)) ** 2,
-    0
-  );
-  const degreesOfFreedom = n - 2;
-  const sigma = Math.sqrt(residualSum / degreesOfFreedom);
-  const standardError = sxx > 0 ? sigma / Math.sqrt(sxx) : null;
-  const tStatistic = standardError && standardError > 0 ? slope / standardError : null;
-  const pValue = tStatistic !== null ? twoSidedStudentP(tStatistic, degreesOfFreedom) : null;
-
-  return {
-    n,
-    slope: Number(slope.toFixed(3)),
-    intercept,
-    sigma,
-    sxx,
-    meanX,
-    pValue: pValue !== null ? Number(pValue.toFixed(4)) : null,
-    significant: pValue !== null && pValue < P_VALUE_THRESHOLD
-  };
-}
-
-function tCritical95(degreesOfFreedom) {
-  const table = {
-    1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
-    6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
-    11: 2.201, 12: 2.179, 13: 2.16, 14: 2.145, 15: 2.131,
-    16: 2.12, 17: 2.11, 18: 2.101, 19: 2.093, 20: 2.086
-  };
-  return table[degreesOfFreedom] ?? 1.96;
-}
-
-function projectPoint(trend, targetYear) {
-  if (!trend) return null;
-  const fitted = trend.intercept + trend.slope * targetYear;
-  const critical = tCritical95(Math.max(1, trend.n - 2));
-  const standardError =
-    trend.sigma *
-    Math.sqrt(1 + 1 / trend.n + ((targetYear - trend.meanX) ** 2) / trend.sxx);
-  return {
-    year: targetYear,
-    score: Number(clamp(fitted, 0, 100).toFixed(1)),
-    lower: Number(clamp(fitted - critical * standardError, 0, 100).toFixed(1)),
-    upper: Number(clamp(fitted + critical * standardError, 0, 100).toFixed(1)),
-    isHistorical: false,
-    fitted: Number(fitted.toFixed(1))
-  };
-}
-
 function tierForScore(score) {
   if (!Number.isFinite(score)) return "Unclassified";
   if (!DATA_COVERAGE.compositeAvailable) return "Factor score";
@@ -347,43 +190,28 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
     const history = OBSERVED_YEARS.map(observedYear =>
       compositeScore(place.id, observedYear, weights)
     );
-    const trend = fitTrend(history);
     const baselinePoint = history.find(point => point.year === BASELINE_YEAR) || null;
     const observedPoint = history.find(point => point.year === year) || null;
-    const selectedPoint =
-      year > BASELINE_YEAR && trend ? projectPoint(trend, year) : observedPoint;
-    // Keep the latest as-of observations visible in the factor breakdown even
-    // when the overall air trend is projected. This also lets a 2022 rent
-    // snapshot appear at its actual observation year.
     const factorPoint = observedPoint || baselinePoint;
-    const projections = trend
-      ? PROJECTION_YEARS.map(projectionYear =>
-          projectPoint(trend, projectionYear)
-        ).filter(Boolean)
-      : [];
 
     return {
       ...place,
-      overallScore: selectedPoint?.score ?? null,
+      overallScore: factorPoint?.score ?? null,
       baseScore: baselinePoint?.score ?? null,
-      partialData: selectedPoint?.partialData ?? false,
-      missingFactors: selectedPoint?.missingFactors ?? [],
+      partialData: factorPoint?.partialData ?? false,
+      missingFactors: factorPoint?.missingFactors ?? [],
       factorScores: factorPoint?.factorScores || {},
       factorYears: factorPoint?.factorYears || {},
       availablePillars: Object.values(factorPoint?.factorScores || {}).filter(
         value => value !== null && value !== undefined
       ).length,
-      outlook: !trend
-        ? "Insufficient data"
-        : trend.significant
-          ? trend.slope > 0 ? "Improving" : "Declining"
-          : "Stable",
-      slope: trend?.slope ?? null,
-      pVal: trend?.pValue ?? null,
-      tier: tierForScore(selectedPoint?.score ?? baselinePoint?.score),
+      outlook: "Insufficient data",
+      slope: null,
+      pVal: null,
+      tier: tierForScore(factorPoint?.score ?? baselinePoint?.score),
       scoreYear: year,
       history,
-      projections
+      projections: []
     };
   });
 
@@ -446,29 +274,3 @@ export function getTierColor(tier) {
   return "#94a3b8";
 }
 
-export function getTierLabel(tier) {
-  if (!tier) return "Unclassified";
-  return tier.split(":")[0];
-}
-
-export async function syncWithBackend(weights, year = BASELINE_YEAR, placeType = "all") {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
-
-    const response = await fetch(`${API_BASE_URL}/score`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ weights, year, place_type: placeType === "all" ? null : placeType }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}

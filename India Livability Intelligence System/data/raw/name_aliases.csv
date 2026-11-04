@@ -104,3 +104,6 @@ raw_name,standard_name,type,notes
 "Baroda","Vadodara",city,old name
 "Varanasi","Varanasi",city,""
 "Benaras","Varanasi",city,old name
+"Gurgaon","Gurugram",city,alternate/old name
+"Maharastra","Maharashtra",state,alternate spelling
+"Dadra and Nagar Haveli & Daman and Diu","Dadra and Nagar Haveli and Daman and Diu",state,NFHS combined UT label

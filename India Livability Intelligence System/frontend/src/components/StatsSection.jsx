@@ -9,12 +9,12 @@ const STATS = [
   {
     value: DATA_COVERAGE.counts.factorRows,
     label: "Active factor rows",
-    detail: "Air, safety, health, economic and rent observations; inherited city rows are counted"
+    detail: "Air, safety, NFHS-5 health, economic and cost-of-living observations; inherited city rows are counted"
   },
   {
     value: DATA_COVERAGE.availableFactors.length,
     label: "Available factors",
-    detail: DATA_COVERAGE.availableFactors.map(key => key === "air" ? "Air quality" : key === "col" ? "Rent snapshot" : key).join(" · ")
+    detail: DATA_COVERAGE.availableFactors.map(key => key === "air" ? "Air quality" : key === "col" ? "Cost of living" : key).join(" · ")
   },
   {
     value: DATA_COVERAGE.compositeAvailable ? "Available" : "Unavailable",

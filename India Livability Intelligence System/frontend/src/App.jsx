@@ -16,7 +16,7 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import MethodologyView from "./components/MethodologyView";
-import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
+import { BASELINE_YEAR, DATA_COVERAGE, PROJECTION_END_YEAR, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
@@ -264,7 +264,7 @@ export default function App() {
                           India Livability Intelligence System
                         </h3>
                         <p className="mt-1 max-w-xl text-sm leading-relaxed text-[#555555]">
-                          Multi-criteria composite rankings across 61 Indian states and cities — air quality, public safety, healthcare, economy and cost of living — with OLS trend projections through 2033.
+                          Multi-criteria composite rankings across 61 Indian states and cities — air quality, public safety, healthcare, economy and cost of living — with OLS trend projections through {PROJECTION_END_YEAR ?? "the latest horizon"}.
                         </p>
                       </div>
                       <button

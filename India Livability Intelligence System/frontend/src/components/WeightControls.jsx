@@ -23,16 +23,16 @@ const FACTORS = [
     colorMeaning: "Higher score indicates lower recorded cognizable crime rates per capita."
   },
   {
-    key: "health", label: "Healthcare", source: "No active observations", icon: HeartPulse, color: "#16a34a", max: 100,
-    colorMeaning: "Higher score indicates lower infant mortality and stronger healthcare resilience."
+    key: "health", label: "Healthcare", source: "NFHS-5 state composite · local extraction unverified", icon: HeartPulse, color: "#16a34a", max: 100,
+    colorMeaning: "Higher score indicates stronger maternal and child health on the NFHS-5 composite index."
   },
   {
     key: "economy", label: "Economy & Jobs", source: "No active observations", icon: TrendingUp, color: "#d97706", max: 100,
     colorMeaning: "Higher score combines higher per-capita net state domestic product and employment rates."
   },
   {
-    key: "col", label: "Cost of Living", source: "Local rent snapshot · source unverified", icon: Coins, color: "#9333ea", max: 100,
-    colorMeaning: "Higher score indicates higher affordability (lower relative rent). Applies to six metros."
+    key: "col", label: "Cost of Living", source: "Longitudinal city estimates · source unverified", icon: Coins, color: "#9333ea", max: 100,
+    colorMeaning: "Higher score indicates higher affordability (lower relative rent). Applies to 26 matched cities."
   }
 ];
 

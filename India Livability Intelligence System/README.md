@@ -1,32 +1,34 @@
 # India Livability Intelligence System
 
-An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files combine local air-quality and rent data with NCRB, SRS, RBI NSDP and PLFS extracts, but their exact upstream versions and values have not been independently confirmed. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
+An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files combine historic and enriched 2025–2026 air-quality data, longitudinal city cost-of-living estimates, and NCRB safety, NFHS-5 health, RBI NSDP/PLFS economy and CPCB water-quality extracts, but their exact upstream versions and values have not been independently confirmed. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
 
 > **Course:** Data Science using Python (CAPCTD3 Elective-V)  
 > **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
 
 ## Project status
 
-- **Current workflow:** six raw tables were confirmed byte-for-byte as outputs from the retired placeholder generator and remain quarantined in `data/rejected/generated_placeholders/`. Processed outputs and the frontend bundle combine the remaining local air-quality and rent files with public NCRB safety, SRS health, RBI NSDP and PLFS unemployment extracts.
+- **Current workflow:** six raw tables were confirmed byte-for-byte as outputs from the retired placeholder generator and remain quarantined in `data/rejected/generated_placeholders/`. Processed outputs and the frontend bundle combine the remaining local air-quality and longitudinal rent files with public NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment and CPCB water-quality extracts.
 - The dashboard covers **61 places**: 32 states/UTs and 29 cities.
 - Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
-- The dashboard has embedded data and computes factor scores in the browser. At 2023 it supports a full five-factor composite; earlier years are factor-specific views. Air-only and rent-only rankings remain available as presets. The FastAPI backend is optional.
+- The dashboard has embedded data and computes factor scores in the browser. The default balanced view combines air quality, safety, health and economy; earlier years remain factor-specific views. Cost-of-living rankings remain available as a preset. Water quality is integrated into the processed tables and scoring configuration but is not yet exposed in the dashboard weight controls. The FastAPI backend is optional.
 - There is no hosted demo linked at present.
 
 ## Findings status
 
-The remaining files are not known matches for the retired generator, but their values, exact upstream versions, and reuse terms have not been independently confirmed. Treat their results as exploratory local-data views, not verified public-data findings. A balanced 2023 composite is published for places that have all weighted factors; places missing a weighted factor remain unscored. Mixed-coverage years expose factor-specific results rather than a composite. See the [fabrication audit](reports/data_fabrication_audit.md).
+The remaining files are not known matches for the retired generator, but their values, exact upstream versions, and reuse terms have not been independently confirmed. Treat their results as exploratory local-data views, not verified public-data findings. A balanced composite is published for places that have the weighted factors; places missing one weighted factor are reweighted and flagged as partial, while places missing two or more remain unscored. Mixed-coverage years expose factor-specific results rather than a composite. See the [fabrication audit](reports/data_fabrication_audit.md).
 
 ## Data coverage and limitations
 
-- The air loader finds 48 valid city-year observations across 18 cities for 2015–2019. Name matching maps 40 city-years across 13 cities into the place master; unmatched observations are not assigned to another place.
-- The pipeline derives 40 state-year air means from those matched city observations across 13 states. They summarize the available city sample; states without a covered city remain unscored.
+- The historic air loader finds 48 valid city-year observations across 18 cities for 2015–2019. The enriched 2025–2026 station file adds 447 city-years across 264 cities, but every enriched city-year is flagged `sparse_observations` because it has fewer than seven PM2.5 observations. Name matching maps 85 city air rows across 28 cities into the place master; unmatched observations are not assigned to another place.
+- The pipeline derives 70 state-year air means from matched city observations across 18 states. They summarize the available city sample; states without a covered city remain unscored.
 - Safety uses NCRB Table 1A.3 for 2020–2022 (36 states/UTs). The 2022 rate is published; 2020 and 2021 rates are derived from reported totals using the 2022 projected population, so those two years are approximations.
-- Health uses SRS Bulletin 2022 infant mortality rates for 35 states/UTs.
-- Economy uses RBI NSDP per-capita constant-price series (2011–2024) and PLFS 2023-24 unemployment for ages 15+. Gujarat is missing NSDP for 2023–24 and Ladakh is absent from the NSDP table, so both remain unscored under the balanced 2023 composite.
-- The local rent file yields six city snapshots. Its observation dates and upstream version remain unverified. It is not a time series.
+- Health uses an NFHS-5 (2019–21) state composite built from household-weighted district factsheets: institutional births, full vaccination, child stunting and women's anaemia. The 2021 snapshot covers 36 states/UTs, 32 of which match the place master.
+- Economy uses RBI NSDP per-capita constant-price series (2011–2024) and PLFS 2023-24 unemployment for ages 15+. Gujarat is missing NSDP for 2023–24 and Ladakh is absent from the NSDP table, so both remain unscored under the balanced composite.
+- The longitudinal cost-of-living file yields 735 city-years across 49 cities for 2010–2024; 390 city-year rows for 26 master cities survive matching. It is modelled/estimated data (`plfs_modeled` or `numbeo` provenance) and is never projected.
+- Water quality uses a 2021 CPCB water-body snapshot. A 0–100 state index is built from mean BOD and dissolved oxygen; coliform and pH are retained for context. It covers 30 states, 28 of which match the place master, and is never projected.
+- The India macro file (`indianEco.csv`, 1960–2020) is exported as `data/processed/national_economy.csv` for context only; it is never assigned to a place or included in scores.
 - State air values are explicitly derived means of available city observations, not independent state measurements.
-- Fixed score bounds, place metadata, map geometry, and visual thresholds are configuration/reference data. They are not observed measurements. The composite is anchored at 2023, the latest year with multi-factor observations. Composite projections are currently withheld because trend eligibility requires every weighted factor to share the same observed years; air-only projections remain available when a place has at least five eligible observations. Rent is never projected.
+- Fixed score bounds, place metadata, map geometry, and visual thresholds are configuration/reference data. They are not observed measurements. The exported dashboard bundle currently uses 2026 as its baseline year; earlier years are selectable. Composite scores use each place's latest observation at or before the selected year and inherit the source year for state-level factors. Composite projections are withheld because trend eligibility requires every weighted factor to share the same observed years; air-only projections remain available when a place has at least five eligible observations. Cost of living and water quality are never projected.
 
 ## Run the dashboard
 
@@ -62,7 +64,7 @@ pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload --port 8000
 ```
 
-The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It serves health, place, source, factor-availability, score, state-ranking, and factor-trend data. Score requests can rank available factors; they do not produce a composite from missing factors. Trend responses return projections only for eligible time series and label snapshot rent as having no trend. The API reloads its processed-data cache after pipeline outputs change. The frontend uses the generated embedded bundle and does not depend on the API for interactive scoring.
+The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It serves health, place, source, factor-availability, score, state-ranking, and factor-trend data. Score requests can rank available factors; they do not produce a composite from missing factors. Trend responses return projections only for eligible time series and label the cost-of-living and water-quality factors as having no trend. The API reloads its processed-data cache after pipeline outputs change. The frontend uses the generated embedded bundle and does not depend on the API for interactive scoring.
 
 ## Data pipeline and analysis
 

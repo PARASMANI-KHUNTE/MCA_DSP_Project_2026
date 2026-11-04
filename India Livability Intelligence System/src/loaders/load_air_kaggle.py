@@ -21,6 +21,8 @@ from src.utils.constants import (
     MIN_DAY_COVERAGE_PCT,
     COVID_YEAR,
     AQI_CATEGORY_ORDER,
+    ENRICHED_AIR_FILENAME,
+    ENRICHED_AIR_YEARS,
 )
 from src.utils.helpers import (
     apply_name_standardization,
@@ -71,6 +73,169 @@ def load_city_day(raw_dir: Path = RAW_AIR_KAGGLE) -> pd.DataFrame:
 
     profile_dataframe(df, "city_day (raw)")
     return df
+
+
+AIR_SOURCE_ENRICHED = "kaggle_2025"
+
+
+def load_enriched_aqi(raw_dir: Path = RAW_AIR_KAGGLE) -> pd.DataFrame:
+    """
+    Load the enriched CPCB/Kaggle 2025-2026 station dataset.
+
+    The file is long-format: one row per station × pollutant × timestamp.
+    PM2.5 and PM10 values are extracted into their own columns so the normal
+    city-year aggregation can treat them consistently.
+
+    Returns
+    -------
+    pd.DataFrame with station/timestamp columns plus pm25, pm10, aqi,
+    and outlier audit columns.
+    """
+    path = raw_dir / ENRICHED_AIR_FILENAME
+    if not path.exists():
+        logger.error("Enriched air file not found: %s", path)
+        return pd.DataFrame()
+
+    logger.info("Loading enriched air data: %s", path.name)
+    df = pd.read_csv(path)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    required = {"city", "station", "pollutant_id", "pollutant_avg", "Year"}
+    missing = required - set(df.columns)
+    if missing:
+        logger.error("Enriched air file missing columns: %s", sorted(missing))
+        return pd.DataFrame()
+
+    df = df.rename(columns={
+        "State": "state",
+        "AQI": "aqi",
+        "AQI_Bucket": "aqi_bucket",
+        "Year": "year",
+        "Month": "month",
+        "Day": "day",
+    })
+    if "last_update" in df.columns:
+        parsed_timestamp = pd.to_datetime(df["last_update"], errors="coerce")
+    else:
+        parsed_timestamp = pd.Series(pd.NaT, index=df.index)
+    calendar_date = pd.to_datetime(
+        df[["year", "month", "day"]], errors="coerce"
+    )
+    df["date"] = parsed_timestamp.dt.normalize().fillna(calendar_date)
+
+    df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
+    df = df[df["year"].isin(ENRICHED_AIR_YEARS)].copy()
+    if df.empty:
+        logger.warning(
+            "No enriched air rows remain for years %s.", ENRICHED_AIR_YEARS
+        )
+        return df
+
+    alias_map = load_alias_map()
+    raw_cities = df["city"].astype(str).str.strip()
+    unmatched = sorted({
+        city for city in raw_cities.unique()
+        if city.lower() not in alias_map
+    })
+    if unmatched:
+        logger.info(
+            "Enriched air: %d city names not in name_aliases.csv will be "
+            "title-cased and dropped unless they match the city master: %s",
+            len(unmatched), unmatched[:20],
+        )
+    df = apply_name_standardization(df, "city", alias_map, warn=False)
+
+    pollutant = df["pollutant_id"].astype(str).str.strip().str.upper()
+    pollutant = pollutant.replace({
+        "PM25": "PM2.5",
+        "PM2.5": "PM2.5",
+        "PM10": "PM10",
+        "O3": "OZONE",
+    })
+    df["pollutant_id"] = pollutant
+
+    for col in ("pollutant_min", "pollutant_max", "pollutant_avg", "aqi"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df["pm25"] = df["pollutant_avg"].where(df["pollutant_id"].eq("PM2.5"))
+    df["pm10"] = df["pollutant_avg"].where(df["pollutant_id"].eq("PM10"))
+    df = flag_outliers(df, "pm25", domain_lo=0.0, domain_hi=2000.0)
+
+    profile_dataframe(df, "enriched_aqi (raw)")
+    logger.info(
+        "Enriched air: %d rows, years %s, pollutants %s",
+        len(df),
+        sorted(df["year"].dropna().unique().tolist()),
+        sorted(df["pollutant_id"].dropna().unique().tolist()),
+    )
+    return df
+
+
+def aggregate_enriched_to_city_year(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aggregate enriched station rows to city × year.
+
+    A city-year is kept when at least one valid PM2.5 observation exists.
+    Sparse coverage (fewer than 7 PM2.5 observations or observation days) is
+    retained but flagged with gap_flag='sparse_observations' rather than
+    pretending it is a full annual mean.
+    """
+    columns = [
+        "city", "year", "pm25_mean", "pm10_mean", "aqi_mean",
+        "pm25_observations", "observation_days", "station_count",
+        "is_valid_year", "gap_flag", "air_source", "series_break",
+    ]
+    if df.empty:
+        return pd.DataFrame(columns=columns)
+
+    work = df.copy()
+    work["observation_date"] = pd.to_datetime(work["date"], errors="coerce").dt.date
+
+    pm25 = work[work["pollutant_id"].eq("PM2.5") & work["pm25"].notna()]
+    if pm25.empty:
+        logger.warning("Enriched air data contains no valid PM2.5 observations.")
+        return pd.DataFrame(columns=columns)
+
+    pm25_annual = (
+        pm25.groupby(["city", "year"], as_index=False)
+        .agg(
+            pm25_mean=("pm25", "mean"),
+            aqi_mean=("aqi", "mean"),
+            pm25_observations=("pm25", "count"),
+            observation_days=("observation_date", "nunique"),
+            station_count=("station", "nunique"),
+        )
+    )
+
+    pm10 = work[work["pollutant_id"].eq("PM10") & work["pm10"].notna()]
+    if not pm10.empty:
+        pm10_annual = (
+            pm10.groupby(["city", "year"], as_index=False)
+            .agg(pm10_mean=("pm10", "mean"))
+        )
+        pm25_annual = pm25_annual.merge(pm10_annual, on=["city", "year"], how="left")
+    else:
+        pm25_annual["pm10_mean"] = pd.NA
+
+    pm25_annual["is_valid_year"] = pm25_annual["pm25_mean"].notna()
+    pm25_annual["gap_flag"] = pm25_annual.apply(
+        lambda row: (
+            "sparse_observations"
+            if row["pm25_observations"] < 7 or row["observation_days"] < 7
+            else ""
+        ),
+        axis=1,
+    )
+    pm25_annual["air_source"] = AIR_SOURCE_ENRICHED
+    pm25_annual["series_break"] = False
+
+    sparse = int(pm25_annual["gap_flag"].eq("sparse_observations").sum())
+    logger.info(
+        "Enriched air annual: %d city-years across %d cities (%d sparse flagged).",
+        len(pm25_annual), pm25_annual["city"].nunique(), sparse,
+    )
+    return pm25_annual[columns]
 
 
 def aggregate_to_city_year(

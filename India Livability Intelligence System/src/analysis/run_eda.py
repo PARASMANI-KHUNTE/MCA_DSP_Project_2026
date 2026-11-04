@@ -70,7 +70,7 @@ def run_eda():
     factors = [
         ("air_quality", "Air Quality (PM2.5 µg/m³)", "#e74c3c", axes[0, 0]),
         ("safety", "Safety (Crime Rate per Lakh)", "#3498db", axes[0, 1]),
-        ("health", "Health (Infant Mortality Rate per 1,000)", "#2ecc71", axes[1, 0]),
+        ("health", "Health Index (0-100, higher is better)", "#2ecc71", axes[1, 0]),
         ("per_capita_nsdp_constant", "Economy (Per Capita NSDP ₹)", "#f39c12", axes[1, 1]),
     ]
     
@@ -125,7 +125,7 @@ def run_eda():
         sns.lineplot(data=city_data, x="year", y="air_quality", hue="place_name", marker="o", linewidth=2.5)
         plt.axhline(60, color="orange", linestyle="--", alpha=0.7, label="CPCB Annual PM2.5 Standard (40-60 µg/m³)")
         plt.axhline(15, color="red", linestyle=":", alpha=0.7, label="WHO Air Quality Guideline (15 µg/m³)")
-        plt.title("PM2.5 Air Pollution Trends in Major Indian Metros (2015-2024)", fontsize=14, fontweight="bold")
+        plt.title("PM2.5 Air Pollution Trends in Major Indian Metros (2015-2026)", fontsize=14, fontweight="bold")
         plt.xlabel("Year", fontsize=12)
         plt.ylabel("Annual Mean PM2.5 (µg/m³)", fontsize=12)
         plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left")
@@ -167,9 +167,9 @@ def run_eda():
         valid_scatter = factors_wide.dropna(subset=["air_quality", "health"])
         if not valid_scatter.empty:
             sns.regplot(data=valid_scatter, x="air_quality", y="health", scatter_kws={"alpha": 0.6, "color": "#e67e22"}, line_kws={"color": "#d35400"})
-            plt.title("Relationship between PM2.5 Air Pollution and Infant Mortality", fontsize=13, fontweight="bold")
+            plt.title("Relationship between PM2.5 Air Pollution and the NFHS-5 Health Index", fontsize=13, fontweight="bold")
             plt.xlabel("Air Quality (PM2.5 in µg/m³)")
-            plt.ylabel("Infant Mortality Rate (per 1,000 live births)")
+            plt.ylabel("NFHS-5 Health Index (0-100, higher is better)")
     plt.tight_layout()
     fig6_path = FIGURES / "06_scatter_relationships.png"
     plt.savefig(fig6_path, dpi=200, bbox_inches="tight")
@@ -300,13 +300,13 @@ def run_eda():
 ---
 
 ## 1. Executive Summary
-This report synthesizes empirical findings from 61 Indian places (32 states/UTs and 29 metropolitan centers) and {len(factors_wide)} processed factor-year rows. The cross-section below uses **{latest_year}**, the latest year with at least 50 scored places; 2023–2024 scores cover cities only because the state safety/health/economy series end in 2022.
+This report synthesizes empirical findings from 61 Indian places (32 states/UTs and 29 metropolitan centers) and {len(factors_wide)} processed factor-year rows. The cross-section below uses **{latest_year}**, the latest year with at least 50 scored places. Composite scores use each place's latest observation at or before the selected year, so city scores can inherit state safety, health and economy values whose source years are older.
 
 | Metric | Result | Interpretation |
 |---|---|---|
 | **One-Way ANOVA (Regional Livability, {latest_year})** | $F = {anova_f:.2f}, p = {anova_p:.4e}$ | Regional differences are {regional_significance} at $\\alpha = 0.05$ across {len(regional_cross_section)} scored places. |
-| **Pearson Correlation (PM2.5 vs IMR)** | $r = {r_val:.2f}, p = {p_val:.4f}$ | Association is {air_significance}; only {len(valid_corr)} rows have both values. |
-| **Pearson Correlation (NSDP vs IMR)** | $r = {nsdp_r:.2f}, p = {nsdp_p:.4e}$ | Higher per-capita NSDP is {nsdp_significance} and negatively associated with infant mortality. |
+| **Pearson Correlation (PM2.5 vs NFHS-5 health index)** | $r = {r_val:.2f}, p = {p_val:.4f}$ | Association is {air_significance}; only {len(valid_corr)} rows have both values. |
+| **Pearson Correlation (NSDP vs NFHS-5 health index)** | $r = {nsdp_r:.2f}, p = {nsdp_p:.4e}$ | Higher per-capita NSDP is {nsdp_significance} and {('positively' if nsdp_r > 0 else 'negatively')} associated with the health index. |
 | **Trend Outlook (place-factor series)** | Improving: {outlook_counts.get('Improving', 0)}, Declining: {outlook_counts.get('Declining', 0)}, Stable/uncertain: {outlook_counts.get('Stable or uncertain', 0)}, Insufficient: {trend_insufficient} | {trend_complete} series meet the minimum observation rule for an outlook. |
 | **K-Means Analysis (offline)** | {cluster_metric_text} | {cluster_text} |
 
@@ -320,8 +320,8 @@ This report synthesizes empirical findings from 61 Indian places (32 states/UTs 
 The null hypothesis of equal regional means is **{'rejected' if anova_p < 0.05 else 'not rejected'}** at $\\alpha = 0.05$ ($F = {anova_f:.2f}, p = {anova_p:.4e}$). This describes the latest broad cross-section, not a causal claim about any individual place.
 
 ### 2.2 Factor Correlations (M4.5)
-- **Air Quality and Infant Mortality:** $r = {r_val:.2f}$ ($p = {p_val:.4f}$, n = {len(valid_corr)}). This is {air_significance}; the limited overlap comes from city-level air observations and state-level health series.
-- **Economic Output and Infant Mortality:** $r = {nsdp_r:.2f}$ ($p = {nsdp_p:.4e}$, n = {len(nsdp_corr)}). The negative direction is consistent with higher state income accompanying lower infant mortality, but remains an association rather than a causal estimate.
+- **Air Quality and the NFHS-5 Health Index:** $r = {r_val:.2f}$ ($p = {p_val:.4f}$, n = {len(valid_corr)}). This is {air_significance}; the limited overlap comes from city-level air observations and the state-level health snapshot.
+- **Economic Output and the NFHS-5 Health Index:** $r = {nsdp_r:.2f}$ ($p = {nsdp_p:.4e}$, n = {len(nsdp_corr)}). The direction is consistent with higher state income accompanying better health outcomes, but remains an association rather than a causal estimate.
 
 ### 2.3 Trends and Clustering (M6)
 - **OLS Projections:** Trends are fitted to observed 2015–2024 series and projected to 2034 only when at least five yearly points exist. Missing years stay missing; no synthetic interpolation is added for the web app.
@@ -331,9 +331,9 @@ The null hypothesis of equal regional means is **{'rejected' if anova_p < 0.05 e
 ---
 
 ## 3. Known Data Gaps
-- Air has processed observations for 2015–2019 and 2023–2024, with no 2021–2022 values.
-- State safety, health and economy end in 2022; 2023–2024 city scores inherit those latest observations and display the source year.
-- Cost of living is a 2022 rent snapshot for six metros and is never trended.
+- Air has historic processed observations for 2015–2019 and enriched observations for 2025–2026, with no 2020–2024 values. Every enriched 2025–2026 city-year is flagged as sparse because it has fewer than seven PM2.5 observations.
+- Safety ends in 2022, health and water quality are 2021 snapshots, and the economy indicators are 2023. City scores inherit those latest state observations and display the source year.
+- Cost of living is modelled/estimated city rent for 2010–2024 across 26 matched cities and is never trended.
 - Population is not present in the processed data, so pins use a fixed scale.
 
 ---
@@ -345,7 +345,7 @@ All visual outputs conform to the M4.6 Matplotlib & Seaborn checklist and are st
 3. `03_correlation_heatmap.png`: Correlation matrix across livability pillars.
 4. `04_air_quality_trends.png`: PM2.5 trajectories for major cities against CPCB and WHO thresholds.
 5. `05_kmeans_clusters.png`: K-Means silhouette curve and offline cluster score profiles.
-6. `06_scatter_relationships.png`: PM2.5 vs infant mortality scatter plot.
+6. `06_scatter_relationships.png`: PM2.5 vs NFHS-5 health index scatter plot.
 7. `07_top_bottom_rankings.png`: Top and bottom 10 places for {latest_year}.
 8. `08_coverage_matrix.png`: Factor completeness across the processed panel.
 """

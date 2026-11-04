@@ -23,7 +23,18 @@ RAW_SAFETY      = DATA_RAW / "safety"
 RAW_HEALTH      = DATA_RAW / "health"
 RAW_ECONOMY     = DATA_RAW / "economy"
 RAW_COL         = DATA_RAW / "cost_of_living"
+RAW_WATER       = DATA_RAW / "Water bodies quality data - India"
 RAW_BOUNDARIES  = DATA_RAW / "boundaries"
+
+# New-source filenames / reference years
+ENRICHED_AIR_FILENAME       = "enriched_aqi_dataset.csv"
+ENRICHED_AIR_YEARS          = (2025, 2026)
+COL_LONGITUDINAL_FILENAME   = "india_col_salary_longitudinal_2010_2024.csv"
+NFHS_HEALTH_FILENAME        = "NFHS_5_India_Districts_Factsheet_Data.csv"
+NFHS_REFERENCE_YEAR         = 2021
+WATER_QUALITY_FILENAME      = "Water_pond_tanks_2021.csv"
+WATER_REFERENCE_YEAR        = 2021
+NATIONAL_ECONOMY_FILENAME   = "indianEco.csv"
 
 # Key processed files
 PLACES_CSV          = DATA_PROCESSED / "places.csv"
@@ -45,8 +56,9 @@ FACTOR_SAFETY   = "safety"
 FACTOR_HEALTH   = "health"
 FACTOR_ECONOMY  = "economy"
 FACTOR_COL      = "cost_of_living"
+FACTOR_WATER    = "water_quality"
 CORE_FACTORS    = [FACTOR_AIR, FACTOR_SAFETY, FACTOR_HEALTH, FACTOR_ECONOMY]
-ALL_FACTORS     = CORE_FACTORS + [FACTOR_COL]
+ALL_FACTORS     = CORE_FACTORS + [FACTOR_COL, FACTOR_WATER]
 
 # ── Place types ────────────────────────────────────────────────────────────
 PLACE_STATE = "state"

@@ -39,8 +39,9 @@ def run() -> None:
 
     factors_wide = pd.read_csv(FACTORS_WIDE)
     # Coerce numeric columns
-    for col in ["year", "pm25_mean", "crime_rate_per_lakh", "infant_mortality_rate",
-                "per_capita_nsdp_constant", "unemployment_rate", "avg_rent"]:
+    for col in ["year", "air_quality", "crime_rate_per_lakh", "health",
+                "per_capita_nsdp_constant", "unemployment_rate",
+                "cost_of_living", "water_quality"]:
         if col in factors_wide.columns:
             factors_wide[col] = pd.to_numeric(factors_wide[col], errors="coerce")
 

@@ -23,7 +23,7 @@ import pandas as pd
 
 _YEAR_RE = re.compile(r"^(?:19|20)\d{2}(?:-\d{2,4})?$")
 
-from src.utils.constants import RAW_ECONOMY
+from src.utils.constants import RAW_ECONOMY, NATIONAL_ECONOMY_FILENAME
 from src.utils.provenance import is_known_generated_source
 from src.utils.helpers import (
     apply_name_standardization,
@@ -415,3 +415,65 @@ def load_economy(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
         merged["state_name"].nunique(),
     )
     return merged
+
+# ── National macro context ──────────────────────────────────────────────────
+
+_NATIONAL_ECONOMY_COLUMNS = {
+    "Year": "year",
+    "Country Name": "country",
+    "GDP (current US$)": "gdp_current_usd",
+    "GDP per capita (current US$)": "gdp_per_capita_current_usd",
+    "GDP growth (annual %)": "gdp_growth_pct",
+    "Imports of goods and services (% of GDP)": "imports_pct_gdp",
+    "Exports of goods and services (% of GDP)": "exports_pct_gdp",
+    "Total reserves (includes gold, current US$)": "total_reserves_usd",
+    "Inflation, consumer prices (annual %)": "inflation_pct",
+    "Population, total": "population_total",
+    "Population growth (annual %)": "population_growth_pct",
+    "Life expectancy at birth, total (years)": "life_expectancy_years",
+}
+
+
+def load_national_economy(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
+    """
+    Load India-only national macro indicators (1960-2020) as a context table.
+
+    These values are national and cannot be assigned to individual states or
+    cities, so they are exported separately and are not used in place scoring.
+    """
+    if not raw_dir.exists():
+        return pd.DataFrame()
+    candidates = [
+        path for path in raw_dir.rglob("*")
+        if path.is_file() and path.name.lower() == NATIONAL_ECONOMY_FILENAME.lower()
+    ]
+    if not candidates:
+        logger.info("National economy context file not found in %s", raw_dir)
+        return pd.DataFrame()
+
+    path = sorted(candidates)[0]
+    logger.info("Loading national economy context: %s", path.name)
+    df = pd.read_csv(path)
+    df = df.rename(columns=_NATIONAL_ECONOMY_COLUMNS)
+
+    if "country" in df.columns:
+        df = df[df["country"].astype(str).str.strip().str.lower().eq("india")].copy()
+    if "year" in df.columns:
+        df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
+
+    for column in _NATIONAL_ECONOMY_COLUMNS.values():
+        if column in ("country", "year"):
+            continue
+        if column in df.columns:
+            df[column] = pd.to_numeric(df[column], errors="coerce")
+
+    keep = [column for column in _NATIONAL_ECONOMY_COLUMNS.values() if column in df.columns]
+    df = df[keep].drop_duplicates(subset=["year"], keep="last").sort_values("year")
+    df["source_id"] = "economy_world_bank_india"
+
+    profile_dataframe(df, "economy: national macro context")
+    logger.info(
+        "National economy context: %d years (%s-%s).",
+        len(df), df["year"].min(), df["year"].max(),
+    )
+    return df

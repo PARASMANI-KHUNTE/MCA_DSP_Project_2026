@@ -6,8 +6,9 @@ export const PLACES = DATA.places;
 export const FACTOR_DEFS = DATA.factorDefs;
 export const DATA_COVERAGE = DATA.meta;
 // Anchor the default view to the latest year with multi-factor observations
-// rather than the most recent air year. Snapshot factors (currently rent) have
-// their own observation year and are never treated as a time series.
+// rather than the most recent air year. Snapshot factors such as the
+// cost-of-living index have their own observation year and are never treated
+// as a time series.
 export const BASELINE_YEAR = DATA.meta.baselineYear;
 export const PROJECTION_END_YEAR = BASELINE_YEAR == null ? null : BASELINE_YEAR + 10;
 export const OBSERVED_YEARS = DATA.meta.years;
@@ -106,8 +107,8 @@ function latestObservedValues(placeId, year) {
 function factorScoresAt(placeId, year) {
   const { values, years, seriesBreaks, gapFlags } = latestObservedValues(placeId, year);
   // Economy: NSDP (higher_is_better) averaged with unemployment rate (lower_is_better).
-  // realData.js has a bug where both economy indicators share key="nsdp"; we hardcode the
-  // lookup against the actual row fields: values.nsdp and values.unemployment.
+  // Read both indicator scores from their row fields and only combine them when
+  // the two indicators share an observation year.
   const nsdpScore = normalize(values.nsdp, FACTOR_DEFS.economy.indicators[0]);
   const unempScore = normalize(values.unemployment, FACTOR_DEFS.economy.indicators[1]);
   const economyScore =

@@ -12,7 +12,7 @@ factors:
     trend: eligible                  # needs >= 5 valid yearly points, no unflagged series break
     bounds: [10, 150]               # µg/m³; fixed normalization anchors
     source_id: air_kaggle
-    notes: "Gap between 2020 and 2023. Flag covid_year for 2020. Two sources: kaggle and cpcb."
+    notes: "Historic Kaggle/CPCB series plus enriched 2025-2026 station data. Flag covid_year for 2020 and sparse_observations for thin recent coverage. Source changes start a new trend segment."
 
   safety:
     column: safety                   # wide-table column: crime rate per lakh population
@@ -24,13 +24,13 @@ factors:
     notes: "Crime rate reflects reporting practices as well as actual crime. Series break in 2024."
 
   health:
-    column: health                   # wide-table column: infant mortality rate per 1000 live births
-    direction: lower_is_better      # lower IMR = better health = higher score
+    column: health                   # wide-table column: NFHS-5 state composite (0-100)
+    direction: higher_is_better     # better maternal/child health = higher score
     level: state
-    trend: eligible
-    bounds: [5, 50]                 # deaths per 1000 live births; fixed normalization anchors
-    source_id: health_srs
-    notes: "SRS data lags by ~3 years. Latest report covers 2022."
+    trend: never                    # single NFHS-5 survey round (2019-21)
+    bounds: [0, 100]                # composite index; fixed normalization anchors
+    source_id: health_nfhs5
+    notes: "NFHS-5 district factsheets aggregated to states (household-weighted). Composite of institutional births, full vaccination, child stunting and women's anaemia. Source year 2021."
 
   economy:
     level: state
@@ -46,15 +46,23 @@ factors:
         source_id: economy_plfs
     notes: "Normalize each indicator separately then average inside the factor. Only years where both exist."
 
-  cost_of_living:                   # OPTIONAL — six cities only
+  cost_of_living:                   # OPTIONAL
     column: cost_of_living
     direction: lower_is_better
     level: city
-    trend: never                    # snapshot only — never project
-    bounds: [10000, 90000]          # ₹/month; fixed normalization anchors
-    source_id: cost_of_living_kaggle
-    cities_only: [Kolkata, Mumbai, Bengaluru, Delhi, Chennai, Hyderabad]
-    notes: "Optional toggle. Show 'no trend available' label. CC BY-SA 4.0 — attribution required."
+    trend: never                    # modelled/estimated city-year rents — never project
+    bounds: [3000, 40000]           # ₹/month for a 1BHK; fixed normalization anchors
+    source_id: cost_of_living_longitudinal
+    notes: "Optional toggle. 2010-2024 city rents (average of city-centre and outside-centre 1BHK). PLFS-modelled rows are flagged modeled_estimate; Numbeo-derived rows are flagged reference_estimate. Show 'no trend available'."
+
+  water_quality:                    # OPTIONAL — single 2021 snapshot
+    column: water_quality           # 0-100 composite from BOD and dissolved oxygen
+    direction: higher_is_better
+    level: state
+    trend: never
+    bounds: [0, 100]                # composite index; fixed normalization anchors
+    source_id: water_quality_cpcb
+    notes: "Optional state-level factor. CPCB water-body quality snapshot (2021): mean BOD (lower is better) and dissolved oxygen (higher is better), rescaled to 0-100. Coliform readings retained for context only."
 
 # ── Eligibility rules ──────────────────────────────────────
 eligibility:

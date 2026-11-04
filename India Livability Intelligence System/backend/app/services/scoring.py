@@ -20,12 +20,16 @@ from src.utils.constants import RAW_COL
 logger = logging.getLogger(__name__)
 
 # Factors that are always inherited from the state at city level
-_INHERITED_FACTORS = {"safety", "health", "per_capita_nsdp_constant", "unemployment_rate"}
+_INHERITED_FACTORS = {
+    "safety", "health", "per_capita_nsdp_constant",
+    "unemployment_rate", "water_quality",
+}
 _FACTOR_ALIASES = {
     "air": "air_quality",
     "col": "cost_of_living",
     "nsdp": "per_capita_nsdp_constant",
     "unemployment": "unemployment_rate",
+    "water": "water_quality",
 }
 
 
@@ -47,11 +51,14 @@ def score_all_places(
     factors_wide = store.factors_wide.copy()
     places = store.places.copy()
 
-    # The rent snapshot is stored in the tidy table because it has no annual
-    # time series. Pivot its single observed value into the wide frame so the
-    # shared scorer can rank it with exactly the configured bounds/direction.
+    # Cost of living is usually already pivoted into factors_wide. Reconstruct
+    # it from tidy only for older processed outputs that lack the column.
     tidy = store.factors_tidy
-    if not tidy.empty and {"factor", "place_id", "value_raw"}.issubset(tidy.columns):
+    if (
+        "cost_of_living" not in factors_wide.columns
+        and not tidy.empty
+        and {"factor", "place_id", "value_raw"}.issubset(tidy.columns)
+    ):
         columns = ["place_id", "value_raw"]
         if "year" in tidy.columns:
             columns.append("year")

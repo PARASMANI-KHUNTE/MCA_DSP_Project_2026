@@ -105,9 +105,9 @@ def _factor_definitions(config: dict) -> dict:
             "direction": health["direction"],
             "bounds": health["bounds"],
             "level": health["level"],
-            "source": "SRS Bulletin 2022 Table 1; local extraction unverified",
+            "source": "NFHS-5 district factsheets aggregated to states; local extraction unverified",
             "sourceId": health.get("source_id"),
-            "unit": "per 1,000 births",
+            "unit": "index (0-100)",
             "trend": health.get("trend"),
         },
         "economy": {
@@ -138,7 +138,7 @@ def _factor_definitions(config: dict) -> dict:
             "direction": col["direction"],
             "bounds": col["bounds"],
             "level": col["level"],
-            "source": "Local rent snapshot; upstream version unverified",
+            "source": "Longitudinal city rents, 2010-2024; upstream version unverified",
             "sourceId": col.get("source_id"),
             "unit": "₹/month",
             "trend": col.get("trend"),
@@ -163,8 +163,8 @@ def build_payload() -> dict:
     scores = pd.read_csv(SCORES_WIDE) if SCORES_WIDE.exists() else pd.DataFrame()
 
     for column in [
-        "year", "air_quality", "safety", "health",
-        "per_capita_nsdp_constant", "unemployment_rate",
+        "year", "air_quality", "safety", "health", "cost_of_living",
+        "per_capita_nsdp_constant", "unemployment_rate", "water_quality",
     ]:
         if column in factors.columns:
             factors[column] = pd.to_numeric(factors[column], errors="coerce")
@@ -193,21 +193,21 @@ def build_payload() -> dict:
             },
         })
 
-    cost_year = _cost_snapshot_year()
+    legacy_cost_year = _cost_snapshot_year()
     cost_rows = []
     for _, row in tidy[tidy["factor"] == "cost_of_living"].iterrows():
-        if cost_year is None:
+        row_year = row.get("year")
+        if pd.isna(row_year):
+            row_year = legacy_cost_year
+        if row_year is None or pd.isna(row_year):
             continue
         cost_rows.append({
             "placeId": str(row["place_id"]),
-            "year": cost_year,
+            "year": int(row_year),
             "value": _number(row["value_raw"]),
         })
 
-    years = sorted(
-        {row["year"] for row in factor_rows}
-        | ({cost_year} if cost_year is not None else set())
-    )
+    years = sorted({row["year"] for row in factor_rows} | {row["year"] for row in cost_rows})
     last_year = {}
     first_year = {}
     for factor_key, column in {
@@ -291,11 +291,14 @@ def build_payload() -> dict:
                 "data/processed/factors_wide.csv",
                 "data/processed/factors_tidy.parquet",
                 "data/raw/air_kaggle/city_day.csv",
-                "data/raw/cost_of_living/House_Rent_Dataset.csv",
+                "data/raw/air_kaggle/enriched_aqi_dataset.csv",
+                "data/raw/cost_of_living/archive/india_col_salary_longitudinal_2010_2024.csv",
                 "data/raw/safety/ncrb_table_1a3_2020_2022.xlsx",
-                "data/raw/health/srs_bulletin_2022.pdf",
+                "data/raw/health/NFHS_5_India_Districts_Factsheet_Data.csv",
                 "data/raw/economy/rbi_nsdp_2025_table20.xlsx",
                 "data/raw/economy/plfs_2023_24_annual_report.pdf",
+                "data/raw/economy/archive (1)/indianEco.csv",
+                "data/raw/Water bodies quality data - India/Water_pond_tanks_2021.csv",
                 "src/scoring/factors_config.yaml",
             ],
             "note": (

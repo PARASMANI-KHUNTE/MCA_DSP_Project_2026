@@ -5,7 +5,7 @@ import { DATA_COVERAGE } from "../services/scoringService";
 const PIPELINE = [
   {
     title: "Ingest",
-    body: "The pipeline loads local air, rent, NCRB safety, SRS health, RBI NSDP and PLFS inputs, standardizes place names, and retains missing observations. Their upstream values and licenses remain unverified."
+    body: "The pipeline loads local historic and enriched air data, longitudinal city cost-of-living estimates, NCRB safety, NFHS-5 health, RBI NSDP, PLFS economy and CPCB water-quality inputs, standardizes place names, and retains missing observations. Their upstream values and licenses remain unverified."
   },
   {
     title: "Normalize",
@@ -13,11 +13,11 @@ const PIPELINE = [
   },
   {
     title: "Weight",
-    body: "Weights combine only factors with observations. The 2023 view supports a full five-factor composite; earlier years expose each factor at its latest observation at or before that year."
+    body: "Weights combine only factors with observations. The baseline view supports a five-factor composite when all selected factors are available; earlier years expose each factor at its latest observation at or before that year."
   },
   {
     title: "Project",
-    body: "Projections appear only when every weighted factor has at least five directly observed years. Mixed pillar coverage currently disables composite projections; air-only views can still project. Rent is a snapshot and is never projected."
+    body: "Projections appear only when every weighted factor has at least five directly observed years. Mixed pillar coverage currently disables composite projections; air-only views can still project. Cost of living and water quality are never projected."
   }
 ];
 
@@ -36,11 +36,11 @@ const LIMITATIONS = [
   },
   {
     title: "Partial cost data",
-    body: "Rent affordability exists for six metros only. Comparisons that include cost of living are not exhaustive."
+    body: "Cost of living exists for 26 matched cities only. Comparisons that include it are not exhaustive."
   },
   {
     title: "Mixed source years",
-    body: "Active air observations cover 2015–2019 in a limited sample; rent is a one-time snapshot. Safety, health, and economy inputs were quarantined as generated placeholders."
+    body: "Air has historic 2015–2019 and sparse 2025–2026 coverage; safety ends in 2022, health and water quality are 2021 snapshots, and the economy indicators are 2023. City scores inherit the latest state observations."
   },
   {
     title: "Ranks are ordinal",

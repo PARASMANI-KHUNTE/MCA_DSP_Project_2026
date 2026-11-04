@@ -17,12 +17,12 @@ const TOUR_STEPS = [
     subtitle: "A local data preview with clear coverage limits",
     icon: Compass,
     description:
-      "The active files provide local air, rent, NCRB safety, SRS health, RBI NSDP and PLFS observations. Their exact publisher versions and reuse terms have not been independently confirmed. Generated placeholder tables remain quarantined.",
-    takeaway: "Use the 2023 balanced view for the full composite, and treat earlier years as factor-specific snapshots with mixed coverage.",
+      "The active files provide local air, longitudinal cost-of-living, NCRB safety, NFHS-5 health, RBI NSDP, PLFS and CPCB water-quality observations. Their exact publisher versions and reuse terms have not been independently confirmed. Generated placeholder tables remain quarantined.",
+    takeaway: "Use the baseline balanced view for the composite, and treat earlier years as factor-specific snapshots with mixed coverage.",
     highlights: [
       `${DATA_COVERAGE.counts.states} states/UTs and ${DATA_COVERAGE.counts.cities} cities are listed; observations cover only a subset`,
-      "Air observations cover 2015–2019 for matched cities and derived state means",
-      "Rent is a six-city snapshot; it is not trended"
+      "Air has historic 2015–2019 observations and sparse 2025–2026 station data",
+      "Cost of living covers 26 matched cities from 2010–2024; it is never trended"
     ]
   },
   {

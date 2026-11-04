@@ -168,15 +168,30 @@ class TestComputeScores:
         result = compute_scores(df, cfg, {"air_quality": 1.0}, year=2023)
         assert result.iloc[0]["place_id"] == "PLACE_0"
 
-    def test_missing_factor_sets_partial_data(self):
-        """A place missing a selected factor is flagged and excluded from ranking."""
+    def test_missing_one_factor_is_reweighted(self):
+        """A place missing one selected factor is flagged and reweighted."""
         df = _make_factors_wide().drop(columns=["pm25_mean"])
         cfg = _make_config()
         result = compute_scores(df, cfg, {"air_quality": 0.5, "safety": 0.5}, year=2023)
         assert result["partial_data"].all()
+        assert result["score"].notna().all()
+        assert result["rank"].notna().all()
+        assert result["missing_factors"].apply(lambda missing: "air_quality" in missing).all()
+
+    def test_missing_two_factors_is_unscored(self):
+        """A place missing multiple selected factors cannot be ranked."""
+        df = _make_factors_wide().drop(
+            columns=["pm25_mean", "crime_rate_per_lakh"]
+        )
+        cfg = _make_config()
+        result = compute_scores(
+            df, cfg,
+            {"air_quality": 0.4, "safety": 0.3, "health": 0.3},
+            year=2023,
+        )
+        assert result["partial_data"].all()
         assert result["score"].isna().all()
         assert result["rank"].isna().all()
-        assert result["missing_factors"].apply(lambda missing: "air_quality" in missing).all()
 
     def test_determinism(self):
         """Same inputs always produce same outputs."""

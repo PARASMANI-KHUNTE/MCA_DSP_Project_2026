@@ -77,17 +77,20 @@ class TestRanges:
         assert (normed >= SCORE_MIN).all(), "Some scores < 0"
         assert (normed <= SCORE_MAX).all(), "Some scores > 100"
 
-    def test_imr_non_negative(self):
+    def test_health_index_in_range(self):
         tidy = _load_tidy()
-        health = tidy[tidy["factor"] == "infant_mortality_rate"]
-        neg = health["value_raw"].lt(0).sum()
-        assert neg == 0, f"{neg} rows have negative IMR."
+        health = tidy[tidy["factor"] == "health"]
+        if health.empty:
+            pytest.skip("No health rows yet.")
+        values = pd.to_numeric(health["value_raw"], errors="coerce").dropna()
+        assert (values >= 0).all(), "Some health index values < 0"
+        assert (values <= 100).all(), "Some health index values > 100"
 
     def test_crime_rate_non_negative(self):
         tidy = _load_tidy()
-        safety = tidy[tidy["factor"] == "crime_rate_per_lakh"]
-        neg = safety["value_raw"].lt(0).sum()
-        assert neg == 0
+        safety = tidy[tidy["factor"] == "safety"]
+        values = pd.to_numeric(safety["value_raw"], errors="coerce").dropna()
+        assert (values >= 0).all()
 
 
 # ── Uniqueness tests ───────────────────────────────────────────────────────
@@ -128,6 +131,7 @@ class TestCoverage:
             "health",
             "per_capita_nsdp_constant",
             "unemployment_rate",
+            "water_quality",
         }
         assert set(tidy["factor"].dropna().unique()) <= allowed
 
@@ -146,14 +150,19 @@ class TestSeriesBreaks:
             assert tidy["series_break"].dtype in (bool, object, "bool"), \
                 "series_break should be boolean."
 
-    def test_no_trend_for_snapshot_factors(self):
-        """Cost-of-living (snapshot) rows should never have a valid value_norm trend."""
-        # This test will be meaningful after the ML notebook runs.
-        # For now just check gap_flag is set.
+    def test_cost_of_living_rows_have_gap_flags(self):
+        """Cost-of-living rows are estimated and must carry a provenance gap flag."""
         tidy = _load_tidy()
         col_rows = tidy[tidy["factor"] == "cost_of_living"]
         if col_rows.empty:
             pytest.skip("No cost_of_living rows yet.")
-        # All cost-of-living rows should have gap_flag containing 'snapshot'
-        has_snapshot = col_rows["gap_flag"].str.contains("snapshot", na=False)
-        assert has_snapshot.all(), "Some cost_of_living rows are missing 'snapshot' gap_flag."
+        has_flag = col_rows["gap_flag"].fillna("").astype(str).str.len().gt(0)
+        assert has_flag.all(), "Some cost_of_living rows are missing a gap_flag."
+
+    def test_water_quality_rows_have_gap_flags(self):
+        tidy = _load_tidy()
+        water_rows = tidy[tidy["factor"] == "water_quality"]
+        if water_rows.empty:
+            pytest.skip("No water_quality rows yet.")
+        has_flag = water_rows["gap_flag"].fillna("").astype(str).str.len().gt(0)
+        assert has_flag.all(), "Some water_quality rows are missing a gap_flag."

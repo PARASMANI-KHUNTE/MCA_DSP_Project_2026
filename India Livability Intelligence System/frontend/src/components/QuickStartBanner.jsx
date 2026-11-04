@@ -38,7 +38,7 @@ export default function QuickStartBanner({ onOpenTour, onSelectPreset, composite
             <p className="mt-0.5 text-[11px] leading-relaxed text-[#666666]">
               {compositeAvailable
                 ? "Simulate alternative priorities across Clean Air, Public Safety, Health, and Economy."
-                : `Choose an air ranking or rent snapshot ranking. No composite index is available from the active data.`}
+                : `Choose an air ranking or cost-of-living ranking. No composite index is available from the active data.`}
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function QuickStartBanner({ onOpenTour, onSelectPreset, composite
               id: `${factor}_only`,
               weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, [factor]: 100 }
             };
-            const label = factor === "air" ? "Air ranking" : factor === "col" ? "Rent snapshot" : factor;
+            const label = factor === "air" ? "Air ranking" : factor === "col" ? "Cost of living" : factor;
             return <button key={factor} onClick={() => onSelectPreset(preset)} className="rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1.5 text-xs font-medium text-[#444444] hover:border-[#B51F3B] hover:text-[#B51F3B]">{label}</button>;
           })}
 

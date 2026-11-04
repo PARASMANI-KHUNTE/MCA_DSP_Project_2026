@@ -43,7 +43,7 @@ export default function HeroSection({ onExplore, onOpenMethodology }) {
 
           {/* Editorial Philosophy / Intro */}
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#555555] sm:text-base">
-            Building a data pipeline and interactive map to explore the local PM2.5 observations and rent snapshot available in this project. Scores are limited to supported factors, and current files are not source-verified.
+            Building a data pipeline and interactive map to explore local PM2.5, cost-of-living, safety, NFHS-5 health and economic indicators across Indian places. Scores are limited to supported factors, and current files are not source-verified.
           </p>
 
           {/* CTAs */}

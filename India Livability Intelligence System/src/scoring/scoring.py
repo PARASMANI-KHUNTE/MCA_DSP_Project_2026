@@ -208,7 +208,9 @@ def compute_scores(
         factor_score_cols.append((factor, col_name))
 
     # Only compare places with every positively weighted factor available.
-    # Reweighting different subsets would make ranks incomparable.
+    # Places missing exactly one factor are reweighted over the remaining
+    # factors so they can still be ranked (flagged as partial_data).
+    # Places missing two or more factors remain unscored.
     scores = []
     partial_data_flags = []
     missing_factors_list = []
@@ -220,8 +222,26 @@ def compute_scores(
         ]
         missing = [f for f, col in factor_score_cols if pd.isna(row[col])]
 
-        if missing:
+        if len(missing) > 1:
+            # Missing two or more factors — cannot reliably score
             scores.append(np.nan)
+            partial_data_flags.append(True)
+            missing_factors_list.append(missing)
+            continue
+
+        if missing:
+            # Missing exactly one factor — reweight remaining factors to sum to 1.0
+            remaining_weights = {
+                f: norm_weights[f] for f, _ in available
+            }
+            total_w = sum(remaining_weights.values())
+            reweighted = {f: w / total_w for f, w in remaining_weights.items()}
+
+            local_score = sum(
+                reweighted[f] * row[col]
+                for f, col in available
+            )
+            scores.append(local_score)
             partial_data_flags.append(True)
             missing_factors_list.append(missing)
             continue

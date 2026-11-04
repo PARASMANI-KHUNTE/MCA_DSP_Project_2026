@@ -203,11 +203,11 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
       note: "Locally extracted; 2020–21 rates use the 2022 projected population."
     },
     {
-      label: "Healthcare (IMR)",
-      source: "SRS Bulletin 2022 / RGI",
+      label: "Healthcare (NFHS-5 index)",
+      source: "NFHS-5 district factsheets / MoHFW",
       latest: DATA_COVERAGE.lastYearByFactor?.health ?? null,
-      coverage: "State infant mortality rates for 2022.",
-      note: "Locally extracted; inverted scale so lower IMR yields a higher score."
+      coverage: "State composite index (0–100) from institutional births, full vaccination, child stunting and women's anaemia, 2019–21.",
+      note: "Household-weighted state aggregation; higher index yields a higher score."
     },
     {
       label: "Economy & Employment",
@@ -218,10 +218,10 @@ export default function InsightsView({ rankedPlaces = [], year = 2024, weights =
     },
     {
       label: "Housing Affordability",
-      source: "Kaggle house-rent snapshot",
+      source: "Longitudinal city cost-of-living estimates",
       latest: DATA_COVERAGE.lastYearByFactor?.col ?? null,
-      coverage: "Rent snapshot across 6 metros.",
-      note: "A single observed snapshot for six cities; it is never projected."
+      coverage: "Average 1BHK rent (city-centre and outside-centre) for 26 matched cities, 2010–2024.",
+      note: "Modelled/estimated series with PLFS and Numbeo provenance; it is never projected."
     }
   ];
 

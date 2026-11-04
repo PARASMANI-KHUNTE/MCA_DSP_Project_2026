@@ -39,18 +39,28 @@ def load_alias_map(path: Path = NAME_ALIASES) -> dict[str, str]:
     }
 
 
-def standardize_name(name: str, alias_map: dict[str, str]) -> str:
+_WARNED_UNMAPPED: set[str] = set()
+
+
+def standardize_name(
+    name: str,
+    alias_map: dict[str, str],
+    *,
+    warn: bool = True,
+) -> str:
     """
     Map a raw place name to its standard form.
     Falls back to the original (title-cased) if not in the alias map.
-    Logs a warning so unmapped names are easy to catch.
+    Logs at most one warning per unmapped name unless warn=False.
     """
     if not isinstance(name, str):
         return name
     key = name.strip().lower()
     if key in alias_map:
         return alias_map[key]
-    logger.warning("Unmapped name: '%s' — add it to name_aliases.csv", name)
+    if warn and key not in _WARNED_UNMAPPED:
+        _WARNED_UNMAPPED.add(key)
+        logger.warning("Unmapped name: '%s' — add it to name_aliases.csv", name)
     return name.strip().title()
 
 
@@ -58,10 +68,14 @@ def apply_name_standardization(
     df: pd.DataFrame,
     col: str,
     alias_map: dict[str, str],
+    *,
+    warn: bool = True,
 ) -> pd.DataFrame:
     """Standardize a place-name column in-place and return the DataFrame."""
     df = df.copy()
-    df[col] = df[col].apply(lambda x: standardize_name(x, alias_map))
+    df[col] = df[col].apply(
+        lambda x: standardize_name(x, alias_map, warn=warn)
+    )
     return df
 
 

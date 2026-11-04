@@ -45,7 +45,7 @@ export default function AboutView({ onOpenExplorer, onOpenMethodology }) {
         </div>
 
         <p className="text-sm leading-relaxed text-[#555555]">
-          A data science project for the Master of Computer Applications curriculum. This build processes local air observations and a rent snapshot into factor-specific views; the source files have not been independently matched to their cited releases, and there is no complete multi-factor index.
+          A data science project for the Master of Computer Applications curriculum. This build processes historic and enriched air observations, longitudinal city cost-of-living estimates, NCRB safety, NFHS-5 health, RBI NSDP/PLFS economy and CPCB water-quality data. The source files have not been independently matched to their cited releases, so results remain exploratory.
         </p>
 
         <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3">
@@ -89,7 +89,7 @@ export default function AboutView({ onOpenExplorer, onOpenMethodology }) {
             </div>
             <h4 className="mt-3 text-sm font-bold text-[#111111]">1. Ingestion & Harmonization</h4>
             <p className="mt-1.5 text-xs leading-relaxed text-[#666666]">
-              Processes local PM2.5, rent, NCRB safety, SRS health, RBI NSDP and PLFS files. Generated placeholders remain quarantined; the active local inputs are not independently source-verified.
+              Processes local PM2.5, longitudinal cost-of-living, NCRB safety, NFHS-5 health, RBI NSDP, PLFS economy and CPCB water-quality files. Generated placeholders remain quarantined; the active local inputs are not independently source-verified.
             </p>
           </div>
 

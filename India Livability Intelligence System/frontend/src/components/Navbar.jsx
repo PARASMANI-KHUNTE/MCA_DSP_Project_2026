@@ -14,11 +14,8 @@ import {
 import { BASELINE_YEAR, DATA_COVERAGE, OBSERVED_YEARS, PROJECTION_END_YEAR } from "../services/scoringService";
 
 const TABS = [
-  { id: "portfolio", label: "Portfolio", icon: Compass },
   { id: "map", label: "Explorer", icon: Map },
-  { id: "insights", label: "Insights", icon: Activity },
-  { id: "methodology", label: "Methodology", icon: BookOpen },
-  { id: "about", label: "About & Code", icon: User }
+  { id: "insights", label: "Insights", icon: Activity }
 ];
 
 const FIRST_YEAR = OBSERVED_YEARS[0];
@@ -54,22 +51,23 @@ export default function Navbar({
         <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-2 px-3 py-2.5 sm:px-6">
           {/* Left: Branding & Developer Name */}
           <button
-            onClick={() => onSelectTab("portfolio")}
+            onClick={() => onSelectTab("map")}
             className="group flex min-w-0 items-center gap-2.5 sm:gap-3 text-left transition-opacity hover:opacity-90"
-            aria-label="Go to portfolio overview"
+            aria-label="Go to explorer"
           >
             <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] text-[#111111] transition-colors group-hover:border-[#D4D4D4]">
               <Compass size={17} className="text-[#B51F3B]" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="truncate text-xs font-bold tracking-tight text-[#111111] sm:text-base">
-                  Parasmani Khunte
-                </span>
-                <span className="hidden rounded-full border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-semibold text-[#666666] sm:inline-flex">
-                  MCA 2026
-                </span>
-              </div>
+               <div className="mb-3 flex flex-col gap-1">
+                 
+                  <h1 className="text-xl font-extrabold tracking-tight text-[#111111] sm-base:text">
+                    Spatial Explorer & Livability Rankings
+                  </h1>
+                  <p className="text-xs text-[#666666] sm:text-sm">
+                    Rank places by available observations, inspect their coverage, and view eligible air trend projections.
+                  </p>
+                </div>
               <p className="hidden text-[11px] text-[#777777] md:block truncate">
                 India Livability Intelligence System
               </p>

@@ -1,0 +1,14 @@
+flowchart TD
+    INPUT([Raw Feature Observation x_i]) --> CLIP[Domain Bounds Clipping: clip x_i to lo, hi]
+    CLIP --> DIR{Factor Direction?}
+    DIR -- Higher is Better --> HB[Score = 100 * x - lo / hi - lo]
+    DIR -- Lower is Better --> LB[Score = 100 * hi - x / hi - lo]
+    HB --> NORM[Normalized Pillar Score S_k in 0..100]
+    LB --> NORM
+    NORM --> AGG[Dynamic Weight Allocation]
+    WEIGHTS([User Weights or Persona Presets]) --> DYN_WEIGHT[Normalize Observed Weights: sum w_j = 1.0]
+    DYN_WEIGHT --> AGG
+    AGG --> GATE{Observed Factors >= Gate?}
+    GATE -- 4 Factors Observed --> COMPLETE[Composite Score: Complete Data]
+    GATE -- 3 Factors Observed --> PARTIAL[Composite Score: Partial Data Flagged]
+    GATE -- < 3 Factors Observed --> UNSCORED[Entity Unscored & Excluded from Composite]

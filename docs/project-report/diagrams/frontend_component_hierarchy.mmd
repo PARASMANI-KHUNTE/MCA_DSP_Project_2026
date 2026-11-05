@@ -1,0 +1,12 @@
+graph TD
+    APP[App.jsx - Application Controller & State Root] --> NAV[Navbar.jsx - Preset Selectors, Years & Global Search]
+    APP --> QUICK[QuickStartBanner.jsx - Onboarding & Context]
+    APP --> MAP[IndiaMap.jsx - Interactive SVG Map & Choropleth Fills]
+    APP --> CONTROLS[WeightControls.jsx - Sliders, Lock Toggles & Presets]
+    APP --> LEADERBOARD[Leaderboard.jsx - Ranked Entities & Scores]
+    APP --> COMPARE_BAR[CompareBar.jsx - Multi-Entity Pin Tray]
+    APP --> DETAIL_MODAL[PlaceDetailModal.jsx - Radar Chart, OLS Trends & Details]
+    APP --> COMPARE_MODAL[CompareModal.jsx - Multi-Pillar Comparison Table]
+    APP --> INSIGHTS[InsightsView.jsx - Statistical Summary & Findings]
+    APP --> SCORING_SRV[scoringService.js - Dynamic Client-Side Scoring Engine]
+    SCORING_SRV --> REALDATA[(realData.js - 338 KB Embedded Analytical Bundle)]

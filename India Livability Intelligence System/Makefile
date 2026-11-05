@@ -50,6 +50,9 @@ api:
 web:
 	cd frontend && $(NPM) run dev
 
+report:
+	python docs/project-report/make_report.py
+
 test:
 	$(PYTEST) tests/ backend/tests/ -v --tb=short --cov=src --cov-report=term-missing
 

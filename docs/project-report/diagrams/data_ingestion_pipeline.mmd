@@ -1,0 +1,24 @@
+flowchart LR
+    subgraph Ingestion [Stage 1: Load]
+        S1[Raw Multi-Format Sources] --> P_GATE{SHA-256 Checksum Gate}
+        P_GATE -- Match Placeholder --> QUARANTINE[Quarantine in rejected/]
+        P_GATE -- Verified Local --> LOADERS[Domain Loaders in src/loaders/]
+    end
+
+    subgraph Standardization [Stage 2: Cleaning & Harmonization]
+        LOADERS --> ALIAS[Entity Name Aliasing & Master Resolution]
+        ALIAS --> CAL[Calendar & Fiscal Year Alignment]
+        CAL --> SPATIAL[Spatial Hierarchical Matching State to City]
+    end
+
+    subgraph QA [Stage 3: Outlier & Quality Audit]
+        SPATIAL --> IQR[Tukey IQR Fencing & Domain Boundary Checks]
+        IQR --> NON_DESTRUCT[Non-Destructive Outlier Flagging]
+        NON_DESTRUCT --> BREAKS[Structural Series Break Flagging COVID-19/Source]
+    end
+
+    subgraph Consolidation [Stage 4: Analytical Consolidation]
+        BREAKS --> MERGE[Master Analytical Merge]
+        MERGE --> PARQUET[(factors_tidy.parquet)]
+        MERGE --> WIDE[(factors_wide.csv)]
+    end

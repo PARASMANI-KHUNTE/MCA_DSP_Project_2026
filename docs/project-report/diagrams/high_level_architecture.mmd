@@ -1,0 +1,66 @@
+graph TB
+    subgraph RawData [Public Data Sources]
+        CPCB[CPCB & Kaggle Ambient Air]
+        NCRB[NCRB IPC Crime Statistics]
+        NFHS[NFHS-5 Health Factsheets]
+        RBI[RBI NSDP Constant Prices]
+        PLFS[MoSPI PLFS Unemployment]
+        COL[Longitudinal 1BHK Rents]
+        WATER[CPCB Water Quality 2021]
+    end
+
+    subgraph DataEngineering [Data Engineering & Modeling]
+        ETL[Pipeline ETL & Outlier Fencing]
+        TIDY[(factors_tidy.parquet)]
+        WIDE[(factors_wide.csv)]
+        SCORING[Mathematical Scoring Engine]
+        TRENDS[OLS Linear Trend Projections]
+        KMEANS[K-Means Clustering Analysis]
+    end
+
+    subgraph Artifacts [Processed Outputs]
+        PLACES[(places.csv)]
+        SCORES[(scores_wide.csv)]
+        TRENDDATA[(trends.csv)]
+        CLUSTERDATA[(clusters.csv)]
+        BUNDLE[frontend/src/data/realData.js]
+    end
+
+    subgraph Backend [FastAPI Service :8000]
+        DATASTORE[In-Memory DataStore Singleton]
+        API_PLACES[GET /api/places]
+        API_TRENDS[GET /api/places/{id}/trend]
+        API_SCORE[POST /api/score]
+        SWAGGER[Swagger UI /docs]
+    end
+
+    subgraph Frontend [React 19 + Vite Dashboard :5173]
+        MAP[Interactive SVG India Map]
+        WEIGHTS[Dynamic Weight Controls]
+        LEADERBOARD[Entity Leaderboard]
+        DETAIL[Place Detail & Radar Modal]
+        CLIENT_SCORING[In-Browser Scoring Engine]
+    end
+
+    RawData --> ETL
+    ETL --> TIDY
+    ETL --> WIDE
+    WIDE --> SCORING
+    WIDE --> TRENDS
+    WIDE --> KMEANS
+    SCORING --> SCORES
+    TRENDS --> TRENDDATA
+    KMEANS --> CLUSTERDATA
+    SCORES --> BUNDLE
+    PLACES --> DATASTORE
+    SCORES --> DATASTORE
+    TRENDDATA --> DATASTORE
+    CLUSTERDATA --> DATASTORE
+    DATASTORE --> API_PLACES
+    DATASTORE --> API_TRENDS
+    DATASTORE --> API_SCORE
+    BUNDLE --> CLIENT_SCORING
+    CLIENT_SCORING --> MAP
+    CLIENT_SCORING --> LEADERBOARD
+    WEIGHTS --> CLIENT_SCORING
+    MAP --> DETAIL

@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant Client as Frontend / HTTP Client
+    participant Main as backend/app/main.py
+    participant Config as backend/app/core/config.py
+    participant Loader as backend/app/core/loader.py (DataStore)
+    participant Route as backend/app/api/routes_*.py
+    participant Scoring as backend/app/services/scoring.py
+
+    Note over Main,Loader: Startup Lifespan Event
+    Main->>Config: Initialize Settings (evaluates DEBUG, data_dir)
+    Main->>Loader: get_store() triggered
+    Loader->>Loader: Hash data files & verify file signatures
+    Loader->>Loader: Read CSVs, Parquet & YAML configuration into memory
+    Main-->>Client: Server Listening at :8000 (OpenAPI /docs available)
+
+    Note over Client,Scoring: Client Request Handling
+    Client->>Route: POST /api/score (Custom weights payload)
+    Route->>Loader: Depends(get_store) -> returns singleton DataStore
+    Route->>Scoring: score_all_places(store, weights, year, place_type)
+    Scoring->>Scoring: Dynamic weight re-normalization & matrix multiplication
+    Scoring-->>Route: Computed scores, ranks, missing & inherited factor lists
+    Route-->>Client: 200 OK (ScoreResponse Pydantic JSON)

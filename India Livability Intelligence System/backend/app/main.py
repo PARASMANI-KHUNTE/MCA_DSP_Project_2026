@@ -68,12 +68,23 @@ app.include_router(places_router, prefix="/api", tags=["Places"])
 app.include_router(score_router,  prefix="/api", tags=["Scoring"])
 
 
-# ── Health check ───────────────────────────────────────────────────────────
+# ── Health check & Root ───────────────────────────────────────────────────
 
+@app.get("/", tags=["System"])
+def root():
+    """Root status endpoint."""
+    return {
+        "status": "ok",
+        "app": settings.app_title,
+        "version": settings.app_version,
+        "docs": "/docs",
+    }
+
+
+@app.get("/health", response_model=HealthResponse, tags=["System"])
 @app.get("/api/health", response_model=HealthResponse, tags=["System"])
 def health():
     """Service status and data version."""
-    store = get_store()
     return HealthResponse(
         status="ok",
         version=settings.app_version,

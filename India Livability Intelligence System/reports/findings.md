@@ -14,7 +14,7 @@ This report synthesizes empirical findings from 61 Indian places (32 states/UTs 
 | **Pearson Correlation (PM2.5 vs NFHS-5 health index)** | Not computable | Not computed: only 0 rows have both values (at least 6 are required). City-level air observations and the state health snapshot do not overlap enough in this rebuild. |
 | **Pearson Correlation (NSDP vs NFHS-5 health index)** | Not computable | Not computed: only 0 rows have both values (at least 6 are required). |
 | **Trend fitting (M6)** | Disabled — 0 series fitted | Every factor is configured `trend: never`, so no projections or outlooks are published. |
-| **K-Means Analysis (offline)** | k=2, silhouette=0.581 | Offline K-Means analysis selected $k=2$ (mean silhouette 0.581); cluster profile scores span 45.9 to 68.7. The interactive interface uses explicit score bands instead of cluster labels. |
+| **K-Means Analysis (offline)** | k=7, silhouette=0.614 | Offline K-Means analysis selected $k=7$ (mean silhouette 0.614); cluster profile scores span 40.1 to 97.4. The interactive interface uses explicit score bands instead of cluster labels. |
 
 ---
 
@@ -37,7 +37,7 @@ The null hypothesis of equal regional means is **not rejected** at $\alpha = 0.0
 ### 2.3 Trends and Clustering (M6)
 - **OLS Trends:** Disabled for every factor in `src/scoring/factors_config.yaml` (`trend: never`). 0 place-factor series were fitted, so no projections or outlooks are published. Missing years stay missing; no synthetic interpolation is added for the web app.
 - **Outlook Counts:** 0 improving, 0 declining, 0 stable/uncertain, and 0 insufficient-data place-factor series.
-- **K-Means:** Offline K-Means analysis selected $k=2$ (mean silhouette 0.581); cluster profile scores span 45.9 to 68.7. The interactive interface uses explicit score bands instead of cluster labels.
+- **K-Means:** Offline K-Means analysis selected $k=7$ (mean silhouette 0.614); cluster profile scores span 40.1 to 97.4. The interactive interface uses explicit score bands instead of cluster labels.
 
 ---
 

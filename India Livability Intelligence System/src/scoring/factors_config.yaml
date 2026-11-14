@@ -3,14 +3,14 @@ factors:
     column: air_quality
     direction: lower_is_better
     level: city
-    trend: eligible
+    trend: never
     bounds:
     - 27.91
     - 150.6
     source_id: air_kaggle
     notes: Historic Kaggle/CBC series plus enriched 2025-2026 station data. Flag covid_year
       for 2020 and sparse_observations for thin recent coverage. Source changes start
-      a new trend segment.
+      a new trend segment. Projection disabled because the series is sparse and unverified.
   safety:
     column: safety
     direction: lower_is_better

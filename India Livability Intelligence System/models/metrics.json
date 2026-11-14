@@ -10,7 +10,7 @@
   },
   "trends": {
     "n_fitted": 0,
-    "n_insufficient": 61,
+    "n_insufficient": 0,
     "improving": 0,
     "declining": 0,
     "stable": 0

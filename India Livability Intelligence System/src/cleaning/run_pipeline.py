@@ -22,7 +22,6 @@ import logging
 import sys
 import hashlib
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pandas as pd
 
@@ -39,6 +38,7 @@ from src.utils.constants import (
     FACTOR_ECONOMY,
     FACTOR_COL,
     FACTOR_WATER,
+    REPORTS,
 )
 from src.utils.helpers import setup_logging, missing_summary
 from src.loaders.load_air_kaggle import (
@@ -587,7 +587,7 @@ def write_data_quality_report(
     output matches the expected schema; it does not independently verify the
     values against their publishers.
     """
-    report_path = Path("reports") / "data_quality_report.md"
+    report_path = REPORTS / "data_quality_report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
     place_master = places if places is not None else pd.read_csv(PLACES_CSV, dtype=str)
@@ -662,7 +662,7 @@ def write_data_quality_report(
         share = populated / len(wide) * 100 if len(wide) else 0.0
         lines.append(f"| `{column}` | {populated} | {blank} | {share:.1f}% |")
 
-    outlier_path = Path("reports") / "outlier_log.csv"
+    outlier_path = REPORTS / "outlier_log.csv"
     if outlier_path.exists():
         outliers = pd.read_csv(outlier_path)
         lines.extend(
@@ -783,7 +783,7 @@ def stage_export(
         "source_id", "source_row", "place_id", "place_name", "state_name", "city",
         "year", "date", "value_column", "original_value", "reason", "action",
     ])
-    outlier_path = Path("reports") / "outlier_log.csv"
+    outlier_path = REPORTS / "outlier_log.csv"
     outlier_path.parent.mkdir(parents=True, exist_ok=True)
     outlier_log.to_csv(outlier_path, index=False)
     logger.info("Saved: %s (%d flagged rows)", outlier_path, len(outlier_log))

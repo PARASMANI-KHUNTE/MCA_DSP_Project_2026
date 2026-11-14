@@ -90,3 +90,19 @@ def health():
         version=settings.app_version,
         data_dir=str(settings.data_dir),
     )
+
+
+@app.get("/v1/models", tags=["System"])
+def list_models():
+    """Discovery stub for IDE/AI extensions checking port 8000."""
+    return {
+        "object": "list",
+        "data": [
+            {
+                "id": "ilis-statistical-engine",
+                "object": "model",
+                "created": 1700000000,
+                "owned_by": "ilis-system",
+            }
+        ],
+    }

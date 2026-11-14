@@ -11,7 +11,7 @@ import {
   X
 } from "lucide-react";
 import Modal from "./Modal";
-import { getScoreColor } from "../services/scoringService";
+import { getFactorInheritance, getScoreColor } from "../services/scoringService";
 
 const FACTORS = [
   { key: "air", label: "Air quality", icon: Wind, color: "#0284c7" },
@@ -23,6 +23,7 @@ const FACTORS = [
 
 export default function CompareModal({
   comparePlaces,
+  year,
   onClose,
   onRemovePlace,
   onSelectPlace,
@@ -192,6 +193,10 @@ export default function CompareModal({
               <h3 className="eyebrow text-[#888888]">Pillar-by-Pillar Comparison</h3>
               <span className="text-[10px] text-[#888888]">Category Leaders Highlighted</span>
             </div>
+            <p className="mb-3 text-[10px] leading-relaxed text-[#777777]">
+              For cities, public safety, healthcare and economy reuse the parent state&apos;s published values.
+              A year badge marks an inherited pillar; it is the source year, not the selected year.
+            </p>
 
             <div className="flex flex-col gap-4">
               {factors.map(factor => {
@@ -208,6 +213,7 @@ export default function CompareModal({
                         const value = place.factorScores?.[factor.key];
                         const hasValue = value !== null && value !== undefined;
                         const isLeader = leaders[factor.key] === place.id;
+                        const inheritance = getFactorInheritance(place, factor.key, year);
 
                         return (
                           <div
@@ -226,7 +232,17 @@ export default function CompareModal({
                                 </span>
                               )}
                             </div>
-                            <div className="text-lg font-black text-[#111111]">{hasValue ? value : "—"}</div>
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="text-lg font-black text-[#111111]">{hasValue ? value : "—"}</div>
+                              {inheritance && (
+                                <span
+                                  title={`Inherited from ${place.state} state-level data published in ${inheritance.sourceYear}`}
+                                  className="cursor-help rounded border border-[#E5E5E5] bg-amber-50/70 px-1.5 py-0.5 text-[9px] font-semibold text-[#666666]"
+                                >
+                                  {inheritance.sourceYear} · state
+                                </span>
+                              )}
+                            </div>
                             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E5E5]">
                               <div
                                 className="h-full rounded-full"

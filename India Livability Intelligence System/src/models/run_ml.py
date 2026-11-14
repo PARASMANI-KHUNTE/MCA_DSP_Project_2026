@@ -130,6 +130,7 @@ def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
 
 
 def run() -> None:
+    """Execute the ML stage: trend fitting, holdout evaluation, and clustering."""
     setup_logging()
     logger.info("=== ML STAGE START ===")
 
@@ -201,7 +202,11 @@ def run() -> None:
 
     metrics = {
         "input_source_status": "local files not independently verified against publishers",
-        "analysis_scope": "factor-level exploratory trends only; no composite score is available",
+        "analysis_scope": (
+            "composite and factor-level exploratory analysis"
+            if scores_wide.get("score", pd.Series(dtype=float)).notna().any()
+            else "factor-level exploratory analysis; no composite score is available"
+        ),
         "composite_available": bool(scores_wide.get("score", pd.Series(dtype=float)).notna().any()),
         "clustering": {"status": "skipped", "year": latest_year, "n_places": 0},
         "trends": {

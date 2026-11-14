@@ -370,6 +370,7 @@ export default function App() {
       {dataAvailable && showCompareModal && (
         <CompareModal
           comparePlaces={comparePlaces}
+          year={selectedYear}
           onClose={() => setShowCompareModal(false)}
           onRemovePlace={handleRemoveCompare}
           onSelectPlace={handleSelectFromCompare}

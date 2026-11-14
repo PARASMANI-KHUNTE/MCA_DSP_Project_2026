@@ -1,4 +1,4 @@
-﻿> **Current data correction (3 November 2026):** earlier sections describe a fuller dataset and outputs. Six inputs described there were confirmed as generated placeholders and are now quarantined. Current outputs contain air observations and rent snapshots only. The app and API support separate factor-only air and rent rankings; no composite score or composite ranking is available. The remaining files are not source-verified. See [fabrication audit](reports/data_fabrication_audit.md).
+﻿> **Current data correction (14 November 2026):** earlier sections describe a fuller dataset and outputs. Six inputs described there were confirmed as generated placeholders and are now quarantined. The current rebuild covers 61 places with air, safety, health, economy, cost-of-living, and water-quality factors, and publishes a balanced composite with partial-data flags. No trend projections are published because every factor is configured `trend: never`. Score bounds are now calibrated percentiles, and the remaining files are still not source-verified. See [fabrication audit](reports/data_fabrication_audit.md).
 # India Livability Intelligence System
 ### Software Requirements Specification, Architecture and Data Science Pipeline
 
@@ -6,7 +6,7 @@
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
 **Version:** 1.5 (local-data pipeline workflow, 3 November 2026)
 
-> **Current implementation status, 3 November 2026.** Six raw files were confirmed as generated placeholders and quarantined. The active pipeline now reads only local air and rent files, which remain independently unverified against their publishers. Safety, health, and economy are unavailable. The app/API provide factor-only air and rent rankings and eligible air-only trend projections, but no composite score, composite ranking, or composite projection. See `reports/data_fabrication_audit.md`. Sections below describe the broader intended design and should not be read as current data availability.
+> **Current implementation status, 14 November 2026.** Six raw files were confirmed as generated placeholders and quarantined. The active pipeline reads local air, rent, NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment, and CPCB water-quality extracts, which remain independently unverified against their publishers. The app supports weighted composites for places with the weighted factors, marks one-missing-factor places as partial, and shows state-inheritance source years. Trend projection is disabled for every factor, so no composite or factor projections are published. The full pytest suite reports 98 passed and 1 skipped. See `reports/data_fabrication_audit.md`. Sections below describe the broader intended design and should not be read as current data availability.
 
 > **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
 
@@ -152,7 +152,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 | FR-20 | The app shall let the user select a state and show a ranked list of its cities. | Must |
 | FR-21 | The app shall let the user select a city and show factor breakdown plus a 10-year projected trend chart. | Must |
 | FR-22 | The app shall provide a toggle to color the map by overall score or by a single factor. | Should |
-| FR-23 | The app shall offer preset profiles (e.g., Clean Air, Family, Career, Retirement). | Could |
+| FR-23 | The app shall offer preset profiles (e.g., Clean Air, Family, Career, Student/Budget). | Could |
 | FR-24 | The app shall allow comparing two to three places side by side. | Could |
 | FR-25 | The app shall show a visible disclaimer next to every projection. | Must |
 | FR-26 | The system shall exclude snapshot-only factors and series with too few points from trend projection and label them "no trend available". | Must |
@@ -554,15 +554,15 @@ Normalize the user's selected positive weights once for the comparison. If any s
 
 ## 5.5 Default weights and presets
 
-Weights apply to the four core factors and sum to 100.
+Weights apply to the four core factors and sum to 100; the student preset adds an optional 25-point cost-of-living weight.
 
 | Profile | Air | Safety | Health | Economy |
 |---|---|---|---|---|
-| Balanced | 30 | 25 | 25 | 20 |
-| Clean air first | 55 | 15 | 20 | 10 |
-| Family | 20 | 30 | 30 | 20 |
-| Career | 15 | 15 | 10 | 60 |
-| Retirement | 30 | 15 | 45 | 10 |
+| Balanced | 35 | 25 | 25 | 15 |
+| Environmental / clean air | 55 | 15 | 20 | 10 |
+| Family | 20 | 40 | 30 | 10 |
+| Career | 10 | 20 | 20 | 50 |
+| Student / budget | 15 | 25 | 15 | 20 (+25 cost of living) |
 
 These weights are subjective. State this openly and let the user change them. Extra factors (cost of living, or any later verified factor) are added only through the optional toggle and re-normalize the weights.
 

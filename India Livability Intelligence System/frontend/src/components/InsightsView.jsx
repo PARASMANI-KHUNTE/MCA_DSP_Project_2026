@@ -192,7 +192,7 @@ const kpis = [
       label: "Air Quality (PM2.5)",
       source: "Local Kaggle city_day PM2.5",
       latest: DATA_COVERAGE.lastYearByFactor?.air ?? null,
-      coverage: "City-level series 2015–2019 for matched cities; state means derived from city observations.",
+      coverage: "City-level series 2015–2019 and 2025–2026 for matched cities; state means derived from city observations.",
       note: "Upstream publisher version and license are unverified."
     },
     {
@@ -200,21 +200,21 @@ const kpis = [
       source: "NCRB Crime in India, Table 1A.3",
       latest: DATA_COVERAGE.lastYearByFactor?.safety ?? null,
       coverage: "State and UT annual cognizable crime rates, 2020–2022.",
-      note: "Locally extracted; 2020–21 rates use the 2022 projected population."
+      note: "Locally extracted; 2020–21 rates use the 2022 projected population. Cities inherit the state value and show its source year."
     },
     {
       label: "Healthcare (NFHS-5 index)",
       source: "NFHS-5 district factsheets / MoHFW",
       latest: DATA_COVERAGE.lastYearByFactor?.health ?? null,
       coverage: "State composite index (0–100) from institutional births, full vaccination, child stunting and women's anaemia, 2019–21.",
-      note: "Household-weighted state aggregation; higher index yields a higher score."
+      note: "Household-weighted state aggregation; higher index yields a higher score. Cities inherit the state value."
     },
     {
       label: "Economy & Employment",
       source: "RBI NSDP Table 20 & MoSPI PLFS 2023-24",
       latest: DATA_COVERAGE.lastYearByFactor?.economy ?? null,
       coverage: "Constant-price per-capita NSDP (2011–2024) and 2023 unemployment (15+).",
-      note: "Locally extracted; economy scores require both indicators in the same year."
+      note: "Locally extracted; economy scores require both indicators in the same year. Cities inherit the state value."
     },
     {
       label: "Housing Affordability",

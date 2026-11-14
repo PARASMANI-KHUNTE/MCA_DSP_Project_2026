@@ -28,7 +28,7 @@ The remaining files are not known matches for the retired generator, but their v
 - Water quality uses a 2021 CPCB water-body snapshot. A 0–100 state index is built from mean BOD and dissolved oxygen; coliform and pH are retained for context. It covers 30 states, 28 of which match the place master, and is never projected.
 - The India macro file (`indianEco.csv`, 1960–2020) is exported as `data/processed/national_economy.csv` for context only; it is never assigned to a place or included in scores.
 - State air values are explicitly derived means of available city observations, not independent state measurements.
-- Fixed score bounds, place metadata, map geometry, and visual thresholds are configuration/reference data. They are not observed measurements. The exported dashboard bundle currently uses 2026 as its baseline year; earlier years are selectable. Composite scores use each place's latest observation at or before the selected year and inherit the source year for state-level factors. Composite projections are withheld because trend eligibility requires every weighted factor to share the same observed years; air-only projections remain available when a place has at least five eligible observations. Cost of living and water quality are never projected.
+- Fixed score normalization anchors are calibrated 5th/95th percentiles of the latest observation per place at or before 2026 (see [`reports/bounds_calibration.md`](reports/bounds_calibration.md)); place metadata, map geometry, and visual thresholds remain configuration/reference data. They are not observed measurements. The exported dashboard bundle currently uses 2026 as its baseline year; earlier years are selectable. Composite scores use each place's latest observation at or before the selected year and inherit the source year for state-level factors. Trend projection is disabled for every factor in the current configuration (`trend: never`), so no projections are published and `data/processed/trends.csv` is header-only. Cost of living and water quality were never projected.
 
 ## Run the dashboard
 
@@ -73,6 +73,7 @@ The full Python stack is listed in the root `requirements.txt`. Raw datasets and
 ```bash
 pip install -r requirements.txt
 make data                              # clean and merge raw source files
+python -m src.scoring.calibrate_bounds # refresh the bounds report, then copy values into the YAML
 python -m src.scoring.run_scoring      # compute scores
 python -m src.models.run_ml            # trends, model metrics, clusters
 python -m src.analysis.run_eda         # statistics, findings, figures
@@ -107,47 +108,6 @@ start.ps1         Start the local frontend from PowerShell
 ## Sources and methodology
 
 See [`data/raw/source_register.csv`](data/raw/source_register.csv) for source URLs, publishers, license notes, and attribution. Scoring bounds, factor directions, trend eligibility, and default weight presets are defined in [`src/scoring/factors_config.yaml`](src/scoring/factors_config.yaml). Analysis notebooks and the application guide describe the statistical and dashboard methodology.
-
-
-
-
-## 🚀 Quick Start Guide
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/PARASMANI-KHUNTE/MCA_DSP_Project_2026.git
-cd MCA_DSP_Project_2026/"India Livability Intelligence System"
-```
-
-### 2. Set Up Python Environment
-```bash
-# Create and activate virtual environment
-python -m venv .venv
-
-# On Windows:
-.venv\Scripts\activate
-
-# On Linux / macOS:
-source .venv/bin/activate
-
-# Install required dependencies
-pip install -r requirements.txt
-```
-
-### 3. Launch Backend API (FastAPI)
-```bash
-# From within "India Livability Intelligence System"
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload   
-```
-- Interactive API Docs (Swagger UI): **`http://localhost:8000/docs`**
-- Alternative Docs (ReDoc): **`http://localhost:8000/redoc`**
-
-### 4. Launch Frontend Web App (React + Vite)
-```bash
-cd frontend
-npm install
-npm run dev
-
 
 ## Author
 

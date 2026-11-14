@@ -9,6 +9,7 @@ from both notebooks and the FastAPI backend.
 """
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # ── Config loading ─────────────────────────────────────────────────────────
 
-def load_config(path=SCORING_CONFIG) -> dict:
+def load_config(path: str | Path = SCORING_CONFIG) -> dict:
     """Load and return the factors_config.yaml as a dict."""
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)

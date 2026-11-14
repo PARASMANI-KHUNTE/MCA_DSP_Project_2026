@@ -1,5 +1,5 @@
 ﻿# India Livability Intelligence System (ILIS)
-> **Withdrawn presentation (3 November 2026):** slides below contain historical findings from before six generated placeholder inputs were quarantined. Do not present these results. The current rebuild has no composite scores, and remaining local inputs are not independently source-verified. See `data_fabrication_audit.md`.
+> **Withdrawn presentation (3 November 2026; status updated 14 November 2026):** slides below contain historical findings from before six generated placeholder inputs were quarantined. Do not present these results. The current rebuild covers 61 places across air, safety, health, economy, cost of living, and water quality, uses calibrated percentile bounds, and publishes a balanced composite with partial-data flags, but it still does not publish trend projections. The remaining local inputs are not independently source-verified. See `data_fabrication_audit.md` and the current `application_guide.md`.
 
 ## Data-Driven Livability Index with Interactive Map and Trend Projection
 

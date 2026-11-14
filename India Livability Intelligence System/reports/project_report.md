@@ -1,5 +1,5 @@
 ﻿# India Livability Intelligence System
-> **Withdrawn report (3 November 2026):** this report contains historical results generated before six placeholder inputs were quarantined. Those claims and figures are not current findings. The current rebuild has no composite scores; the remaining local inputs are not source-verified. See `data_fabrication_audit.md`.
+> **Withdrawn report (3 November 2026; status updated 14 November 2026):** this report contains historical results generated before six placeholder inputs were quarantined. Those claims and figures are not current findings. The current rebuild covers 61 places across air, safety, health, economy, cost of living, and water quality, uses calibrated percentile bounds, and publishes a balanced composite with partial-data flags, but it still does not publish trend projections. The remaining local inputs are not source-verified. See `data_fabrication_audit.md` and the current `application_guide.md`.
 
 ## A Multi-Criteria Analytical Framework, Statistical Trend Projections, and Interactive Spatial Decision Support System
 

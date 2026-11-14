@@ -575,11 +575,143 @@ def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
 
 # ── Stage 7: Export ────────────────────────────────────────────────────────
 
+def write_data_quality_report(
+    tidy: pd.DataFrame,
+    wide: pd.DataFrame,
+    issues: list[str],
+    places: pd.DataFrame | None = None,
+) -> Path:
+    """Write a coverage, missingness, and validation summary.
+
+    This report is intentionally descriptive. A structural pass means the
+    output matches the expected schema; it does not independently verify the
+    values against their publishers.
+    """
+    report_path = Path("reports") / "data_quality_report.md"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    place_master = places if places is not None else pd.read_csv(PLACES_CSV, dtype=str)
+    n_places = int(place_master["place_id"].nunique())
+    n_states = int((place_master["place_type"] == "state").sum())
+    n_cities = int((place_master["place_type"] == "city").sum())
+
+    imputed = int(tidy.get("is_imputed", pd.Series([False], dtype=bool)).fillna(False).sum())
+    inherited = int(tidy.get("is_inherited", pd.Series([False], dtype=bool)).fillna(False).sum())
+    duplicates = int(tidy.duplicated(subset=["place_id", "year", "factor"]).sum())
+
+    lines = [
+        "# Data Quality Report",
+        "",
+        f"**Generated (UTC):** {datetime.now(timezone.utc).isoformat(timespec='seconds')}  ",
+        f"**Place master:** {n_places} places ({n_states} states/UTs, {n_cities} cities)  ",
+        f"**Tidy rows:** {len(tidy)}  ",
+        f"**Wide rows:** {len(wide)}  ",
+        f"**Duplicate (place, year, factor) rows:** {duplicates}  ",
+        f"**Imputed values:** {imputed}  ",
+        f"**Inherited state-level rows:** {inherited}",
+        "",
+        "## Factor coverage",
+        "",
+        "| Factor | Observations | Places | Years | Inherited rows | Series-break rows |",
+        "|---|---:|---:|---|---:|---:|",
+    ]
+
+    for factor, group in tidy.groupby("factor", sort=True):
+        valid = group.dropna(subset=["value_raw"])
+        years = pd.to_numeric(valid["year"], errors="coerce").dropna()
+        year_span = f"{int(years.min())}–{int(years.max())}" if not years.empty else "—"
+        lines.append(
+            f"| `{factor}` | {len(valid)} | {valid['place_id'].nunique()} | "
+            f"{year_span} | "
+            f"{int(group.get('is_inherited', pd.Series([False] * len(group))).fillna(False).sum())} | "
+            f"{int(group.get('series_break', pd.Series([False] * len(group))).fillna(False).sum())} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "Inherited rows are city records that reuse the latest state-level "
+            "observation for a factor whose published geography is the state. "
+            "The dashboard shows the source year for each pillar.",
+            "",
+            "## Missingness",
+            "",
+            "Factors are stored only where an observation exists; the pipeline does "
+            "not fill missing indicator-years. A place is unscored when two or more "
+            "weighted factors are missing.",
+            "",
+        ]
+    )
+
+    lines.append("| Factor | Wide rows with a value | Blank rows | Coverage of place-years |")
+    lines.append("|---|---:|---:|---:|")
+    for factor, column in (
+        ("air_quality", "air_quality"),
+        ("safety", "safety"),
+        ("health", "health"),
+        ("per_capita_nsdp_constant", "per_capita_nsdp_constant"),
+        ("unemployment_rate", "unemployment_rate"),
+        ("cost_of_living", "cost_of_living"),
+        ("water_quality", "water_quality"),
+    ):
+        if column not in wide.columns:
+            continue
+        values = pd.to_numeric(wide[column], errors="coerce")
+        populated = int(values.notna().sum())
+        blank = int(values.isna().sum())
+        share = populated / len(wide) * 100 if len(wide) else 0.0
+        lines.append(f"| `{column}` | {populated} | {blank} | {share:.1f}% |")
+
+    outlier_path = Path("reports") / "outlier_log.csv"
+    if outlier_path.exists():
+        outliers = pd.read_csv(outlier_path)
+        lines.extend(
+            [
+                "",
+                "## Outliers",
+                "",
+                f"{len(outliers)} source rows were flagged by the domain/IQR rules. "
+                "See `reports/outlier_log.csv` for the original value, rule, and action.",
+            ]
+        )
+
+    lines.extend(["", "## Structural validation", ""])
+    if issues:
+        lines.append(f"**{len(issues)} issue(s) found:**")
+        lines.append("")
+        lines.extend(f"- {issue}" for issue in issues)
+    else:
+        lines.append("**PASSED** — no duplicate keys, unknown place IDs, or negative PM2.5 values.")
+        lines.append("")
+        lines.append(
+            "This confirms output structure only. It does not confirm that the "
+            "local extracts match their cited publications."
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Known limitations",
+            "",
+            "- The local raw extracts have not been independently reconciled against their publishers.",
+            "- State-level air values are derived means of matched city observations, not independent state measurements.",
+            "- Safety rates for 2020 and 2021 use the 2022 projected population denominator.",
+            "- Cost-of-living values are modelled (`plfs_modeled`) or reference (`numbeo`) estimates.",
+            "- Trend projections are disabled because no factor has five comparable annual points after source breaks.",
+            "",
+        ]
+    )
+
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+    return report_path
+
+
 def stage_export(
     tidy: pd.DataFrame,
     wide: pd.DataFrame,
     issues: list[str],
     raw_sources: dict[str, pd.DataFrame] | None = None,
+    places: pd.DataFrame | None = None,
 ) -> None:
     """Write processed files with version tag."""
     logger.info("=== STAGE 7: EXPORT ===")
@@ -656,33 +788,8 @@ def stage_export(
     outlier_log.to_csv(outlier_path, index=False)
     logger.info("Saved: %s (%d flagged rows)", outlier_path, len(outlier_log))
 
-    # Write data quality report stub
-    report_path = Path("reports") / "data_quality_report.md"
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write("# Data Quality Report\n\n")
-        f.write(f"**Rows in tidy table:** {len(tidy)}\n\n")
-        f.write(f"**Factors present:** {sorted(tidy['factor'].unique())}\n\n")
-        f.write(f"**Places covered:** {tidy['place_id'].nunique()}\n\n")
-        imputed = int(tidy.get("is_imputed", pd.Series([False])).sum())
-        f.write(f"**Imputed values:** {imputed}\n\n")
-        present_factors = set(tidy.get("factor", pd.Series(dtype=str)).dropna().unique())
-        required_factors = {
-            FACTOR_AIR, FACTOR_SAFETY, FACTOR_HEALTH,
-            "per_capita_nsdp_constant", "unemployment_rate",
-        }
-        missing_core = sorted(required_factors - present_factors)
-        if missing_core:
-            f.write("## Composite score availability\n\n")
-            f.write("A complete composite cannot be calculated from the active inputs. Missing core indicators: ")
-            f.write(", ".join(missing_core) + ".\n\n")
-        if issues:
-            f.write("## Validation Issues\n\n")
-            for issue in issues:
-                f.write(f"- {issue}\n")
-        else:
-            f.write("## Structural validation: PASSED\n\n")
-            f.write("This confirms output structure only. Core indicator coverage is incomplete; see composite score availability above.\n")
+    # Write the coverage, missingness, and validation summary.
+    report_path = write_data_quality_report(tidy, wide, issues, places=places)
     logger.info("Saved: %s", report_path)
 
 
@@ -749,7 +856,7 @@ def run(places_path: Path = PLACES_CSV) -> None:
         )
 
     # Stage 7: Export
-    stage_export(tidy, wide, issues, raw_sources=raw)
+    stage_export(tidy, wide, issues, raw_sources=raw, places=places)
 
     logger.info("=== PIPELINE COMPLETE ===")
 

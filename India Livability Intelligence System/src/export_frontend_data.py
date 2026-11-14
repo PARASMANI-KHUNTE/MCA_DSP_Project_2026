@@ -156,6 +156,7 @@ def _cost_snapshot_year() -> int | None:
 
 
 def build_payload() -> dict:
+    """Assemble the JSON-serializable payload embedded in the dashboard bundle."""
     places = pd.read_csv(PLACES_CSV, dtype=str)
     factors = pd.read_csv(FACTORS_WIDE)
     tidy = pd.read_parquet(FACTORS_TIDY)
@@ -315,6 +316,7 @@ def build_payload() -> dict:
 
 
 def main() -> None:
+    """Write the generated ES module consumed by the React dashboard."""
     payload = build_payload()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(

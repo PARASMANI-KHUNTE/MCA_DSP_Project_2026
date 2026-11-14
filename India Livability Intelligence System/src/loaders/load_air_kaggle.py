@@ -266,6 +266,7 @@ def aggregate_to_city_year(
 
     # Expected days per year (365 or 366); we compare against this
     def expected_days(year: int) -> int:
+        """Return 366 for leap years, otherwise 365."""
         import calendar
         return 366 if calendar.isleap(year) else 365
 

@@ -14,7 +14,14 @@ import {
   X
 } from "lucide-react";
 import Modal from "./Modal";
-import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR, getScoreColor, getTierColor } from "../services/scoringService";
+import {
+  BASELINE_YEAR,
+  OBSERVED_YEARS,
+  PROJECTION_END_YEAR,
+  getFactorInheritance,
+  getScoreColor,
+  getTierColor
+} from "../services/scoringService";
 
 const FACTOR_CARDS = [
   { key: "air", label: "Air Quality", source: "CPCB Stations & Kaggle PM2.5 Dataset", icon: Wind, color: "#0284c7" },
@@ -267,12 +274,27 @@ export default function PlaceDetailModal({
               <h3 className="eyebrow text-[#888888]">Pillar Breakdown & Ground-Truth Years</h3>
               <span className="text-xs text-[#888888]">Total Weight: {totalWeight}</span>
             </div>
+            {place.type === "city" && (
+              <p className="mb-2 rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] px-3 py-2 text-[11px] leading-relaxed text-[#666666]">
+                <strong className="font-bold text-[#111111]">State-level inheritance:</strong> public safety,
+                healthcare and economy are published for states, so this city reuses its parent state&apos;s
+                observation. The <span className="font-semibold">State</span> badge marks an inherited pillar and
+                the year label is the published source year, not the selected year.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
               {FACTOR_CARDS.map(card => {
                 const Icon = card.icon;
                 const value = place.factorScores?.[card.key];
                 const hasValue = value !== null && value !== undefined;
                 const sourceYear = place.factorYears?.[card.key];
+                const inheritance = getFactorInheritance(place, card.key, year);
+                const inheritanceTitle = inheritance
+                  ? `Inherited from ${place.state} state-level data published in ${inheritance.sourceYear}` +
+                    (inheritance.isCarriedForward
+                      ? `; carried forward ${inheritance.lagYears} year${inheritance.lagYears === 1 ? "" : "s"} to ${year}`
+                      : "")
+                  : undefined;
 
                 return (
                   <div key={card.key} className="rounded-xl border border-[#E5E5E5] bg-white p-3 flex flex-col justify-between gap-2">
@@ -281,8 +303,23 @@ export default function PlaceDetailModal({
                         <Icon size={12} />
                         {card.label}
                       </span>
-                      <span className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-semibold text-[#666666]">
-                        {sourceYear ?? "No data"}
+                      <span className="flex items-center gap-1">
+                        {inheritance && (
+                          <span
+                            title={inheritanceTitle}
+                            className="cursor-help rounded border border-[#E5E5E5] bg-[#FAFAF8] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#B51F3B]"
+                          >
+                            State
+                          </span>
+                        )}
+                        <span
+                          title={inheritanceTitle}
+                          className={`rounded border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-semibold text-[#666666] ${
+                            inheritance ? "bg-amber-50/70" : "bg-[#FAFAF8]"
+                          }`}
+                        >
+                          {sourceYear ?? "No data"}
+                        </span>
                       </span>
                     </div>
                     <div className="flex items-end justify-between">

@@ -33,6 +33,40 @@ export const SCORE_GRADIENT_CSS = `linear-gradient(90deg, ${SCORE_BANDS_ASC.map(
 
 const FACTOR_KEYS = ["air", "safety", "health", "economy", "col"];
 
+// Factors whose published geography is the state. A city record for these
+// factors reuses its parent state's observation, so the UI labels it as
+// inherited rather than city-measured.
+const STATE_LEVEL_FACTORS = new Set(
+  Object.entries(FACTOR_DEFS)
+    .filter(([, definition]) => definition?.level === "state")
+    .map(([key]) => key)
+);
+
+/**
+ * Describe how a city obtained a factor value.
+ *
+ * Returns null for state places, city-level factors, or factors without an
+ * observation year. Otherwise returns the published source year and, when a
+ * later year is selected, the number of years the value has been carried
+ * forward.
+ */
+export function getFactorInheritance(place, factorKey, selectedYear) {
+  if (!place || place.type !== "city" || !STATE_LEVEL_FACTORS.has(factorKey)) return null;
+  const sourceYear = place.factorYears?.[factorKey];
+  if (!Number.isFinite(sourceYear)) return null;
+  const lagYears = Number.isFinite(selectedYear) ? Math.max(0, selectedYear - sourceYear) : null;
+  return {
+    level: "state",
+    sourceYear,
+    lagYears,
+    isCarriedForward: lagYears !== null && lagYears > 0
+  };
+}
+
+export function getStateLevelFactorKeys() {
+  return [...STATE_LEVEL_FACTORS];
+}
+
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const ROWS_BY_PLACE = new Map();

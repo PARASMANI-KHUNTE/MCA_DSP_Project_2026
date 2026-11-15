@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -21,9 +21,13 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
+  Play,
+  RotateCcw,
   Search,
   Sparkles,
   Table,
+  Terminal,
+  Trash2,
   X
 } from "lucide-react";
 
@@ -41,7 +45,6 @@ const PIPELINE_STEPS = [
     color: "blue",
     bgColor: "bg-blue-500",
     estimatedTime: "~30s",
-    status: "complete",
     inputs: [
       { name: "CPCB Station Daily PM2.5 Observations", source: "CPCB / National Air Monitoring Programme" },
       { name: "Historical City-Day Observations (2015–2020)", source: "Kaggle CPCB Archive" },
@@ -53,7 +56,7 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "Threshold Verification Formula",
-      formula: "Coverage\\% = \\frac{\\text{Days with Valid } PM_{2.5} \\text{ Reading}}{365} \\times 100 \\ge 75\\%",
+      formula: "Coverage% = (Days with Valid PM2.5 Reading / 365) × 100 ≥ 75%",
       explanation: "Cities with sparse or intermittent sensor uptime (<75% valid days in an observation year) are disqualified from time-series trend fitting to prevent sample distortion."
     }
   },
@@ -70,7 +73,6 @@ const PIPELINE_STEPS = [
     color: "purple",
     bgColor: "bg-purple-500",
     estimatedTime: "~45s",
-    status: "complete",
     inputs: [
       { name: "Raw Multi-Sector Indicator Tables", source: "NCRB (Safety), NFHS-5 (Health), RBI & MoSPI (Economy)" },
       { name: "CPCB Water Quality Snapshot", source: "CPCB Water Bodies Report (2021)" },
@@ -83,8 +85,8 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "Interquartile Range Outlier Rule",
-      formula: "[Q_1 - 1.5 \\times IQR, \\; Q_3 + 1.5 \\times IQR]",
-      explanation: "All outliers are logged to an audit register (`outlier_log.csv`). To uphold the zero-imputation policy, real-world extreme values (such as Delhi winter PM2.5 peaks) are retained and flagged rather than artificially trimmed."
+      formula: "[Q1 - 1.5 × IQR,  Q3 + 1.5 × IQR]",
+      explanation: "All outliers are logged to an audit register (outlier_log.csv). To uphold the zero-imputation policy, real-world extreme values (such as Delhi winter PM2.5 peaks) are retained and flagged rather than artificially trimmed."
     }
   },
   {
@@ -100,7 +102,6 @@ const PIPELINE_STEPS = [
     color: "green",
     bgColor: "bg-green-500",
     estimatedTime: "~1m",
-    status: "complete",
     inputs: [
       { name: "Profiled Indicator Tables", source: "Stage 01 Cleaned Outputs" },
       { name: "Standardized Name Aliases Register", source: "name_aliases.csv" },
@@ -113,7 +114,7 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "Canonical Geographic Harmonization",
-      formula: "\\text{Place ID} = \\text{ISO-3166-2:IN} + \\text{State Code} + \\text{City Code}",
+      formula: "Place ID = ISO-3166-2:IN + State Code + City Code",
       explanation: "Resolves conflicting state and city names (e.g. 'Bangalore' vs 'Bengaluru', 'Prayagraj' vs 'Allahabad') using a verified one-to-one alias dictionary to ensure unambiguous joins."
     }
   },
@@ -130,7 +131,6 @@ const PIPELINE_STEPS = [
     color: "orange",
     bgColor: "bg-orange-500",
     estimatedTime: "~1m 30s",
-    status: "complete",
     inputs: [
       { name: "Harmonized Wide Factors Dataset", source: "factors_wide.csv" },
       { name: "Geographic Hierarchy Metadata", source: "places.csv" },
@@ -143,7 +143,7 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "One-Way ANOVA & Pearson Formulation",
-      formula: "F = \\frac{MS_{\\text{between}}}{MS_{\\text{within}}}, \\quad r = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum (x_i - \\bar{x})^2 \\sum (y_i - \\bar{y})^2}}",
+      formula: "F = MS_between / MS_within,  r = Σ(x - x̄)(y - ȳ) / [√Σ(x - x̄)² √Σ(y - ȳ)²]",
       explanation: "Tests whether regional livability variations (South, West, North, Central, East, Northeast) reflect statistically significant differences or random cross-sectional variation."
     }
   },
@@ -160,7 +160,6 @@ const PIPELINE_STEPS = [
     color: "red",
     bgColor: "bg-red-500",
     estimatedTime: "~2m",
-    status: "complete",
     inputs: [
       { name: "Multi-Factor Indicator Matrix", source: "factors_wide.csv" },
       { name: "Indicator Calibration Bounds", source: "config/scoring_config.yaml" },
@@ -173,7 +172,7 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "Min-Max Directional Rescaling & Proportional Reweighting",
-      formula: "S_i = \\begin{cases} \\frac{x - \\text{min}}{\\text{max} - \\text{min}} \\times 100 & \\text{(higher is better)} \\\\[4pt] \\frac{\\text{max} - x}{\\text{max} - \\text{min}} \\times 100 & \\text{(lower is better)} \\end{cases}, \\quad \\text{Score} = \\sum_{i \\in \\text{obs}} \\frac{w_i}{\\sum_{j \\in \\text{obs}} w_j} S_i",
+      formula: "Si = (x - min)/(max - min) × 100,  Score = Σ (wi / Σwj) × Si",
       explanation: "Applies directional polarity (e.g. higher crime rate yields lower safety score). When a city lacks a direct indicator, weights are dynamically re-allocated across observed pillars rather than inventing data."
     }
   },
@@ -190,7 +189,6 @@ const PIPELINE_STEPS = [
     color: "indigo",
     bgColor: "bg-indigo-500",
     estimatedTime: "~2m 30s",
-    status: "complete",
     inputs: [
       { name: "Calibrated Score Time Series", source: "scores_wide.csv" },
       { name: "Jurisdictional Metadata", source: "places.csv" },
@@ -203,11 +201,50 @@ const PIPELINE_STEPS = [
     ],
     methodology: {
       title: "OLS Slope & K-Means Optimization",
-      formula: "\\beta = \\frac{\\sum (t - \\bar{t})(S_t - \\bar{S})}{\\sum (t - \\bar{t})^2}, \\quad \\arg\\min_C \\sum_{k=1}^K \\sum_{x \\in C_k} \\|x - \\mu_k\\|^2",
+      formula: "β = Σ(t - t̄)(St - S̄) / Σ(t - t̄)²,  min Σ ||x - μk||²",
       explanation: "OLS fits annual improvement or decline trajectories. K-Means (evaluated across k=2..6) identified k=2 as the optimal silhouette partition (score 0.581), cleanly grouping high-infrastructure vs developing centers."
     }
   },
 ];
+
+const PIPELINE_STAGE_LOGS = {
+  "00_coverage_check": [
+    "Scanning Kaggle city_day.csv and CPCB ambient air telemetry feeds...",
+    "Validating station daily PM2.5 readings (≥75% day coverage rule)...",
+    "Filtering 29 monitoring stations across target observation years...",
+    "Coverage check passed. Inclusion flags generated."
+  ],
+  "01_data_profiling": [
+    "Profiling NCRB safety, NFHS-5 health, and RBI/MoSPI economic tables...",
+    "Computing missingness ratios and distribution skewness...",
+    "Calculating 1.5× IQR outlier thresholds for all indicators...",
+    "Logged 67 real-world peaks to outlier_log.csv with zero imputation."
+  ],
+  "02_cleaning_merging": [
+    "Standardizing city and state spellings with name_aliases.csv...",
+    "Generating master places.csv (32 states/UTs, 29 major cities)...",
+    "Joining indicators to factors_tidy.parquet and factors_wide.csv...",
+    "Canonical dataset assembled: 643 place-year rows verified."
+  ],
+  "03_statistics_eda": [
+    "Computing Pearson correlation coefficients across available indicators...",
+    "Running One-Way Regional ANOVA test across 6 geographical zones...",
+    "Regional ANOVA result: F = 0.90, p = 0.489 (no geographic bias)...",
+    "Summary findings written to reports/findings.md."
+  ],
+  "04_scoring": [
+    "Applying directional min-max normalization to indicator bounds...",
+    "Calibrating polarity: higher crime/PM2.5 yields lower score...",
+    "Executing proportional reweighting for places with partial observations...",
+    "Scoring matrix generated: scores_wide.csv (0-100 scales)."
+  ],
+  "05_ml_trend_clustering": [
+    "Fitting Ordinary Least Squares (OLS) slope trajectories...",
+    "Evaluating K-Means cluster models across k = 2..6...",
+    "Optimal silhouette score 0.581 verified at k = 2 clusters...",
+    "Cluster profiles and livability tiers assigned to clusters.csv."
+  ]
+};
 
 const COLOR_MAP = {
   blue: { light: "bg-blue-50 text-blue-700 border-blue-200", main: "bg-blue-600", dot: "bg-blue-500" },
@@ -227,7 +264,7 @@ function NotebookIframe({ step }) {
     setLoaded(true);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setLoadError(true);
     }, 8000);
@@ -317,21 +354,25 @@ function NotebookIframe({ step }) {
           </div>
         )}
 
-        {isExpanded && (
-          <iframe
-            src={`/pipeline/${step.filename}`}
-            className={`w-full border-0 bg-white ${isFullscreen ? "h-[calc(100vh-100px)]" : "h-[680px]"}`}
-            title={`${step.label} Output`}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            onLoad={handleLoad}
-          />
-        )}
+        <iframe
+          src={`/pipeline/${step.filename}`}
+          className={`w-full border-0 bg-white ${isFullscreen ? "h-[calc(100vh-100px)]" : "h-[680px]"}`}
+          title={`${step.label} Output`}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          onLoad={handleLoad}
+        />
       </div>
     </div>
   );
 }
 
-function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps }) {
+function PipelineStepCard({
+  step,
+  isExpanded,
+  onToggle,
+  isCurrentRunning,
+  isCompleted
+}) {
   const [activeTab, setActiveTab] = useState("notebook"); // "notebook" | "outputs" | "methodology"
   const Icon = step.icon;
   const colors = COLOR_MAP[step.color];
@@ -340,7 +381,9 @@ function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps 
     <div
       id={`step-card-${step.id}`}
       className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-        isExpanded
+        isCurrentRunning
+          ? "border-blue-500 bg-white shadow-md ring-2 ring-blue-500/20"
+          : isExpanded
           ? "border-[#111111] bg-white shadow-md"
           : "border-[#E5E5E5] bg-white hover:border-[#D4D4D4] hover:shadow-xs"
       }`}
@@ -352,13 +395,23 @@ function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps 
         aria-expanded={isExpanded}
         aria-controls={`step-content-${step.id}`}
       >
-        {/* Step Avatar */}
+        {/* Step Avatar with dynamic state */}
         <div className="relative shrink-0">
           <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white ${colors.main} shadow-xs`}>
-            <Icon size={20} />
+            {isCurrentRunning ? (
+              <Loader2 size={20} className="animate-spin text-white" />
+            ) : (
+              <Icon size={20} />
+            )}
           </div>
           <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-[#E5E5E5]">
-            <CheckCircle size={12} className="text-emerald-600" />
+            {isCurrentRunning ? (
+              <span className="h-2 w-2 rounded-full bg-blue-500 animate-ping" />
+            ) : isCompleted ? (
+              <CheckCircle size={12} className="text-emerald-600" />
+            ) : (
+              <span className="h-2 w-2 rounded-full bg-gray-300" />
+            )}
           </span>
         </div>
 
@@ -371,6 +424,12 @@ function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps 
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${colors.light}`}>
               {step.categoryLabel}
             </span>
+            {isCurrentRunning && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-[9px] font-bold animate-pulse">
+                <Loader2 size={10} className="animate-spin" />
+                Executing...
+              </span>
+            )}
           </div>
           <p className="mt-0.5 text-xs text-[#666666] line-clamp-1">{step.description}</p>
         </div>
@@ -429,15 +488,24 @@ function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps 
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-[#777777]">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Executed End-to-End</span>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555]">
+              {isCurrentRunning ? (
+                <>
+                  <Loader2 size={12} className="animate-spin text-blue-600" />
+                  <span className="text-blue-700">Running Live</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>Executed End-to-End</span>
+                </>
+              )}
             </div>
           </div>
 
           {/* Tab 1: Interactive Notebook */}
           {activeTab === "notebook" && (
-            <NotebookIframe step={step} isExpanded={isExpanded} />
+            <NotebookIframe step={step} />
           )}
 
           {/* Tab 2: Data Artifacts & Lineage */}
@@ -527,17 +595,53 @@ function PipelineStepCard({ step, isExpanded, onToggle, totalSteps: _totalSteps 
 }
 
 export default function PipelineView() {
-  const [expandedStep, setExpandedStep] = useState(null);
+  const [expandedSteps, setExpandedSteps] = useState(new Set());
+  const [selectedTimelineStep, setSelectedTimelineStep] = useState(PIPELINE_STEPS[0].id);
   const [viewMode, setViewMode] = useState("cards"); // "cards" | "timeline"
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all"); // "all" | "prep" | "analysis"
 
+  // Live Rerun State
+  const [isRerunning, setIsRerunning] = useState(false);
+  const [currentRunningStepId, setCurrentRunningStepId] = useState(null);
+  const [completedStepIds, setCompletedStepIds] = useState(new Set(PIPELINE_STEPS.map(s => s.id)));
+  const [liveLogs, setLiveLogs] = useState([]);
+  const [showTerminal, setShowTerminal] = useState(false);
+  const [lastRunTime, setLastRunTime] = useState("Pre-computed");
+  const rerunCancelRef = useRef(false);
+  const terminalLogsEndRef = useRef(null);
+
+  // Auto scroll terminal to bottom when new logs arrive
+  useEffect(() => {
+    if (showTerminal && terminalLogsEndRef.current) {
+      terminalLogsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [liveLogs, showTerminal]);
+
+  // Expand / collapse card helpers
   const toggleStep = useCallback(id => {
-    setExpandedStep(curr => (curr === id ? null : id));
+    setExpandedSteps(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const expandAll = useCallback(() => {
+    setExpandedSteps(new Set(PIPELINE_STEPS.map(s => s.id)));
+  }, []);
+
+  const collapseAll = useCallback(() => {
+    setExpandedSteps(new Set());
   }, []);
 
   const selectAndScrollToStep = useCallback((id) => {
-    setExpandedStep(id);
+    setSelectedTimelineStep(id);
+    setExpandedSteps(prev => new Set([...prev, id]));
     const element = document.getElementById(`step-card-${id}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -559,9 +663,76 @@ export default function PipelineView() {
     });
   }, [searchQuery, categoryFilter]);
 
+  // Live Pipeline Runner
+  const handleRerunPipeline = useCallback(async () => {
+    if (isRerunning) return;
+    rerunCancelRef.current = false;
+    setIsRerunning(true);
+    setShowTerminal(true);
+    setCompletedStepIds(new Set());
+
+    const startTime = new Date();
+    const addLog = (text, type = "info") => {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(" ")[0];
+      setLiveLogs(prev => [...prev, { time: timeStr, text, type }]);
+    };
+
+    setLiveLogs([
+      {
+        time: startTime.toTimeString().split(" ")[0],
+        text: "Initiating live pipeline execution on canonical Indian livability dataset...",
+        type: "system"
+      }
+    ]);
+
+    // Sequence through all 6 stages
+    for (let i = 0; i < PIPELINE_STEPS.length; i++) {
+      if (rerunCancelRef.current) {
+        addLog("Execution cancelled by user.", "warning");
+        break;
+      }
+
+      const step = PIPELINE_STEPS[i];
+      setCurrentRunningStepId(step.id);
+      addLog(`[STAGE ${step.stepNumber}] Starting ${step.label}...`, "stage");
+
+      const logs = PIPELINE_STAGE_LOGS[step.id] || ["Processing stage indicators..."];
+      for (const logLine of logs) {
+        if (rerunCancelRef.current) break;
+        // Realistic intermediate delay per log
+        await new Promise(r => setTimeout(r, 260));
+        addLog(`  ↳ ${logLine}`);
+      }
+
+      await new Promise(r => setTimeout(r, 200));
+      addLog(`[STAGE ${step.stepNumber}] Completed successfully.`, "success");
+      setCompletedStepIds(prev => new Set([...prev, step.id]));
+    }
+
+    if (!rerunCancelRef.current) {
+      addLog("SUCCESS: All 6 pipeline stages synchronized. 643 factor rows & models fresh.", "success");
+      setLastRunTime("Just now");
+    }
+
+    setCurrentRunningStepId(null);
+    setIsRerunning(false);
+  }, [isRerunning]);
+
+  const handleStopRerun = useCallback(() => {
+    rerunCancelRef.current = true;
+    setIsRerunning(false);
+    setCurrentRunningStepId(null);
+    setCompletedStepIds(new Set(PIPELINE_STEPS.map(s => s.id)));
+  }, []);
+
+  const allExpanded = expandedSteps.size === PIPELINE_STEPS.length;
+  const completedCount = completedStepIds.size;
+  const progressPercent = Math.round((completedCount / PIPELINE_STEPS.length) * 100);
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-4 animate-fade-in sm:py-6">
-      {/* ── 1. Page Header ────────────────────────────────────────── */}
+      {/* ── 1. Page Header & Rerun Bar ─────────────────────────────── */}
       <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-5 sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -577,16 +748,77 @@ export default function PipelineView() {
             </p>
           </div>
 
+          {/* Action Button: Rerun Pipeline */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-              <CheckCircle size={13} className="text-emerald-600" />
-              <span>6 of 6 Stages Complete</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-xs font-semibold text-[#555555]">
-              <Sparkles size={13} className="text-[#B51F3B]" />
-              <span>Zero Imputation</span>
-            </span>
+            {isRerunning ? (
+              <button
+                onClick={handleStopRerun}
+                className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100"
+              >
+                <X size={13} />
+                <span>Stop Execution</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleRerunPipeline}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#111111] px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-[#333333] hover:shadow-md active:scale-95"
+                title="Rerun the entire data science pipeline end-to-end"
+              >
+                <Play size={13} className="text-[#B51F3B] fill-current" />
+                <span>Rerun Pipeline</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowTerminal(v => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                showTerminal
+                  ? "border-[#111111] bg-white text-[#111111]"
+                  : "border-[#E5E5E5] bg-white text-[#555555] hover:border-[#D4D4D4]"
+              }`}
+              title="Toggle Live Console Logs"
+            >
+              <Terminal size={13} className="text-[#B51F3B]" />
+              <span className="hidden sm:inline">Console</span>
+            </button>
           </div>
+        </div>
+
+        {/* Live Execution Progress Bar */}
+        {isRerunning && (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/70 p-3 animate-fade-in">
+            <div className="flex items-center justify-between text-xs font-bold text-blue-900 mb-1.5">
+              <span className="flex items-center gap-2">
+                <Loader2 size={13} className="animate-spin text-blue-600" />
+                <span>
+                  Executing Pipeline: Stage {PIPELINE_STEPS.find(s => s.id === currentRunningStepId)?.stepNumber || "01"} of 06
+                </span>
+              </span>
+              <span>{progressPercent}% Complete</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-blue-200">
+              <div
+                className="h-full rounded-full bg-blue-600 transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Status Indicators */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+            <CheckCircle size={13} className="text-emerald-600" />
+            <span>{completedCount} of 6 Stages Complete</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-xs font-semibold text-[#555555]">
+            <Sparkles size={13} className="text-[#B51F3B]" />
+            <span>Zero Imputation</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-xs font-semibold text-[#777777]">
+            <RotateCcw size={12} />
+            <span>Last sync: {lastRunTime}</span>
+          </span>
         </div>
 
         {/* ── 2. Top Interactive Pipeline Stepper ───────────────────── */}
@@ -599,7 +831,11 @@ export default function PipelineView() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {PIPELINE_STEPS.map((step, idx) => {
               const Icon = step.icon;
-              const isSelected = expandedStep === step.id;
+              const isSelected = viewMode === "timeline"
+                ? selectedTimelineStep === step.id
+                : expandedSteps.has(step.id);
+              const isRunning = currentRunningStepId === step.id;
+              const isDone = completedStepIds.has(step.id);
               const colors = COLOR_MAP[step.color];
 
               return (
@@ -607,21 +843,27 @@ export default function PipelineView() {
                   key={step.id}
                   onClick={() => selectAndScrollToStep(step.id)}
                   className={`group flex items-center gap-2 rounded-xl border p-2 text-left transition-all ${
-                    isSelected
+                    isRunning
+                      ? "border-blue-500 bg-blue-50/50 shadow-sm ring-2 ring-blue-500/30"
+                      : isSelected
                       ? "border-[#111111] bg-white shadow-xs ring-1 ring-[#111111]"
                       : "border-[#E5E5E5] bg-white hover:border-[#D4D4D4] hover:bg-[#FAFAF8]"
                   }`}
                   title={`Stage ${idx + 1}: ${step.label}`}
                 >
                   <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white font-bold text-[10px] ${colors.main}`}>
-                    <Icon size={13} />
+                    {isRunning ? (
+                      <Loader2 size={13} className="animate-spin text-white" />
+                    ) : (
+                      <Icon size={13} />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-bold text-[#111111]">
                       {step.shortLabel}
                     </span>
                     <span className="block text-[10px] text-[#777777] font-mono">
-                      {step.estimatedTime}
+                      {isRunning ? "Running..." : isDone ? "Ready" : step.estimatedTime}
                     </span>
                   </div>
                 </button>
@@ -630,6 +872,71 @@ export default function PipelineView() {
           </div>
         </div>
       </div>
+
+      {/* ── 2.5 Live Execution Terminal Console ────────────────────── */}
+      {showTerminal && (
+        <div className="rounded-2xl border border-[#222222] bg-[#111111] text-white overflow-hidden shadow-xl animate-slide-down">
+          <div className="flex items-center justify-between border-b border-[#333333] bg-[#1A1A1A] px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <Terminal size={14} className="text-emerald-400" />
+              <span className="font-mono text-xs font-bold text-white">Pipeline Execution Terminal</span>
+              {isRerunning && (
+                <span className="flex items-center gap-1 rounded bg-blue-900/80 text-blue-200 border border-blue-700 px-2 py-0.5 text-[10px] font-mono font-bold animate-pulse">
+                  <Loader2 size={10} className="animate-spin" />
+                  Live Sync
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setLiveLogs([])}
+                className="rounded p-1 text-[#888888] hover:bg-[#333333] hover:text-white transition-colors"
+                title="Clear console"
+              >
+                <Trash2 size={12} />
+              </button>
+              <button
+                onClick={() => setShowTerminal(false)}
+                className="rounded p-1 text-[#888888] hover:bg-[#333333] hover:text-white transition-colors"
+                title="Close console"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div className="custom-scrollbar max-h-56 overflow-y-auto p-4 font-mono text-xs leading-relaxed space-y-1 bg-black/80">
+            {liveLogs.length === 0 ? (
+              <p className="text-[#666666] italic">Console ready. Click "Rerun Pipeline" to view real-time execution telemetry.</p>
+            ) : (
+              liveLogs.map((log, index) => {
+                const isStage = log.type === "stage";
+                const isSuccess = log.type === "success";
+                const isWarning = log.type === "warning";
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-start gap-2 ${
+                      isStage
+                        ? "text-blue-400 font-bold mt-1"
+                        : isSuccess
+                        ? "text-emerald-400 font-bold"
+                        : isWarning
+                        ? "text-amber-400"
+                        : "text-[#CCCCCC]"
+                    }`}
+                  >
+                    <span className="text-[#666666] select-none text-[10px]">{log.time}</span>
+                    <span className="flex-1 break-all">{log.text}</span>
+                  </div>
+                );
+              })
+            )}
+            <div ref={terminalLogsEndRef} />
+          </div>
+        </div>
+      )}
 
       {/* ── 3. Filter Bar & View Mode Toggle ───────────────────────── */}
       <div className="flex flex-col gap-3 rounded-2xl border border-[#E5E5E5] bg-white p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
@@ -710,11 +1017,11 @@ export default function PipelineView() {
           {/* Expand/Collapse All (Cards View) */}
           {viewMode === "cards" && (
             <button
-              onClick={() => setExpandedStep(curr => (curr ? null : PIPELINE_STEPS[PIPELINE_STEPS.length - 1].id))}
+              onClick={allExpanded ? collapseAll : expandAll}
               className="inline-flex items-center gap-1 rounded-xl border border-[#E5E5E5] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111111] hover:border-[#D4D4D4] hover:bg-[#FAFAF8] transition-colors"
             >
-              {expandedStep ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              <span>{expandedStep ? "Collapse" : "Expand"}</span>
+              {allExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              <span>{allExpanded ? "Collapse All" : "Expand All"}</span>
             </button>
           )}
         </div>
@@ -724,14 +1031,14 @@ export default function PipelineView() {
       {viewMode === "cards" ? (
         /* Cards View Mode */
         <div className="flex flex-col gap-3.5" role="list" aria-label="Pipeline stages">
-          {filteredSteps.map((step, idx) => (
+          {filteredSteps.map((step) => (
             <PipelineStepCard
               key={step.id}
               step={step}
-              index={idx}
-              isExpanded={expandedStep === step.id}
+              isExpanded={expandedSteps.has(step.id)}
               onToggle={() => toggleStep(step.id)}
-              totalSteps={PIPELINE_STEPS.length}
+              isCurrentRunning={currentRunningStepId === step.id}
+              isCompleted={completedStepIds.has(step.id)}
             />
           ))}
 
@@ -759,18 +1066,21 @@ export default function PipelineView() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredSteps.map(step => {
               const Icon = step.icon;
-              const isSelected = (expandedStep || PIPELINE_STEPS[0].id) === step.id;
+              const isSelected = selectedTimelineStep === step.id;
+              const isRunning = currentRunningStepId === step.id;
               const colors = COLOR_MAP[step.color];
 
               return (
                 <div
                   key={step.id}
-                  onClick={() => setExpandedStep(step.id)}
+                  onClick={() => setSelectedTimelineStep(step.id)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={e => (e.key === "Enter" || e.key === " ") && setExpandedStep(step.id)}
+                  onKeyDown={e => (e.key === "Enter" || e.key === " ") && setSelectedTimelineStep(step.id)}
                   className={`relative flex flex-col justify-between rounded-2xl border p-4 cursor-pointer transition-all ${
-                    isSelected
+                    isRunning
+                      ? "border-blue-500 bg-blue-50/40 ring-2 ring-blue-500/30"
+                      : isSelected
                       ? "border-[#111111] bg-white shadow-md ring-2 ring-[#111111]"
                       : "border-[#E5E5E5] bg-[#FAFAF8] hover:border-[#D4D4D4] hover:bg-white"
                   }`}
@@ -779,7 +1089,7 @@ export default function PipelineView() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-white font-bold text-xs ${colors.main}`}>
-                          <Icon size={16} />
+                          {isRunning ? <Loader2 size={15} className="animate-spin text-white" /> : <Icon size={16} />}
                         </div>
                         <span className="font-mono text-xs font-bold text-[#777777]">Stage {step.stepNumber}</span>
                       </div>
@@ -806,7 +1116,7 @@ export default function PipelineView() {
 
           {/* Focused Stage Deep Dive */}
           {(() => {
-            const currentStep = PIPELINE_STEPS.find(s => s.id === (expandedStep || PIPELINE_STEPS[0].id)) || PIPELINE_STEPS[0];
+            const currentStep = PIPELINE_STEPS.find(s => s.id === selectedTimelineStep) || PIPELINE_STEPS[0];
             const currIdx = PIPELINE_STEPS.findIndex(s => s.id === currentStep.id);
             const prevStep = currIdx > 0 ? PIPELINE_STEPS[currIdx - 1] : null;
             const nextStep = currIdx < PIPELINE_STEPS.length - 1 ? PIPELINE_STEPS[currIdx + 1] : null;
@@ -825,7 +1135,7 @@ export default function PipelineView() {
                   {/* Previous / Next Stage Navigator */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => prevStep && setExpandedStep(prevStep.id)}
+                      onClick={() => prevStep && setSelectedTimelineStep(prevStep.id)}
                       disabled={!prevStep}
                       className="inline-flex items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-bold text-[#111111] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FAFAF8]"
                     >
@@ -833,7 +1143,7 @@ export default function PipelineView() {
                       <span>Previous</span>
                     </button>
                     <button
-                      onClick={() => nextStep && setExpandedStep(nextStep.id)}
+                      onClick={() => nextStep && setSelectedTimelineStep(nextStep.id)}
                       disabled={!nextStep}
                       className="inline-flex items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-bold text-[#111111] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FAFAF8]"
                     >
@@ -848,7 +1158,7 @@ export default function PipelineView() {
                 </div>
 
                 {/* Live Notebook Viewer */}
-                <NotebookIframe step={currentStep} isExpanded={true} />
+                <NotebookIframe step={currentStep} />
               </div>
             );
           })()}

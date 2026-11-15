@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   AlertCircle,
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
   BarChart2,
@@ -21,6 +22,7 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
+  Network,
   Play,
   RotateCcw,
   Search,
@@ -28,8 +30,10 @@ import {
   Table,
   Terminal,
   Trash2,
+  Workflow,
   X
 } from "lucide-react";
+import DataPreviewModal from "./DataPreviewModal";
 
 const PIPELINE_STEPS = [
   {
@@ -207,6 +211,15 @@ const PIPELINE_STEPS = [
   },
 ];
 
+const RAW_DATA_FEEDS = [
+  { name: "CPCB Ambient Air PM2.5", agency: "Central Pollution Control Board", metric: "Daily station PM2.5 readings", scope: "29 Cities (2015–2026)" },
+  { name: "NCRB Crime in India", agency: "National Crime Records Bureau", metric: "Cognizable crime rate per lakh", scope: "32 States & UTs (2020–2022)" },
+  { name: "MoHFW NFHS-5 Survey", agency: "Ministry of Health & Family Welfare", metric: "Institutional births, vaccination, nutrition", scope: "32 States & UTs (2019–2021)" },
+  { name: "RBI NSDP & MoSPI PLFS", agency: "Reserve Bank of India & MoSPI", metric: "Constant NSDP per capita & employment rate", scope: "All States & Metros (2023–2024)" },
+  { name: "City Rent Affordability", agency: "Longitudinal Rent Index", metric: "Median 2-BHK rent / salary ratio", scope: "26 Matched Cities (2010–2024)" },
+  { name: "CPCB Water Bodies", agency: "Central Pollution Control Board", metric: "BOD and Dissolved Oxygen (DO)", scope: "State-level Snapshot (2021)" },
+];
+
 const PIPELINE_STAGE_LOGS = {
   "00_coverage_check": [
     "Scanning Kaggle city_day.csv and CPCB ambient air telemetry feeds...",
@@ -371,18 +384,29 @@ function PipelineStepCard({
   isExpanded,
   onToggle,
   isCurrentRunning,
-  isCompleted
+  isCompleted,
+  isRerunning,
+  onPreviewData
 }) {
   const [activeTab, setActiveTab] = useState("notebook"); // "notebook" | "outputs" | "methodology"
   const Icon = step.icon;
   const colors = COLOR_MAP[step.color];
 
+  // Desaturation logic during pipeline rerun
+  const saturationClass = isRerunning
+    ? isCurrentRunning
+      ? "grayscale-0 opacity-100 ring-2 ring-blue-500 shadow-lg scale-[1.005] transition-all duration-300"
+      : isCompleted
+      ? "grayscale-0 opacity-100 transition-all duration-700"
+      : "grayscale opacity-40 contrast-75 transition-all duration-700 pointer-events-none"
+    : "grayscale-0 opacity-100 transition-all duration-300";
+
   return (
     <div
       id={`step-card-${step.id}`}
-      className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+      className={`rounded-2xl border overflow-hidden ${saturationClass} ${
         isCurrentRunning
-          ? "border-blue-500 bg-white shadow-md ring-2 ring-blue-500/20"
+          ? "border-blue-500 bg-white"
           : isExpanded
           ? "border-[#111111] bg-white shadow-md"
           : "border-[#E5E5E5] bg-white hover:border-[#D4D4D4] hover:shadow-xs"
@@ -427,7 +451,7 @@ function PipelineStepCard({
             {isCurrentRunning && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-[9px] font-bold animate-pulse">
                 <Loader2 size={10} className="animate-spin" />
-                Executing...
+                Executing Live
               </span>
             )}
           </div>
@@ -530,7 +554,7 @@ function PipelineStepCard({
                 </div>
               </div>
 
-              {/* Outputs */}
+              {/* Outputs with View Data and Download */}
               <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#888888] mb-2.5 flex items-center gap-1.5">
                   <Table size={13} className="text-emerald-700" />
@@ -543,8 +567,8 @@ function PipelineStepCard({
                       className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#EBEBE8] bg-[#FAFAF8] p-3 transition-colors hover:border-[#D4D4D4] hover:bg-white"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white border border-[#E5E5E5] text-[#111111]">
-                          <output.icon size={14} className="text-[#B51F3B]" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-[#E5E5E5] text-[#111111]">
+                          <output.icon size={15} className="text-[#B51F3B]" />
                         </span>
                         <div>
                           <span className="block text-xs font-bold text-[#111111]">{output.label}</span>
@@ -552,15 +576,27 @@ function PipelineStepCard({
                         </div>
                       </div>
 
+                      {/* Both View Data and Download Buttons */}
                       {output.file ? (
-                        <a
-                          href={output.file}
-                          download
-                          className="inline-flex items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-3 py-1.5 text-xs font-bold text-[#111111] transition-colors hover:border-[#B51F3B] hover:text-[#B51F3B]"
-                        >
-                          <Download size={12} />
-                          <span>Download Data</span>
-                        </a>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => onPreviewData(output.file, output.label)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-white px-3 py-1.5 text-xs font-bold text-[#111111] transition-all hover:border-[#111111] hover:bg-[#FAFAF8] shadow-2xs"
+                            title={`Preview ${output.label} in interactive data table`}
+                          >
+                            <Eye size={12} className="text-[#B51F3B]" />
+                            <span>View Data</span>
+                          </button>
+                          <a
+                            href={output.file}
+                            download
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-white px-3 py-1.5 text-xs font-bold text-[#111111] transition-all hover:border-[#B51F3B] hover:text-[#B51F3B] shadow-2xs"
+                            title={`Download ${output.label}`}
+                          >
+                            <Download size={12} />
+                            <span>Download</span>
+                          </a>
+                        </div>
                       ) : (
                         <span className="text-[10px] font-semibold text-[#888888] rounded-md bg-white border border-[#E5E5E5] px-2 py-0.5">
                           In-Memory / Notebook
@@ -597,9 +633,12 @@ function PipelineStepCard({
 export default function PipelineView() {
   const [expandedSteps, setExpandedSteps] = useState(new Set());
   const [selectedTimelineStep, setSelectedTimelineStep] = useState(PIPELINE_STEPS[0].id);
-  const [viewMode, setViewMode] = useState("cards"); // "cards" | "timeline"
+  const [viewMode, setViewMode] = useState("cards"); // "cards" | "timeline" | "flowchart"
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all"); // "all" | "prep" | "analysis"
+
+  // Data Preview Modal State
+  const [previewModalFile, setPreviewModalFile] = useState(null); // { url, name } | null
 
   // Live Rerun State
   const [isRerunning, setIsRerunning] = useState(false);
@@ -609,12 +648,12 @@ export default function PipelineView() {
   const [showTerminal, setShowTerminal] = useState(false);
   const [lastRunTime, setLastRunTime] = useState("Pre-computed");
   const rerunCancelRef = useRef(false);
-  const terminalLogsEndRef = useRef(null);
+  const terminalScrollRef = useRef(null);
 
-  // Auto scroll terminal to bottom when new logs arrive
+  // Auto-scroll terminal container ONLY without moving the page window
   useEffect(() => {
-    if (showTerminal && terminalLogsEndRef.current) {
-      terminalLogsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (showTerminal && terminalScrollRef.current) {
+      terminalScrollRef.current.scrollTop = terminalScrollRef.current.scrollHeight;
     }
   }, [liveLogs, showTerminal]);
 
@@ -646,6 +685,10 @@ export default function PipelineView() {
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }, []);
+
+  const handleOpenPreview = useCallback((url, name) => {
+    setPreviewModalFile({ url, name });
   }, []);
 
   // Filter steps by search query and category
@@ -700,12 +743,12 @@ export default function PipelineView() {
       const logs = PIPELINE_STAGE_LOGS[step.id] || ["Processing stage indicators..."];
       for (const logLine of logs) {
         if (rerunCancelRef.current) break;
-        // Realistic intermediate delay per log
-        await new Promise(r => setTimeout(r, 260));
+        // Non-blocking asynchronous pause per log
+        await new Promise(r => setTimeout(r, 240));
         addLog(`  ↳ ${logLine}`);
       }
 
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 160));
       addLog(`[STAGE ${step.stepNumber}] Completed successfully.`, "success");
       setCompletedStepIds(prev => new Set([...prev, step.id]));
     }
@@ -825,7 +868,9 @@ export default function PipelineView() {
         <div className="mt-6 border-t border-[#E5E5E5] pt-5">
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="eyebrow text-[#888888]">Execution Sequence</span>
-            <span className="text-[11px] text-[#777777]">Click any node to inspect</span>
+            <span className="text-[11px] text-[#777777]">
+              {isRerunning ? "Live Execution in Progress" : "Click any node to inspect"}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -838,13 +883,22 @@ export default function PipelineView() {
               const isDone = completedStepIds.has(step.id);
               const colors = COLOR_MAP[step.color];
 
+              // Stepper desaturation during live rerun
+              const stepperSaturationClass = isRerunning
+                ? isRunning
+                  ? "grayscale-0 opacity-100 ring-2 ring-blue-500 shadow-md scale-105 transition-all duration-300"
+                  : isDone
+                  ? "grayscale-0 opacity-100 transition-all duration-700"
+                  : "grayscale opacity-40 contrast-75 transition-all duration-700"
+                : "grayscale-0 opacity-100";
+
               return (
                 <button
                   key={step.id}
                   onClick={() => selectAndScrollToStep(step.id)}
-                  className={`group flex items-center gap-2 rounded-xl border p-2 text-left transition-all ${
+                  className={`group flex items-center gap-2 rounded-xl border p-2 text-left transition-all ${stepperSaturationClass} ${
                     isRunning
-                      ? "border-blue-500 bg-blue-50/50 shadow-sm ring-2 ring-blue-500/30"
+                      ? "border-blue-500 bg-blue-50/50 shadow-sm"
                       : isSelected
                       ? "border-[#111111] bg-white shadow-xs ring-1 ring-[#111111]"
                       : "border-[#E5E5E5] bg-white hover:border-[#D4D4D4] hover:bg-[#FAFAF8]"
@@ -905,7 +959,11 @@ export default function PipelineView() {
             </div>
           </div>
 
-          <div className="custom-scrollbar max-h-56 overflow-y-auto p-4 font-mono text-xs leading-relaxed space-y-1 bg-black/80">
+          {/* Internal scroll only; never hijacks window viewport */}
+          <div
+            ref={terminalScrollRef}
+            className="custom-scrollbar max-h-56 overflow-y-auto p-4 font-mono text-xs leading-relaxed space-y-1 bg-black/80"
+          >
             {liveLogs.length === 0 ? (
               <p className="text-[#666666] italic">Console ready. Click "Rerun Pipeline" to view real-time execution telemetry.</p>
             ) : (
@@ -933,7 +991,6 @@ export default function PipelineView() {
                 );
               })
             )}
-            <div ref={terminalLogsEndRef} />
           </div>
         </div>
       )}
@@ -986,18 +1043,18 @@ export default function PipelineView() {
                 categoryFilter === "analysis" ? "bg-[#111111] text-white shadow-xs" : "text-[#666666] hover:text-[#111111]"
               }`}
             >
-              Models & Scoring (3)
+              Models (3)
             </button>
           </div>
 
-          {/* View Mode Toggle */}
+          {/* View Mode Toggle (Cards / DAG Flow / Flowchart) */}
           <div className="flex items-center gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1">
             <button
               onClick={() => setViewMode("cards")}
               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                 viewMode === "cards" ? "bg-[#111111] text-white shadow-xs" : "text-[#666666] hover:text-[#111111]"
               }`}
-              title="Cards view mode"
+              title="Sequential Cards View"
             >
               <Layers size={13} />
               <span>Cards</span>
@@ -1007,10 +1064,20 @@ export default function PipelineView() {
               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                 viewMode === "timeline" ? "bg-[#111111] text-white shadow-xs" : "text-[#666666] hover:text-[#111111]"
               }`}
-              title="Interactive DAG timeline view"
+              title="Interactive DAG Stage Inspector"
             >
               <GitBranch size={13} />
               <span>DAG Flow</span>
+            </button>
+            <button
+              onClick={() => setViewMode("flowchart")}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                viewMode === "flowchart" ? "bg-[#111111] text-white shadow-xs" : "text-[#666666] hover:text-[#111111]"
+              }`}
+              title="System Architecture & Flowchart"
+            >
+              <Workflow size={13} />
+              <span>Flowchart</span>
             </button>
           </div>
 
@@ -1028,8 +1095,9 @@ export default function PipelineView() {
       </div>
 
       {/* ── 4. Main View Container ─────────────────────────────────── */}
-      {viewMode === "cards" ? (
-        /* Cards View Mode */
+
+      {/* View 1: Sequential Cards */}
+      {viewMode === "cards" && (
         <div className="flex flex-col gap-3.5" role="list" aria-label="Pipeline stages">
           {filteredSteps.map((step) => (
             <PipelineStepCard
@@ -1039,6 +1107,8 @@ export default function PipelineView() {
               onToggle={() => toggleStep(step.id)}
               isCurrentRunning={currentRunningStepId === step.id}
               isCompleted={completedStepIds.has(step.id)}
+              isRerunning={isRerunning}
+              onPreviewData={handleOpenPreview}
             />
           ))}
 
@@ -1059,8 +1129,10 @@ export default function PipelineView() {
             </div>
           )}
         </div>
-      ) : (
-        /* Timeline DAG Flow Mode */
+      )}
+
+      {/* View 2: DAG Flow & Stage Inspector */}
+      {viewMode === "timeline" && (
         <div className="flex flex-col gap-6 animate-fade-in">
           {/* Visual DAG Stepper Cards */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1068,7 +1140,16 @@ export default function PipelineView() {
               const Icon = step.icon;
               const isSelected = selectedTimelineStep === step.id;
               const isRunning = currentRunningStepId === step.id;
+              const isDone = completedStepIds.has(step.id);
               const colors = COLOR_MAP[step.color];
+
+              const dagSaturationClass = isRerunning
+                ? isRunning
+                  ? "grayscale-0 opacity-100 ring-2 ring-blue-500 shadow-md scale-102"
+                  : isDone
+                  ? "grayscale-0 opacity-100"
+                  : "grayscale opacity-40 contrast-75 pointer-events-none"
+                : "grayscale-0 opacity-100";
 
               return (
                 <div
@@ -1077,7 +1158,7 @@ export default function PipelineView() {
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => (e.key === "Enter" || e.key === " ") && setSelectedTimelineStep(step.id)}
-                  className={`relative flex flex-col justify-between rounded-2xl border p-4 cursor-pointer transition-all ${
+                  className={`relative flex flex-col justify-between rounded-2xl border p-4 cursor-pointer transition-all ${dagSaturationClass} ${
                     isRunning
                       ? "border-blue-500 bg-blue-50/40 ring-2 ring-blue-500/30"
                       : isSelected
@@ -1165,6 +1246,176 @@ export default function PipelineView() {
         </div>
       )}
 
+      {/* View 3: Complete System Flowchart */}
+      {viewMode === "flowchart" && (
+        <div className="flex flex-col gap-6 animate-fade-in">
+          <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 sm:p-7 shadow-xs">
+            <div className="mb-4 flex items-center justify-between border-b border-[#E5E5E5] pb-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#B51F3B]">
+                  <Network size={14} />
+                  <span>System Architecture & Lineage</span>
+                </div>
+                <h2 className="text-xl font-extrabold text-[#111111] mt-1">
+                  How It All Works: End-to-End Execution Flow
+                </h2>
+                <p className="text-xs text-[#666666] mt-0.5">
+                  Five-layer data pipeline transforming multi-agency government observations into live intelligence.
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 text-xs font-bold">
+                <CheckCircle size={12} /> Fully Verified
+              </span>
+            </div>
+
+            {/* Visual Swimlanes Flow */}
+            <div className="flex flex-col gap-6">
+              {/* Layer 1: Ingestion */}
+              <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="rounded bg-blue-100 text-blue-900 border border-blue-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                    Layer 1 · Raw Feeds Ingestion
+                  </span>
+                  <span className="text-[11px] text-[#777777]">6 Official Feeds · Zero Synthetic Rows</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {RAW_DATA_FEEDS.map((feed, idx) => (
+                    <div key={idx} className="rounded-xl border border-[#E5E5E5] bg-white p-3 shadow-2xs">
+                      <span className="block text-xs font-bold text-[#111111]">{feed.name}</span>
+                      <span className="block text-[10px] text-[#B51F3B] font-semibold mt-0.5">{feed.agency}</span>
+                      <span className="block text-[11px] text-[#666666] mt-1">{feed.metric}</span>
+                      <span className="mt-2 inline-block rounded bg-[#FAFAF8] border border-[#EBEBE8] px-1.5 py-0.5 text-[9px] font-medium text-[#777777]">
+                        {feed.scope}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Connecting Down Arrow */}
+              <div className="flex justify-center -my-3 z-10">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#E5E5E5] shadow-xs text-[#B51F3B]">
+                  <ArrowDown size={14} />
+                </div>
+              </div>
+
+              {/* Layer 2: Preparation */}
+              <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="rounded bg-purple-100 text-purple-900 border border-purple-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                    Layer 2 · Data Engineering & Cleaning
+                  </span>
+                  <span className="text-[11px] text-[#777777]">Stages 01, 02, 03 · ISO Canonical Harmonization</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 01</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Coverage Check</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Filters cities with ≥75% valid annual PM2.5 readings to prevent intermittent sampling bias.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 02</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">IQR Outlier Auditing</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Computes 1.5× IQR boundary violations and logs 67 real-world peaks to audit register with zero deletion.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 03</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Canonical Alias Merging</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Maps government spelling variations to ISO place IDs, producing master places.csv & factors_wide.csv.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Connecting Down Arrow */}
+              <div className="flex justify-center -my-3 z-10">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#E5E5E5] shadow-xs text-[#B51F3B]">
+                  <ArrowDown size={14} />
+                </div>
+              </div>
+
+              {/* Layer 3: Analytics & Inference */}
+              <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="rounded bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                    Layer 3 · Inferential Statistics & Modeling
+                  </span>
+                  <span className="text-[11px] text-[#777777]">Stages 04, 05, 06 · Mathematical Formulations</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 04</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Regional ANOVA & EDA</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      One-Way ANOVA test (F = 0.90, p = 0.489) verifies that regional livability spreads reflect genuine distribution.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 05</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Calibrated Scoring Engine</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Directional min-max rescaling and proportional partial-data reweighting without artificial imputation.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#777777]">Stage 06</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">ML Clustering & Tiers</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      OLS annual slope rates and K-Means clustering (k = 2, mean silhouette = 0.581) deriving analytical tiers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Connecting Down Arrow */}
+              <div className="flex justify-center -my-3 z-10">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#E5E5E5] shadow-xs text-[#B51F3B]">
+                  <ArrowDown size={14} />
+                </div>
+              </div>
+
+              {/* Layer 4: Presentation */}
+              <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="rounded bg-emerald-100 text-emerald-900 border border-emerald-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                    Layer 4 · Decision Intelligence Interface
+                  </span>
+                  <span className="text-[11px] text-[#777777]">Interactive React Decision Engine</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-bold text-[#B51F3B] uppercase">Spatial Cartography</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Interactive India Map</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Color-coded state polygons and city pin coordinates with dynamic pan, pinch, and zoom controls.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-bold text-[#B51F3B] uppercase">Persona Allocation</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Dynamic Weight Portfolio</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Live slider tuning with real-time portfolio breakdown bar and 1-click evaluation presets.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E5E5E5] bg-white p-3.5">
+                    <span className="text-[10px] font-bold text-[#B51F3B] uppercase">Benchmarking Tray</span>
+                    <h3 className="text-xs font-bold text-[#111111] mt-0.5">Side-by-Side Comparison</h3>
+                    <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
+                      Comparative multi-city analysis highlighting category leaders and observation year provenance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── 5. Technical Rigor & Reproducibility Footer ────────────── */}
       <div className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8] p-5 sm:p-6">
         <h3 className="font-bold text-xs uppercase tracking-wider text-[#888888] mb-4 flex items-center gap-2">
@@ -1207,6 +1458,15 @@ export default function PipelineView() {
           </div>
         </div>
       </div>
+
+      {/* ── 6. In-App Data Preview Modal ────────────────────────────── */}
+      {previewModalFile && (
+        <DataPreviewModal
+          fileUrl={previewModalFile.url}
+          fileName={previewModalFile.name}
+          onClose={() => setPreviewModalFile(null)}
+        />
+      )}
     </div>
   );
 }

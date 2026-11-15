@@ -1,28 +1,19 @@
 import {
   Activity,
+  BookOpen,
   Compass,
-  Map,
-  Radio,
-  RefreshCw
+  Map
 } from "lucide-react";
 const TABS = [
   { id: "map", label: "Explorer", icon: Map },
-  { id: "insights", label: "Insights", icon: Activity }
+  { id: "insights", label: "Insights", icon: Activity },
+  { id: "pipeline", label: "Pipeline", icon: BookOpen }
 ];
 
 export default function Navbar({
   activeTab,
-  onSelectTab,
-  backendStatus,
-  onRetryBackend,
-  dataAvailable
+  onSelectTab
 }) {
-  const backendOnline = backendStatus === "ok";
-  const backendLabel = backendOnline ? "API Live" : "Local Engine";
-  const backendDescription = backendOnline
-    ? "FastAPI backend connected. Click to re-check."
-    : "Running on embedded client engine. Click to probe API.";
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-[#E5E5E5] bg-white/95 backdrop-blur-md">
@@ -78,28 +69,12 @@ export default function Navbar({
             })}
           </nav>
 
-          {/* Right: Backend status */}
+          {/* Right: data status */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {dataAvailable && (
-              <button
-                onClick={onRetryBackend}
-                data-api-state={backendStatus}
-                className={`flex items-center gap-1.5 rounded-xl border px-2 sm:px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
-                  backendOnline
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-[#E5E5E5] bg-[#FAFAF8] text-[#666666] hover:border-[#D4D4D4] hover:text-[#111111]"
-                }`}
-                title={backendDescription}
-                aria-label={backendDescription}
-              >
-                <Radio
-                  size={11}
-                  className={backendOnline ? "animate-pulse text-emerald-600" : "text-[#999999]"}
-                />
-                <span className="hidden sm:inline">{backendLabel}</span>
-                <RefreshCw size={10} className="text-[#999999]" />
-              </button>
-            )}
+            <span className="flex items-center gap-1.5 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-2 sm:px-2.5 py-1.5 text-[11px] font-semibold text-[#666666]" title="All scores are computed locally in your browser from the embedded dataset.">
+              <Compass size={11} className="text-[#999999]" />
+              <span className="hidden sm:inline">Local Engine</span>
+            </span>
           </div>
         </div>
       </header>

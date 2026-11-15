@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
-  ChevronRight,
   Download,
   ExternalLink,
   FileText,
@@ -11,7 +10,6 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  ArrowRight,
   Sparkles,
   Database,
   BarChart2,
@@ -148,7 +146,7 @@ const COLOR_MAP = {
   indigo: { light: "bg-indigo-50 text-indigo-700 border-indigo-100", main: "bg-indigo-500", ring: "ring-indigo-500" },
 };
 
-function StatusDot({ status, color, size = 8 }) {
+function StatusDot({ status, size = 8 }) {
   const Icon = STATUS_ICONS[status] || XCircle;
   const colors = {
     complete: "text-green-500",
@@ -164,7 +162,7 @@ function StatusDot({ status, color, size = 8 }) {
   );
 }
 
-function PipelineStepCard({ step, index, isExpanded, onToggle, totalSteps }) {
+function PipelineStepCard({ step, index, isExpanded, onToggle }) {
   const Icon = step.icon;
   const colors = COLOR_MAP[step.color];
   const [iframeLoaded, setIframeLoaded] = useState(false);
@@ -346,7 +344,6 @@ function PipelineStepCard({ step, index, isExpanded, onToggle, totalSteps }) {
 export default function PipelineView() {
   const [expandedStep, setExpandedStep] = useState(null);
   const [viewMode, setViewMode] = useState("cards"); // "cards" | "timeline"
-  const [showAllOutputs, setShowAllOutputs] = useState(false);
 
   const toggleStep = (id) => {
     setExpandedStep(expandedStep === id ? null : id);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Map, SlidersHorizontal, Trophy } from "lucide-react";
-import Navbar from "./components/Navbar";
+import { Compass, Map, Menu, SlidersHorizontal, Trophy } from "lucide-react";
+import Sidebar from "./components/Sidebar";
 import WeightControls from "./components/WeightControls";
 import IndiaMap from "./components/IndiaMap";
 import Leaderboard from "./components/Leaderboard";
@@ -35,6 +35,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("map");
   const [selectedYear, setSelectedYear] = useState(BASELINE_YEAR);
   const [mobilePanel, setMobilePanel] = useState("map");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [weights, setWeights] = useState(() =>
     DATA_COVERAGE.compositeAvailable
@@ -167,16 +169,49 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F2] p-2 sm:p-4 lg:p-6 text-[#111111] flex flex-col font-sans">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[#E5E5E5] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] overflow-hidden">
-        {/* Navigation Bar */}
-        <Navbar
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-        />
+    <div className="min-h-screen bg-[#F5F5F2] text-[#111111] font-sans flex flex-col">
+      {/* Sticky Mobile Top Header */}
+      <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-[#E5E5E5] bg-white/95 px-4 backdrop-blur-md lg:hidden">
+        <button
+          onClick={() => setActiveTab("map")}
+          className="flex items-center gap-2 text-left"
+          aria-label="Go to explorer"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] text-[#111111]">
+            <Compass size={17} className="text-[#B51F3B]" />
+          </div>
+          <span className="text-sm font-extrabold tracking-tight text-[#111111]">
+            Spatial Explorer
+          </span>
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-1 text-[11px] font-semibold text-[#666666]">
+            {selectedYear}
+          </span>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E5E5E5] bg-white text-[#111111] hover:bg-[#F5F5F2] transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={18} />
+          </button>
+        </div>
+      </header>
 
-        {/* Main Content Surfaces */}
-        <div className="flex-1 px-4 sm:px-8 lg:px-10 py-4 sm:py-6">
+      {/* Left Sidebar Drawer / Rail */}
+      <Sidebar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        compositeAvailable={DATA_COVERAGE.compositeAvailable}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+      />
+
+      {/* Main Content */}
+      <main className={`flex-1 transition-all duration-300 min-h-screen ${sidebarCollapsed ? "lg:pl-16" : "lg:pl-[260px]"}`}>
+        <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {dataAvailable && activeTab !== "pipeline" && (
             <YearSelector
               year={selectedYear}
@@ -186,12 +221,13 @@ export default function App() {
           )}
 
           {/* Interactive Views */}
-          <main className="flex-1">
+          <div className="flex-1 min-h-0 flex flex-col">
             {/* View 1: Explorer (Decision System) */}
             {dataAvailable && activeTab === "map" && (
               <div className="flex flex-col">    
 
                 <QuickStartBanner
+                  onOpenTour={() => setShowTourModal(true)}
                   onSelectPreset={handleSelectPreset}
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}
@@ -300,11 +336,9 @@ export default function App() {
             )}
 
             {/* About section removed — kept only Explorer and Insights views */}
-          </main>
+          </div>
         </div>
-
-
-      </div>
+      </main>
 
       {/* Floating Elements */}
       {dataAvailable && (

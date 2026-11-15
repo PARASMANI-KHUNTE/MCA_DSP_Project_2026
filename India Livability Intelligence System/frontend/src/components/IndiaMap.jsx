@@ -16,7 +16,8 @@ const FACTOR_LABELS = {
   safety: "Public safety",
   health: "Healthcare",
   economy: "Economy & jobs",
-  col: "Cost of living"
+  col: "Cost of living",
+  water: "Water quality"
 };
 
 const VIEWS = [

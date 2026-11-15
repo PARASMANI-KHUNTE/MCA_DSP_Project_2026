@@ -10,7 +10,7 @@ import {
   Trophy,
   X
 } from "lucide-react";
-import { getScoreColor } from "../services/scoringService";
+import { getScoreColor, getStateLevelFactorKeys } from "../services/scoringService";
 
 const FILTERS = [
   { id: "city", label: "Cities" },
@@ -136,6 +136,18 @@ export default function Leaderboard({
           const isComparing = compareIds.includes(place.id);
           const hasScore = Number.isFinite(place.overallScore);
           const scoreColor = getScoreColor(place.overallScore);
+          const sourceYears = Object.values(place.factorYears || {}).filter(Number.isFinite);
+          const minSourceYear = sourceYears.length ? Math.min(...sourceYears) : null;
+          const maxSourceYear = sourceYears.length ? Math.max(...sourceYears) : null;
+          const sourceYearLabel =
+            minSourceYear === null
+              ? null
+              : minSourceYear === maxSourceYear
+                ? `data ${minSourceYear}`
+                : `data ${minSourceYear}\u2013${maxSourceYear}`;
+          const hasInheritedValue =
+            place.type === "city" &&
+            getStateLevelFactorKeys().some(key => Number.isFinite(place.factorYears?.[key]));
 
           return (
             <div
@@ -182,6 +194,28 @@ export default function Leaderboard({
                       {place.type === "city" ? place.state : `${place.region} region`}
                       <span>·</span>
                       {place.type}
+                      {sourceYearLabel && (
+                        <>
+                          <span>·</span>
+                          <span
+                            className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1 py-0.5 text-[9px] font-medium text-[#666666]"
+                            title="Range of source years behind this place's available pillars"
+                          >
+                            {sourceYearLabel}
+                          </span>
+                        </>
+                      )}
+                      {hasInheritedValue && (
+                        <>
+                          <span>·</span>
+                          <span
+                            className="rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-800 border border-amber-200"
+                            title="One or more pillars reuse the parent state's published value"
+                          >
+                            state
+                          </span>
+                        </>
+                      )}
                       {place.partialData && (
                         <>
                           <span>·</span>

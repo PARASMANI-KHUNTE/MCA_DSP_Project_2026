@@ -6,6 +6,7 @@ import {
   Briefcase,
   CheckCircle2,
   Compass,
+  Droplets,
   Heart,
   Info,
   MapPin,
@@ -20,7 +21,7 @@ const PILLARS = [
     key: "air",
     name: "Air Quality",
     icon: Wind,
-    weightKey: "air_quality",
+    weightKey: "air",
     desc: "PM2.5 concentration index; higher in coastal & southern cities.",
   },
   {
@@ -43,6 +44,13 @@ const PILLARS = [
     icon: Briefcase,
     weightKey: "economy",
     desc: "Constant per-capita NSDP combined with PLFS employment.",
+  },
+  {
+    key: "water",
+    name: "Water Quality",
+    icon: Droplets,
+    weightKey: "water",
+    desc: "CPCB 2021 surface-water index from BOD and dissolved oxygen.",
   },
 ];
 
@@ -249,7 +257,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               </span>
             </div>
             <span className="text-[10px] text-[#777777]">
-              {summary.topCity?.stateName || "Metro"} leader
+              {summary.topCity?.state || "Metro"} leader
             </span>
           </div>
 
@@ -343,7 +351,14 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               {PILLARS.map(p => {
                 const Icon = p.icon;
                 const score = summary.pillarAverages[p.key] || 0;
-                const currentWeight = weights[p.weightKey] != null ? weights[p.weightKey] * 100 : 25;
+                const totalWeight = Object.values(weights || {}).reduce(
+                  (sum, value) => sum + Number(value || 0),
+                  0
+                );
+                const currentWeight =
+                  totalWeight > 0
+                    ? (Number(weights?.[p.weightKey] || 0) / totalWeight) * 100
+                    : 0;
 
                 return (
                   <div
@@ -415,7 +430,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               </p>
             </div>
             <div className="mt-4 border-t border-[#F0F0EE] pt-2 text-[10px] text-[#777777]">
-              Validated by ANOVA test (F = 4.79, p &lt; 0.001)
+              Descriptive regional comparison of the current weighted cross-section.
             </div>
           </div>
 
@@ -436,7 +451,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               </p>
             </div>
             <div className="mt-4 border-t border-[#F0F0EE] pt-2 text-[10px] text-[#777777]">
-              City stations include real-time CPCB monitoring
+              Air values are historic and enriched station observations, not live monitoring.
             </div>
           </div>
 
@@ -446,7 +461,9 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold text-[#B51F3B]">Development Link</span>
                 <span className="rounded-full bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-bold text-[#111111]">
-                  Spearman &rho; = +0.69
+                  {summary.econHealthCorr !== null
+                    ? `Pearson r = ${summary.econHealthCorr > 0 ? "+" : ""}${summary.econHealthCorr}`
+                    : "Descriptive association"}
                 </span>
               </div>
               <h3 className="text-sm font-bold text-[#111111]">
@@ -468,7 +485,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
         <div className="flex items-center gap-2">
           <Info size={15} className="shrink-0 text-[#B51F3B]" />
           <span>
-            <strong className="text-[#111111]">Official Data Sources:</strong> CPCB Air Quality (Daily/Enriched) · NCRB Crime in India (2020–22) · MoHFW NFHS-5 (2019–21) · RBI & MoSPI PLFS (2023–24).
+            <strong className="text-[#111111]">Official Data Sources:</strong> CPCB Air Quality (Daily/Enriched) · NCRB Crime in India (2020–22) · MoHFW NFHS-5 (2019–21) · RBI & MoSPI PLFS (2023–24) · CPCB Water Bodies (2021).
           </span>
         </div>
         <span className="shrink-0 rounded-full border border-[#E5E5E5] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#555555]">

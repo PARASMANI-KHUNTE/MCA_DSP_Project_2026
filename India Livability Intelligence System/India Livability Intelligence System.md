@@ -4,15 +4,17 @@
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)
 **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
-**Version:** 1.5 (local-data pipeline workflow, 3 November 2026)
+**Version:** 1.6 (backend removed, static data bundle, 15 November 2026)
 
-> **Current implementation status, 14 November 2026.** Six raw files were confirmed as generated placeholders and quarantined. The active pipeline reads local air, rent, NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment, and CPCB water-quality extracts, which remain independently unverified against their publishers. The app supports weighted composites for places with the weighted factors, marks one-missing-factor places as partial, and shows state-inheritance source years. Trend projection is disabled for every factor, so no composite or factor projections are published. The full pytest suite reports 98 passed and 1 skipped. See `reports/data_fabrication_audit.md`. Sections below describe the broader intended design and should not be read as current data availability.
+> **Current implementation status, 14 November 2026.** Six raw files were confirmed as generated placeholders and quarantined. The active pipeline reads local air, rent, NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment, and CPCB water-quality extracts, which remain independently unverified against their publishers. The app supports weighted composites for places with the weighted factors, marks one-missing-factor places as partial, and shows state-inheritance source years. Trend projection is disabled for every factor, so no composite or factor projections are published. The dashboard is a static React build with no server component; all scoring runs in the browser from the generated data bundle. The full pytest suite reports 91 passed and 1 skipped. See `reports/data_fabrication_audit.md`. Sections below describe the broader intended design and should not be read as current data availability.
 
 > **Revision 1.2 summary.** This update records the implementation scope and a critical provenance finding: several local files labelled as official NCRB, SRS, RBI, MoSPI, and CPCB data are exact outputs from a hard-coded placeholder generator. The project now blocks those files from all pipeline and analytical outputs, marks derived results unverified, and requires fresh source validation before resuming empirical work.
 
-> **Revision 1.3 summary.** Docker and Docker Compose configuration was removed. The Windows project now uses `start.ps1` to launch the local frontend; the FastAPI service remains optional and is started separately. CI/CD is not configured.
+> **Revision 1.3 summary (historical).** Docker and Docker Compose configuration was removed. The Windows project now uses `start.ps1` to launch the local frontend; a separate FastAPI service was still offered at that point. CI/CD is not configured.
 
 > **Revision 1.4 summary (historical).** Added a file-checksum source validation manifest and human review gate. That runtime gate has since been removed by revision 1.5. Scores require every positively weighted factor to be present for each ranked place; trend fitting uses only the latest segment after a flagged source break.
+
+> **Revision 1.6 summary.** The FastAPI backend was removed. Data now reaches the browser only through the generated `frontend/src/data/realData.js` bundle produced by `src/export_frontend_data.py`, and every score is computed client-side. Module M7 is redefined as the data-delivery layer, and the API endpoints, schemas and service tests described in earlier revisions no longer exist. Water quality is now a selectable dashboard factor, and the leaderboard shows per-place source years and state-inheritance markers.
 
 > **Accuracy limitation.** The source manifest enforces a documented review process but cannot automatically establish that a public source's values were extracted correctly. Independent source-to-data checks are still required before marking an input verified.
 
@@ -31,7 +33,7 @@ This document is split into **independent modules**. Each module has its own pur
 | M4 | Statistics and EDA | "What did you find in the data?" |
 | M5 | Livability scoring engine | "How is the score calculated?" |
 | M6 | Machine learning (trend and clustering) | "Where is the model and prediction?" |
-| M7 | Backend API | "How does the app get the data?" |
+| M7 | Data delivery layer | "How does the app get the data?" |
 | M8 | Frontend and map interface | "Show me the app." |
 | M9 | System architecture and deployment | "How is it built and hosted?" |
 | M10 | Testing and validation | "How do you know it works?" |
@@ -48,14 +50,14 @@ flowchart LR
     M3 --> M4[M4 Stats and EDA]
     M3 --> M5[M5 Scoring]
     M3 --> M6[M6 ML]
-    M5 --> M7[M7 API]
+    M5 --> M7[M7 Data bundle]
     M6 --> M7
     M7 --> M8[M8 Frontend]
     M3 --> M10[M10 Testing]
     M5 --> M10
 ```
 
-The notebook (M3 to M6) is the graded core. The API and frontend (M7 and M8) are the presentation layer. The system is designed so that M7 and M8 can be dropped without breaking M3 to M6.
+The notebook (M3 to M6) is the graded core. The data-delivery layer and frontend (M7 and M8) are the presentation layer. The system is designed so that M7 and M8 can be dropped without breaking M3 to M6.
 
 ---
 
@@ -171,7 +173,7 @@ People choosing where to live in India rely on anecdotes. Reliable information i
 | NFR-06 | Reproducibility | Running the pipeline twice on the same raw data shall produce identical outputs. |
 | NFR-07 | Maintainability | Adding a new factor shall require only a new loader file and one config entry. |
 | NFR-08 | Transparency | The methodology page shall describe every formula and data source. |
-| NFR-09 | Security | The API shall be read-only, validate all inputs and expose no secrets. |
+| NFR-09 | Security | The dashboard shall be read-only, compute scores locally and expose no secrets. |
 | NFR-10 | Portability | The system shall provide a single local start script for the dashboard. |
 | NFR-11 | Accessibility | Colors shall be color-blind-safe and every color shall also have a numeric label. |
 | NFR-12 | Licensing | Every dataset's license and attribution shall be recorded and displayed. |
@@ -674,113 +676,84 @@ Report **MSE, RMSE and R-squared** on validation and test, and compare against a
 
 ---
 
-# M7. Backend API
+# M7. Data Delivery Layer
 
-> **Present alone:** shows software engineering skills with an API-first design. Test it with the auto-generated docs page, no frontend needed.
+> **Present alone:** shows how the analytical outputs reach the browser without a server.
 
 ## 7.1 Responsibilities
 
-- Serve the precomputed data and the scoring function.
-- Recompute scores on demand when weights change (cheap, since it is a weighted sum).
-- Never retrain models at request time.
+- Convert the processed tables into a single deterministic ES module that the frontend imports.
+- Carry the scoring configuration (bounds, direction, level, trend policy) so the browser can normalize values.
+- Carry per-place provenance: source year per factor, series-break flags and gap flags.
+- Never change, impute or synthesize a value during export.
 
 ## 7.2 Technology
 
 | Concern | Choice | Reason |
 |---|---|---|
-| Framework | FastAPI | Typed, fast, automatic docs |
-| Validation | Pydantic | Input checks |
-| Data access | Pandas loaded once at startup, or SQLite/PostgreSQL | Small data, so in-memory is enough |
-| Server | Uvicorn | Standard for FastAPI |
+| Format | ES module (`frontend/src/data/realData.js`) | Imports directly in Vite; no fetch, CORS or proxy setup |
+| Generator | `src/export_frontend_data.py` | Pure Python, reads the same processed tables as the notebooks |
+| Source of truth | `data/processed/*` and `src/scoring/factors_config.yaml` | One pipeline, one set of numbers |
+| Transport | Static file hosting | The built `frontend/dist/` can be served by any static host |
 
-## 7.3 Endpoints
+## 7.3 Bundle contract
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/health` | Service status and data version |
-| GET | `/api/places` | List all places with type, state, coordinates |
-| GET | `/api/factors` | List factors with direction, level, source and whether a trend is allowed |
-| POST | `/api/score` | Body: weights and optional year. Returns scores and ranks for all places |
-| GET | `/api/states/{state_id}/ranking` | City ranking inside a state for given weights (query params) |
-| GET | `/api/places/{place_id}` | Details: factors, inherited flags, history |
-| GET | `/api/places/{place_id}/trend` | Historical values and 10-year projection with intervals |
-| GET | `/api/clusters` | Tier labels |
-| GET | `/api/stats/summary` | Key statistical findings for the methodology page |
-| GET | `/api/sources` | Source register |
+| Export | Contents |
+|---|---|
+| `DATA.places` | place_id, name, type, state, coordinates, population |
+| `DATA.rows` | place_id, year and raw factor values (air, safety, health, nsdp, unemployment, water) plus series-break and gap flags |
+| `DATA.costRows` | Per-city cost-of-living snapshots with their own source year |
+| `DATA.factorDefs` | key, column, label, direction, bounds, level, source, unit, trend policy |
+| `DATA.meta` | baseline year, observed years, available factors, first/last year per factor, composite availability |
 
-### Example: `POST /api/score`
+### Example: one `DATA.rows` entry
 
-Request:
 ```json
 {
-  "weights": {
-    "air_quality": 0.4,
-    "safety": 0.3,
-    "cost_of_living": 0.3
-  },
-  "year": 2024,
-  "place_type": "city"
-}
-```
-
-Response (shortened):
-```json
-{
-  "year": 2024,
-  "weights_normalized": {"air_quality": 0.4, "safety": 0.3, "cost_of_living": 0.3},
-  "results": [
-    {
-      "place_id": "IN-XX-AAA",
-      "name": "Example City",
-      "score": 72.4,
-      "rank": 1,
-      "factor_scores": {"air_quality": 80.1, "safety": 65.0, "cost_of_living": 68.3},
-      "partial_data": false,
-      "inherited_factors": ["safety"]
-    }
-  ]
+  "placeId": "IN-AP",
+  "year": 2021,
+  "air": null,
+  "safety": 419.0,
+  "health": 60.24,
+  "nsdp": null,
+  "unemployment": null,
+  "water": 75.68,
+  "seriesBreak": {"air": false, "safety": false, "health": false, "economy": false, "water": false},
+  "gapFlags": {"health": "nfhs5_2019_21_survey", "water": "water_quality_2021_snapshot"}
 }
 ```
 
 ## 7.4 Validation and error handling
 
-| Case | Response |
+| Case | Behaviour |
 |---|---|
-| Weights missing or all zero | 422 with a clear message |
-| Weights do not sum to 1 | Normalize automatically and return the normalized weights |
-| Unknown factor or place | 404 |
-| Data file missing at startup | Fail fast with a readable log message |
+| A factor column is absent from the processed table | The factor is omitted from `availableFactors`; no synthetic values are added |
+| Bounds missing or non-finite | The factor normalizes to `null` for every place |
+| A selected factor is missing for a place | The place is excluded from the composite ranking instead of being reweighted |
+| Bundle regenerated | `python -m src.export_frontend_data` rewrites the module in place |
 
-## 7.5 Security and operations
+## 7.5 Provenance requirements
 
-- Read-only API, no write endpoints.
-- CORS limited to the frontend origin.
-- Basic rate limiting if publicly hosted.
-- No secrets in the repo; configuration through environment variables.
-- Structured logs for requests and errors.
+- Every exported factor value keeps its observation year, because state-level factors are inherited by cities at the published year.
+- Series-break flags survive export so the UI can mark a discontinuous series.
+- The bundle header states that the values are locally supplied and independently unverified.
+- Snapshot factors (cost of living, water quality) are exported as snapshots and never as time series.
 
-## 7.6 Backend folder structure
+## 7.6 Delivery folder structure
 
 ```
-backend/
-  app/
-    main.py
-    api/routes_places.py
-    api/routes_score.py
-    api/routes_trends.py
-    core/config.py
-    core/loader.py        # loads processed data once
-    services/scoring.py   # imports the M5 function
-    schemas/              # Pydantic models
-  tests/
-  requirements.txt
+src/
+  export_frontend_data.py      # builds the bundle from data/processed
+frontend/src/
+  data/realData.js             # generated; do not hand-edit
+  services/scoringService.js   # normalizes and scores in the browser
 ```
 
 ---
 
 # M8. Frontend and Map Interface
 
-> **Present alone:** the visual demo. Can run against the API or against static JSON files.
+> **Present alone:** the visual demo. Runs entirely from the embedded static data bundle.
 
 ## 8.1 Technology options
 
@@ -846,14 +819,14 @@ The rest of this module describes option B. Option A uses the same screens and l
 
 | Action | Result |
 |---|---|
-| Move a slider | Debounced (about 150 ms) call to `/api/score`, then recolor |
+| Move a slider | Recompute normalized scores in the browser (sub-millisecond), then recolor |
 | Click a state | Zoom, show state view |
 | Click a city marker | Open city detail drawer |
 | Hover | Tooltip with name, score and rank |
 | Select preset | Sliders jump to preset weights |
 | Click compare | Add place to comparison tray (max 3) |
 
-**Performance tip:** since the scoring is a weighted sum over a small table, you can ship the normalized factor table to the browser and compute scores client-side for instant slider response. The API then serves only as a source of truth and for the trend data.
+**Performance note:** scoring is a weighted sum over a small table, so the normalized factor table ships to the browser and scores are computed client-side. This gives instant slider response and removes the need for a request/response service.
 
 ## 8.5 Map data requirements
 
@@ -886,7 +859,8 @@ frontend/
       Explorer.jsx
       Insights.jsx
       Methodology.jsx
-    services/api.js
+    data/realData.js        # generated bundle (M7)
+    services/scoringService.js
     hooks/useScores.js
     utils/colorScale.js
   public/
@@ -919,9 +893,9 @@ flowchart LR
         D1[(Raw files)]
         D2[(Processed tables)]
     end
-    subgraph Backend[Backend - online]
-        B1[FastAPI]
-        B2[Scoring service]
+    subgraph Delivery[Data delivery - generated]
+        B1[Export bundle]
+        B2[Scoring config]
     end
     subgraph Frontend
         F1[React map app]
@@ -935,7 +909,8 @@ flowchart LR
     D2 --> P4
     P4 --> D2
     D2 --> B1
-    B1 --> B2
+    P3 --> B2
+    B2 --> B1
     B1 --> F1
 ```
 
@@ -946,11 +921,11 @@ flowchart LR
 | Layer | Contents | Technology |
 |---|---|---|
 | Presentation | Map, sliders, charts | React, MapLibre or Leaflet, Recharts or Plotly |
-| API | REST endpoints, validation | FastAPI, Pydantic |
-| Domain logic | Scoring, ranking, trend lookup | Python module shared with the notebook |
-| Data | Processed tables, source register | Parquet or CSV, optionally SQLite or PostgreSQL |
+| Delivery | Generated data bundle, bundle schema | `src/export_frontend_data.py`, ES module |
+| Domain logic | Scoring, ranking, trend lookup | Python scoring module (offline) mirrored by `scoringService.js` (browser) |
+| Data | Processed tables, source register | Parquet or CSV |
 | Offline analytics | Cleaning, statistics, ML | Pandas, NumPy, SciPy, statsmodels, scikit-learn, Matplotlib, Seaborn |
-| Infrastructure | Local startup, CI, hosting | PowerShell start script, GitHub Actions (planned), Render or similar, Vercel or Netlify |
+| Infrastructure | Local startup, CI, hosting | PowerShell start script, GitHub Actions (planned), Vercel or Netlify |
 
 ## 9.3 Technology stack summary
 
@@ -962,9 +937,9 @@ flowchart LR
 | ML | scikit-learn |
 | Visualization (offline) | Matplotlib, Seaborn |
 | Notebook | Jupyter or Google Colab |
-| Backend | FastAPI, Uvicorn, Pydantic |
+| Delivery | Generated ES module bundle (`realData.js`) |
 | Frontend | React, Vite, MapLibre GL or Leaflet, Recharts or Plotly |
-| Storage | Parquet or CSV, optionally SQLite or PostgreSQL |
+| Storage | Parquet or CSV |
 | Testing | pytest, Vitest or Jest |
 | DevOps | PowerShell start script; GitHub Actions planned, not configured |
 | Version control | Git, GitHub |
@@ -1037,7 +1012,7 @@ CREATE TABLE sources (
 | Component | Option | Notes |
 |---|---|---|
 | Notebooks | Google Colab or local Jupyter | Add an "Open in Colab" badge |
-| Backend | Run locally or deploy to Render, Railway or a small VM | Free tiers may sleep when idle; no container setup is maintained |
+| Data bundle | Generated locally, committed with the frontend | Regenerate with `python -m src.export_frontend_data` |
 | Frontend | Vercel or Netlify | Static build |
 | Quick demo path | Streamlit Community Cloud | One file, minimal setup |
 
@@ -1045,7 +1020,7 @@ CREATE TABLE sources (
 
 - **Current status:** no CI workflow is configured.
 - **Recommended future setup:** GitHub Actions on every push to lint, run unit tests, and build the frontend. Run the data pipeline only against a small verified fixture, not the current unverified local tables.
-- A `Makefile` or script with the commands: `make data`, `make notebooks`, `make api`, `make web`, `make test`.
+- A `Makefile` or script with the commands: `make data`, `make notebooks`, `make export`, `make web`, `make test`.
 
 ## 9.8 Scalability note (supports the "big data and cloud" course objective)
 
@@ -1056,7 +1031,7 @@ The current design is small by choice. If data grew to many millions of rows (fo
 | Pandas | Dask or Spark |
 | Parquet files | Partitioned Parquet in cloud object storage |
 | Notebook run | Scheduled pipeline (Airflow or a cloud scheduler) |
-| In-memory API data | Database plus caching |
+| Embedded data bundle | API plus database caching |
 
 Mention this in the report as a design consideration; do not build it.
 
@@ -1097,12 +1072,14 @@ Mention this in the report as a design consideration; do not build it.
 - Time-based split never leaks future rows into training.
 - K-Means with a fixed random seed gives stable cluster labels.
 
-## 10.4 API tests
+## 10.4 Data bundle tests
 
-- Each endpoint returns the documented schema.
-- Invalid weights return a 422.
-- Unknown place returns a 404.
-- Response time for `/api/score` is within the NFR target.
+- The generated bundle loads as valid ES module syntax and exposes every documented key.
+- Every place in the place master appears in `DATA.places` exactly once.
+- No exported factor value is invented: a value exists only where the processed table has an observation.
+- Snapshot factors expose a single observation year and never a projection.
+- `availableFactors` matches the factors that actually have observations.
+- Re-running the exporter on unchanged inputs produces an identical bundle.
 
 ## 10.5 Frontend tests
 
@@ -1222,7 +1199,7 @@ Mention this in the report as a design consideration; do not build it.
 | 2. Cleaning and merging | 4 to 6 | M3 pipeline, data quality report | Processed tables |
 | 3. Statistics and EDA | 7 to 9 | M4 tests and plots | EDA notebook, findings |
 | 4. Scoring and ML | 10 to 12 | M5 scoring, sensitivity analysis, M6 models | Scores, trends, clusters |
-| 5. Application | 13 to 16 | M7 API (or Streamlit), M8 map | Working app |
+| 5. Application | 13 to 16 | M7 data bundle, M8 map | Working app |
 | 6. Testing and polish | 17 to 18 | M10 tests, bug fixes, deployment | Hosted app |
 | 7. Report and viva prep | 19 to 20 | Report, slides, M14 practice | Final documents |
 
@@ -1244,7 +1221,7 @@ If time is short, **protect phases 1 to 4**. They carry the marks. Phase 5 can f
 | 3 | Statistics and EDA notebook | Jupyter |
 | 4 | Scoring and ML notebook | Jupyter |
 | 5 | Processed datasets | CSV or Parquet |
-| 6 | Backend API | FastAPI code, auto docs |
+| 6 | Data delivery bundle | Generated ES module + schema |
 | 7 | Frontend app | React (or Streamlit) |
 | 8 | Test suite | pytest |
 | 9 | Project report (10 to 15 pages) | PDF or DOCX |
@@ -1306,7 +1283,7 @@ If time is short, **protect phases 1 to 4**. They carry the marks. Phase 5 can f
 18. How did you choose k for K-Means?
 
 **Engineering**
-19. Why precompute results instead of running models inside the API?
+19. Why precompute results instead of running models at request time?
 20. How would you scale this to much bigger data?
 21. How do you test the scoring function?
 
@@ -1348,7 +1325,6 @@ If time is short, **protect phases 1 to 4**. They carry the marks. Phase 5 can f
 make data        # run the cleaning and merging pipeline
 make notebooks   # execute notebooks in order
 make test        # run all tests
-make api         # start FastAPI on port 8000
 make web         # start the frontend dev server
 .\start.ps1      # start the local frontend (PowerShell)
 ```

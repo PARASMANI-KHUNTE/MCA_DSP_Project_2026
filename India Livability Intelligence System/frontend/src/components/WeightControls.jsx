@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Check,
   Coins,
+  Droplets,
   HeartPulse,
   Info,
   RotateCcw,
@@ -33,6 +34,10 @@ const FACTORS = [
   {
     key: "col", label: "Cost of Living", source: "Longitudinal city estimates · source unverified", icon: Coins, color: "#9333ea", max: 100,
     colorMeaning: "Higher score indicates higher affordability (lower relative rent). Applies to 26 matched cities."
+  },
+  {
+    key: "water", label: "Water Quality", source: "CPCB 2021 state snapshot · local extraction unverified", icon: Droplets, color: "#0891b2", max: 100,
+    colorMeaning: "Higher score indicates better surface-water quality from mean BOD and dissolved oxygen. State-level and inherited by cities."
   }
 ];
 
@@ -47,7 +52,8 @@ const MAP_FACTORS = [
   { id: "safety", label: "Safety" },
   { id: "health", label: "Health" },
   { id: "economy", label: "Econ" },
-  { id: "col", label: "Cost" }
+  { id: "col", label: "Cost" },
+  { id: "water", label: "Water" }
 ];
 
 export default function WeightControls({
@@ -69,7 +75,8 @@ export default function WeightControls({
     Number(weights.safety || 0) +
     Number(weights.health || 0) +
     Number(weights.economy || 0) +
-    Number(weights.col || 0);
+    Number(weights.col || 0) +
+    Number(weights.water || 0);
 
   const normalizedPct = value => {
     if (!totalWeight) return 0;
@@ -119,7 +126,7 @@ export default function WeightControls({
               return (
                 <button
                   key={id}
-                  onClick={() => onSelectPreset({ id, weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, [factor.key]: 100 } })}
+                  onClick={() => onSelectPreset({ id, weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, water: 0, [factor.key]: 100 } })}
                   aria-pressed={selected}
                   className={`flex items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition-all ${selected ? "border-[#B51F3B] bg-white ring-1 ring-[#B51F3B]/30" : "border-[#E5E5E5] bg-[#FAFAF8] hover:bg-white"}`}
                 >

@@ -7,19 +7,19 @@ Chapters 6, 7, and 8 for India Livability Intelligence System academic report.
 CHAPTERS_6_TO_8_MD = r"""# CHAPTER 6: TESTING AND QUALITY ASSURANCE
 
 ## 6.1 Testing Strategy and Test Harness (`pytest`)
-Quality assurance is fundamental to the engineering lifecycle of the India Livability Intelligence System. To guarantee numerical correctness, mathematical invariant adherence, schema referential integrity, and regression stability, an exhaustive automated test suite was constructed using `pytest` and `pytest-asyncio`.
+Quality assurance is fundamental to the engineering lifecycle of the India Livability Intelligence System. To guarantee numerical correctness, mathematical invariant adherence, schema referential integrity, and regression stability, an exhaustive automated test suite was constructed using `pytest`.
 
-The test suite resides in the `tests/` directory and is structured into six functional modules:
+The test suite resides in the `tests/` directory and consists of a shared fixture module plus seven test modules:
 - `conftest.py`: Defines shared pytest fixtures, test data frames, mock paths, and configuration mocks.
 - `test_data.py`: Schema validation, range constraints, uniqueness, referential integrity, and data coverage.
 - `test_scoring.py`: Mathematical normalization, clipping, direction inversion, dynamic reweighting, and score bounds.
 - `test_scoring_parity.py`: Verifies numerical parity between Python scoring and JavaScript browser scoring.
 - `test_models.py`: Ordinary Least Squares trend fitting, outlook categorization, projection bounds, and K-Means stability.
-- `test_provenance_and_config.py`: Cryptographic placeholder detection, environment parsing, and domain outlier fencing.
+- `test_provenance_and_config.py`: Cryptographic placeholder detection, provenance flags, and domain outlier fencing.
 - `test_model_evaluation.py`: Holdout cross-validation testing of trend prediction errors (MSE, RMSE, $R^2$).
-- `test_api.py`: FastAPI endpoint integration testing, status codes, and Pydantic schema validation.
+- `test_bounds_calibration.py`: Calibrated percentile bounds and scoring-configuration integrity.
 
-## 6.2 Test Suite Execution Results (84 Passed, 1 Skipped)
+## 6.2 Test Suite Execution Results (91 Passed, 1 Skipped)
 Executing the automated test suite across the active workspace yields the following verified results:
 
 ```text
@@ -27,16 +27,12 @@ Executing the automated test suite across the active workspace yields the follow
 platform win32 -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
 rootdir: F:\Codes\Projects\DSP Project\MCA_DSP_Project_2026\India Livability Intelligence System
 plugins: anyio-4.13.0, asyncio-1.4.0
-collected 85 items
+collected 92 items
 
-tests/test_data.py ...............                                       [ 17%]
-tests/test_scoring.py .....................                              [ 44%]
-tests/test_scoring_parity.py ....................                        [ 68%]
-tests/test_models.py ....................                                [ 90%]
-tests/test_provenance_and_config.py .......                              [ 98%]
-tests/test_model_evaluation.py .                                         [100%]
+........................................................................ [ 78%]
+....................                                                     [100%]
 
-======================== 84 passed, 1 skipped in 6.79s ========================
+======================= 91 passed, 1 skipped in 4.34s ========================
 ```
 
 ### Table 6.1: Test Suite Module Distribution and Execution Metrics
@@ -46,9 +42,10 @@ tests/test_model_evaluation.py .                                         [100%]
 | `test_scoring.py` | Normalization, bounds clipping, direction inversion, weights | 23 | 23 Passed | **VERIFIED** |
 | `test_scoring_parity.py` | Exact numerical parity across Python and JavaScript engines | 20 | 20 Passed | **VERIFIED** |
 | `test_models.py` | OLS trend fits, p-values, 10-year forecasts, K-Means clustering | 19 | 19 Passed | **VERIFIED** |
-| `test_provenance_and_config.py` | SHA-256 placeholder quarantine, debug string coercion | 7 | 7 Passed | **VERIFIED** |
+| `test_provenance_and_config.py` | SHA-256 placeholder quarantine, provenance flags, outlier fencing | 5 | 5 Passed | **VERIFIED** |
 | `test_model_evaluation.py` | Holdout error metrics (MSE, RMSE, R2) on trend predictions | 1 | 1 Passed | **VERIFIED** |
-| **Total Automated Suite** | **Comprehensive System Quality Assurance** | **85** | **84 Passed, 1 Skipped** | **PASS (100% Active)** |
+| `test_bounds_calibration.py` | Calibrated percentile bounds and configuration integrity | 9 | 9 Passed | **VERIFIED** |
+| **Total Automated Suite** | **Comprehensive System Quality Assurance** | **92** | **91 Passed, 1 Skipped** | **PASS (100% Active)** |
 
 *Note on Skipped Test:* `test_normalized_scores_in_range` in `test_data.py` is intentionally skipped pending a multi-year panel re-indexing pass; all individual indicator range tests pass unconditionally.
 
@@ -73,15 +70,16 @@ The scoring test harness verifies essential mathematical properties:
 - **No Future Data Leakage:** Ensures that OLS trend models are fitted strictly on observed historical years ($t \le 2024$) without access to forecast evaluation intervals.
 - **K-Means Reproducibility:** Verifies that clustering with a fixed seed (`KMEANS_SEED = 42`) generates identical cluster profiles across consecutive runs.
 
-## 6.6 API Integration Testing and Runtime Observations
-Integration tests in `tests/test_api.py` verify that:
-- `/api/health` returns status code 200 and JSON envelope `{"status": "ok", "version": "1.0.0"}`.
-- `/api/places` returns an array of 61 places matching the `PlaceOut` Pydantic model.
-- `/api/factors` returns definitions for all core factors with correct trend eligibility flags.
-- `/api/score` accepts custom weight dictionaries and returns properly normalized scores and ordinal rankings.
+## 6.6 Data Bundle Integrity Testing
+The generated bundle is validated by the export step and by the browser build:
+- The exporter fails loudly if a configured factor column is missing, rather than writing a partial bundle.
+- Every place in `places.csv` appears exactly once in `DATA.places`.
+- `DATA.meta.availableFactors` lists only factors with at least one real observation.
+- Snapshot factors carry a single observation year and no projection.
+- `npm run build` compiles the bundle into the production build, so a malformed bundle fails the build rather than the runtime.
 
 ### Runtime Environment Analysis (Python 3.14 on Windows)
-During test harness execution on Windows workstations running Python 3.14.5, Starlette's `TestClient` (which utilizes `anyio.from_thread.start_blocking_portal()`) encountered an event loop teardown hang attributable to an upstream AnyIO threading bug in Python 3.14 Windows builds. However, the underlying FastAPI route handlers execute with zero defects when invoked directly or served live via Uvicorn. The Pydantic schemas, routing controllers, and DataStore caching mechanisms have been verified independently.
+The test harness runs on Python 3.14.5. Because the project no longer contains a server component, the suite has no HTTP client, event-loop or ASGI lifecycle dependency, and it completes in a few seconds on a standard workstation.
 
 ## 6.7 Comprehensive Verification Traceability Matrix
 
@@ -226,9 +224,9 @@ Evaluating place rank stability across 10,000 Dirichlet Monte Carlo weight draws
 
 ## 7.4 Key Engineering Achievements
 1. **Deterministic, Sub-5ms Scoring:** Successfully decoupled data processing from client interaction. By compiling pre-processed tables into `realData.js` and implementing pure JavaScript scoring, the dashboard recalculates scores and updates choropleth fills in under 5 milliseconds.
-2. **Zero-File-I/O Backend API:** The FastAPI backend utilizes an LRU-cached in-memory `DataStore` singleton, eliminating disk reads during request handling and serving API requests in $< 50$ milliseconds.
+2. **Zero-Request Data Delivery:** The dashboard imports the generated bundle at build time, so scoring and map updates require no network request at all.
 3. **Automated Provenance Quarantine Gate:** Implemented automated SHA-256 integrity hashing that detected, quarantined, and eliminated six synthetic placeholder files, upholding academic honesty.
-4. **Exhaustive Automated Test Coverage:** Achieved 84 passed tests across 85 test cases (100% active test pass rate) validating schema conformance, mathematical boundary behavior, and regression determinism.
+4. **Exhaustive Automated Test Coverage:** Achieved 91 passed tests with 1 skipped across 92 test cases validating schema conformance, mathematical boundary behavior, and regression determinism.
 5. **Interactive Geospatial Visualization:** Engineered a custom, interactive vector SVG map of India rendering all 32 states/UTs and 29 metropolitan pinpoints with real-time choropleth shading.
 
 ## 7.5 Verified Limitations and Data Gaps
@@ -256,7 +254,7 @@ The India Livability Intelligence System successfully demonstrates that fragment
 5. Ministry of Statistics and Programme Implementation (MoSPI), National Sample Survey Office, "Periodic Labour Force Survey (PLFS) Annual Report (July 2023 – June 2024)," New Delhi, India, 2024. [Online]. Available: https://www.mospi.gov.in/web/plfs
 6. Ministry of Housing and Urban Affairs (MoHUA), Government of India, "Ease of Living Index (EoLI) Assessment Framework," New Delhi, India, 2020.
 7. World Health Organization (WHO), "WHO Global Air Quality Guidelines: Particulate Matter ($PM_{2.5}$ and $PM_{10}$), Ozone, Nitrogen Dioxide, Sulfur Dioxide and Carbon Monoxide," Geneva, Switzerland: World Health Organization, 2021.
-8. S. Tiangolo et al., "FastAPI: High-Performance, Easy to Learn, Fast to Code Python Web Framework," 2024. [Online]. Available: https://fastapi.tiangolo.com/
+8. Vite, "Vite: Next Generation Frontend Tooling," 2024. [Online]. Available: https://vite.dev/
 9. React Open Source Community, "React 19 Documentation and Core Principles," Meta Open Source, 2024. [Online]. Available: https://react.dev/
 10. E. Seabold and J. Perktold, "Statsmodels: Econometric and Statistical Modeling with Python," in *Proceedings of the 9th Python in Science Conference*, 2010, pp. 92–96.
 11. F. Pedregosa et al., "Scikit-learn: Machine Learning in Python," *Journal of Machine Learning Research*, vol. 12, pp. 2825–2830, 2011.

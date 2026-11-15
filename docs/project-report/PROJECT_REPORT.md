@@ -33,7 +33,7 @@ I hereby declare that this project report titled **"India Livability Intelligenc
 I further declare that this work adheres strictly to academic integrity standards:
 1. All public datasets ingested from official statutory bodies (CPCB, NCRB, MoHFW NFHS-5, RBI, MoSPI) and open repositories are explicitly registered with citations in `data/raw/source_register.csv`.
 2. A formal provenance and fabrication audit was completed on 3 November 2026 (`reports/data_fabrication_audit.md`) that identified, quarantined, and eliminated six synthetic placeholder files from the active pipeline, ensuring that all published scores derive from verifiable inputs.
-3. Every component—including the FastAPI REST microservice, React 19 geospatial dashboard, OLS trend projection models, and K-Means clustering—has been implemented and verified against an automated test suite comprising 85 test specifications with 84 passing and 0 failures.
+3. Every component—including the React 19 geospatial dashboard, the generated data bundle, OLS trend models, and K-Means clustering—has been implemented and verified against an automated test suite comprising 92 test specifications with 91 passing, 1 skipped and 0 failures.
 
 <br/><br/>
 **Parasmani Khunte**  
@@ -59,17 +59,17 @@ Selecting an urban center or state to reside in within India is conventionally s
 To resolve these empirical challenges, this project establishes the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture and geospatial decision-support platform spanning 61 geographic entities (32 states/Union Territories and 29 primary metropolitan centers). The system implements a complete data engineering lifecycle comprising:
 1. **Multi-Source Data Ingestion & Governance:** Ingestion of public environmental, demographic, public safety, and economic indicators spanning 2010–2026, backed by a cryptographic SHA-256 provenance quarantine gate and non-destructive Tukey Interquartile Range (IQR) outlier fencing.
 2. **Direction-Aware Mathematical Normalization:** A bounded [0, 100] Min-Max normalization engine that enforces direction inversion for negative externalities (PM2.5 particulate matter, IPC cognizable crime rates, unemployment rates) and positive scaling for developmental goods (per-capita NSDP, NFHS-5 maternal/child healthcare composite).
-3. **Dynamic Composite Scoring & Stakeholder Personas:** A flexible multi-criteria evaluation framework featuring client-side and server-side weight normalization, minimum-factor gating, and customizable persona presets (Balanced, Clean Air First, Family Wellbeing, Career Growth, and Student Budget).
+3. **Dynamic Composite Scoring & Stakeholder Personas:** A flexible multi-criteria evaluation framework featuring client-side weight normalization, minimum-factor gating, and customizable persona presets (Balanced, Clean Air First, Family Wellbeing, Career Growth, and Student Budget).
 4. **Longitudinal Trend Modeling & Inferential Statistics:** Ordinary Least Squares (OLS) regression models generating 10-year forward projections (2025–2034) with 95% prediction intervals; One-Way ANOVA proving statistically significant regional disparity (F = 7.23, p = 2.89 × 10^{-5} across the complete 61-place panel, and F = 13.27, p = 3.38 × 10^{-4} on the 2023 cross-section); and unsupervised K-Means clustering (k=5, Silhouette Score = 0.647).
-5. **Decoupled Dual-Tier Architecture:** A high-throughput Python FastAPI REST service equipped with an in-memory, LRU-cached `DataStore` singleton, paired with an interactive single-page application built on React 19, Vite, Tailwind CSS, and an interactive vector SVG India map with client-side real-time calculation.
+5. **Decoupled Two-Tier Architecture:** A generated static data bundle that carries every processed value with its observation year and provenance flags, paired with an interactive single-page application built on React 19, Vite, Tailwind CSS, and an interactive vector SVG India map with client-side real-time calculation.
 
-The software architecture is substantiated by 85 automated test cases achieving comprehensive coverage across schema integrity, mathematical normalization invariants, regression determinism, and data provenance verification.
+The software architecture is substantiated by 92 automated test cases with 91 passing and 1 skipped, achieving comprehensive coverage across schema integrity, mathematical normalization invariants, regression determinism, and data provenance verification.
 
 ---
 
 ## KEYWORDS
 
-Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), Spatial Intelligence, Directional Min-Max Normalization, Ordinary Least Squares (OLS) Projections, K-Means Clustering, One-Way ANOVA, FastAPI, React 19, Automated Provenance Verification.
+Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), Spatial Intelligence, Directional Min-Max Normalization, Ordinary Least Squares (OLS) Projections, K-Means Clustering, One-Way ANOVA, Static Data Bundles, React 19, Automated Provenance Verification.
 
 ---
 
@@ -107,7 +107,7 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
   - 4.3 End-to-End System Architecture
   - 4.4 Data Pipeline & ETL Architecture
   - 4.5 Data Modeling & Analytical Schemas
-  - 4.6 RESTful API Design & Endpoint Specifications
+  - 4.6 Embedded Data Bundle and Delivery Contract
   - 4.7 Core Mathematical and Statistical Algorithms
   - 4.8 Security, Data Provenance, and Access Architecture
 - **CHAPTER 5: IMPLEMENTATION DETAILS**
@@ -115,17 +115,17 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
   - 5.2 Data Loaders and Entity Aliasing (`src/loaders/`)
   - 5.3 Normalization and Scoring Implementation (`src/scoring/`)
   - 5.4 Machine Learning and Statistical Projections (`src/models/`)
-  - 5.5 Backend REST Microservice Implementation (`backend/app/`)
+  - 5.5 Data Delivery Bundle Implementation (`src/export_frontend_data.py`)
   - 5.6 Frontend Geospatial Dashboard Implementation (`frontend/src/`)
   - 5.7 Data Provenance and Quality Assurance Modules (`src/utils/`)
   - 5.8 Error Handling, Edge Cases, and System Reliability
 - **CHAPTER 6: TESTING AND QUALITY ASSURANCE**
   - 6.1 Testing Strategy and Test Harness (`pytest`)
-  - 6.2 Test Suite Execution Results (84 Passed, 1 Skipped)
+  - 6.2 Test Suite Execution Results (91 Passed, 1 Skipped)
   - 6.3 Schema and Referential Integrity Test Suite
   - 6.4 Scoring Engine Mathematical Parity and Invariant Tests
   - 6.5 Statistical Modeling and ML Validation Tests
-  - 6.6 API Integration Testing and Runtime Observations
+  - 6.6 Data Bundle Integrity Testing
   - 6.7 Comprehensive Verification Traceability Matrix
 - **CHAPTER 7: RESULTS, EMPIRICAL FINDINGS, AND FUTURE SCOPE**
   - 7.1 Inferential Statistics and Empirical Observations
@@ -167,7 +167,6 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
 - **Figure 4.2:** End-to-End Data Ingestion, Cleaning, and Analytical Pipeline
 - **Figure 4.3:** Mathematical Normalization and Composite Scoring Engine Workflow
 - **Figure 4.4:** React 19 Frontend Component Hierarchy and Interaction Model
-- **Figure 4.5:** Sequence Diagram of API Request Execution and In-Memory DataStore Lifecycle
 - **Figure 7.1:** Univariate Feature Distributions and Density Estimates of Core Indicators
 - **Figure 7.2:** Regional Boxplots Illustrating Geographic Score Disparities
 - **Figure 7.3:** Pearson Correlation Heatmap Across Core Quality-of-Life Indicators
@@ -205,7 +204,7 @@ The primary domestic benchmark is the **Ease of Living Index (EoLI)** formulated
 3. **Data Quality and Fabrication Risks:** Academic and public hobbyist repositories often ingest secondary uncurated web aggregations or introduce synthetic placeholder values without establishing cryptographic provenance gates.
 
 ## 1.4 Proposed Solution
-To resolve these systemic challenges, this project engineers the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture, RESTful backend microservice, and interactive spatial decision-support platform.
+To resolve these systemic challenges, this project engineers the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture and interactive spatial decision-support platform.
 
 ILIS addresses existing gaps through five core architectural pillars:
 1. **Multi-Source Empirical Ingestion:** Integrates verified public datasets across five foundational quality-of-life pillars: Air Quality (CPCB / Kaggle), Public Safety (NCRB), Public Health (MoHFW NFHS-5 factsheets), Economic Productivity (RBI NSDP & MoSPI PLFS), and Cost of Living (longitudinal municipal rental series).
@@ -217,7 +216,7 @@ ILIS addresses existing gaps through five core architectural pillars:
 ## 1.5 High-Level Project Overview
 The ILIS platform is engineered as a decoupled, full-stack software system:
 - **Data Engineering Core (`src/`):** Python modules handling domain-specific ingestion loaders, name aliasing, Tukey IQR outlier fencing, normalization, scoring, OLS trend modeling, and K-Means clustering.
-- **FastAPI REST Service (`backend/app/`):** A high-performance Python ASGI backend that preloads processed datasets into an in-memory, LRU-cached `DataStore` singleton, exposing nine documented endpoints.
+- **Generated Data Bundle (`frontend/src/data/realData.js`):** An ES module built by `src/export_frontend_data.py` that carries every processed place, factor value, observation year, series-break flag and gap flag from the pipeline to the browser, with no server process.
 - **React 19 Geospatial Dashboard (`frontend/src/`):** A modern, responsive single-page application built on Vite and Tailwind CSS. It features an interactive vector SVG India map covering 32 states/UTs and 29 metropolitan pinpoints, an interactive leaderboard, multi-pillar radar visualizations, and an embedded analytical data bundle (`realData.js`).
 
 ---
@@ -246,7 +245,7 @@ The engineering and empirical objectives of the India Livability Intelligence Sy
    - Execute K-Means unsupervised clustering across normalized feature spaces, performing silhouette analysis to discover natural multi-dimensional entity archetypes.
 
 5. **Decoupled Full-Stack Architecture:**
-   - Engineer an asynchronous FastAPI backend microservice with dependency-injected in-memory caching and strict Pydantic v2 validation.
+   - Generate a deterministic static data bundle that delivers every processed value, observation year and provenance flag to the browser.
    - Construct a responsive React 19 geospatial dashboard supporting real-time choropleth mapping, client-side score recalculation, and multi-entity comparative analysis.
 
 6. **Quality Assurance, Provenance & Verification:**
@@ -340,16 +339,13 @@ npm run build                   # Verify production build compilation
 ```
 
 ## 3.4 Comprehensive Technology Stack Inventory
-Every library, framework, and tool deployed in the ILIS architecture has been verified against the project repository manifests (`requirements.txt`, `backend/requirements.txt`, and `frontend/package.json`).
+Every library, framework, and tool deployed in the ILIS architecture has been verified against the project repository manifests (`requirements.txt` and `frontend/package.json`).
 
 ### Table 3.2: Comprehensive Technology Stack Inventory
 | Architecture Layer | Technology / Library | Verified Version | Purpose & Function | Architectural Role |
 |---|---|---|---|---|
-| **Language Runtime** | Python | 3.14.5 | Core execution engine for data pipelines, ML, and API | Primary Backend & Modeling Runtime |
+| **Language Runtime** | Python | 3.14.5 | Core execution engine for data pipelines, ML, and the data bundle exporter | Primary Analytics & Modeling Runtime |
 | **Language Runtime** | JavaScript / Node.js | ES2022 / Node v20+ | Client-side execution and modern bundle compilation | Primary Frontend Runtime |
-| **Web API Framework** | FastAPI | >=0.111.0 (0.136.3) | Asynchronous REST routing, OpenAPI generation, DI | Core Backend Microservice |
-| **ASGI Web Server** | Uvicorn | >=0.30.0 (0.49.0) | High-concurrency asynchronous HTTP server | Production ASGI Application Server |
-| **Data Validation** | Pydantic / Pydantic-Settings | >=2.7.0 / >=2.3.0 | Strict runtime schema parsing, request/response models | Data Validation & Configuration Layer |
 | **Data Processing** | Pandas | >=2.2.2 (3.0.3) | Tabular transformations, merging, aggregations, pivoting | Core Analytical Engine |
 | **Numerical Computing** | NumPy | >=1.26.4 (2.4.6) | Vectorized arithmetic, clipping, matrix operations | Numerical Foundation |
 | **Columnar Storage** | PyArrow | >=15.0.0 (26.0.0) | High-speed Parquet serialization for tidy factor logs | Columnar Data Persistence |
@@ -367,7 +363,7 @@ Every library, framework, and tool deployed in the ILIS architecture has been ve
 
 ## 3.5 Technology Selection and Architectural Justification
 The selection of each foundational technology was governed by strict architectural requirements:
-- **FastAPI over Monoliths:** FastAPI provides native asynchronous request processing, automatic OpenAPI specification generation, and sub-millisecond JSON serialization powered by Pydantic v2 (compiled in Rust). In contrast to monolithic frameworks like Django, FastAPI minimizes memory consumption and overhead for read-heavy analytical APIs.
+- **Static Bundle over a REST Service:** A read-only analytics dashboard does not need a running server. Exporting the processed tables into a single ES module removes HTTP latency, CORS configuration, and process supervision while keeping one source of truth for both the notebook and the browser. It also removes an entire dependency and deployment surface.
 - **React 19 & Vite over Server-Side Rendering:** An interactive decision support tool requires instantaneous feedback when a user adjusts weight sliders. By compiling an embedded analytical bundle (`realData.js`) and implementing in-browser scoring (`scoringService.js`), React 19 calculates composite scores and updates choropleth fills in under 5 milliseconds—completely eliminating network latency.
 - **Statsmodels & Scikit-Learn over Deep Learning:** Urban livability indices must remain transparent, defensible, and interpretable to policy makers and academic evaluators. Deep neural networks act as black boxes and overfit short temporal series (n ≤ 10). Linear OLS and K-Means clustering provide rigorous statistical test statistics (R², p-values, F-statistics, silhouette coefficients) that are mathematically verifiable.
 - **Parquet for Tidy Long Tables:** Storing long analytical panels containing boolean flags (`is_imputed`, `is_inherited`, `series_break`) in Apache Parquet preserves strict data types, enables Snappy/ZSTD compression, and loads up to 10× faster than raw CSVs.
@@ -387,21 +383,21 @@ The system implements a rigorous set of functional requirements:
 - **FR-07 (OLS Trend Projections):** The system shall compute OLS linear regression models for entities with ≥ 5 observed historical points, projecting scores 10 years forward (2025–2034) with 95% confidence bounds.
 - **FR-08 (Interactive Geospatial Visualization):** The system shall render an interactive SVG India map supporting real-time choropleth coloring, hover tooltips, and place selection.
 - **FR-09 (Detailed Entity Diagnostics):** The system shall display longitudinal historical trajectories, radar profiles, and source attribution badges upon entity selection.
-- **FR-10 (RESTful Service Exposure):** The system shall expose all entities, scores, trends, clusters, and source attributions via documented REST API endpoints.
+- **FR-10 (Embedded Data Delivery):** The system shall deliver all entities, factor values, observation years, and provenance flags to the dashboard through a generated static data bundle.
 
 ## 4.2 Non-Functional Requirements Specification
-- **NFR-01 (Performance & Latency):** Client-side scoring recalculations upon slider adjustment shall execute in < 10 milliseconds. Backend API response times for pre-loaded endpoints shall not exceed 50 milliseconds under standard concurrency.
+- **NFR-01 (Performance & Latency):** Client-side scoring recalculations upon slider adjustment shall execute in < 10 milliseconds, with no network round-trip.
 - **NFR-02 (Data Integrity & Reproducibility):** All scoring computations and machine learning fits shall be strictly deterministic. Re-running the pipeline with identical seeds (`KMEANS_SEED = 42`) shall produce identical outputs.
 - **NFR-03 (Transparency & Attribution):** The system shall never present proxy state-level metrics as municipal measurements without explicitly attaching an `is_inherited` indicator.
 - **NFR-04 (Graceful Degradation):** If an indicator file is unavailable, the system shall log the absence, compute scores over the remaining available factors, and alert the user rather than terminating with an unhandled exception.
 - **NFR-05 (Cross-Platform Compatibility):** The software shall execute identically across Windows, Linux, and macOS environments without requiring platform-specific binary dependencies.
 
 ## 4.3 End-to-End System Architecture
-The India Livability Intelligence System is organized into three decoupled tiers: the Offline Data Engineering Core, the Backend REST Microservice, and the Client-Side Geospatial Dashboard.
+The India Livability Intelligence System is organized into three decoupled stages: the Offline Data Engineering Core, the Generated Data Delivery Bundle, and the Client-Side Geospatial Dashboard.
 
 ![Figure 4.1: High-Level System Architecture](diagrams/high_level_architecture.png)
 
-*Figure 4.1 illustrates the structural interaction between the public data sources, the Python data engineering core, the FastAPI service, and the React 19 single-page application.*
+*Figure 4.1 illustrates the structural interaction between the public data sources, the Python data engineering core, the generated data bundle, and the React 19 single-page application.*
 
 ## 4.4 Data Pipeline & ETL Architecture
 The extract, transform, load (ETL) pipeline is orchestrated by `src/cleaning/run_pipeline.py`. It executes sequentially across four modular stages:
@@ -473,21 +469,19 @@ The wide table pivots indicators into tabular feature vectors per `place_id` × 
 | `outlook` | `VARCHAR(24)` | Classification: `Improving, Declining, Stable or uncertain, Insufficient data` |
 | `projections` | `VARCHAR(1024)` | JSON array of 10-year forecasts with 95% confidence intervals |
 
-## 4.6 RESTful API Design & Endpoint Specifications
-The FastAPI application exposes nine read-only REST endpoints structured under the `/api` prefix:
+## 4.6 Embedded Data Bundle and Delivery Contract
+The dashboard is served as a static build. `src/export_frontend_data.py` converts the processed tables and the scoring configuration into one ES module, `frontend/src/data/realData.js`, which the application imports at build time. No HTTP endpoint, server process, or CORS policy exists.
 
-### Table 4.6: REST API Route Catalogue and Response Envelopes
-| HTTP Method | Route Path | Handler Function & Module | Response Pydantic Schema | Description & Query Parameters |
-|---|---|---|---|---|
-| `GET` | `/api/health` | `health()` in `main.py` | `HealthResponse` | Verifies service health, version, and data directory path |
-| `GET` | `/api/places` | `list_places()` in `routes_places.py` | `list[PlaceOut]` | Returns catalogue of all 61 places with spatial coordinates |
-| `GET` | `/api/places/{place_id}` | `place_detail()` in `routes_places.py` | `PlaceDetailOut` | Detailed metadata and full yearly factor history for a place |
-| `GET` | `/api/places/{place_id}/trend` | `place_trend()` in `routes_places.py` | `TrendResponse` | 10-year OLS projections and outlook classifications per factor |
-| `GET` | `/api/clusters` | `list_clusters()` in `routes_places.py` | `list[ClusterOut]` | Returns K-Means cluster assignments and tier labels |
-| `GET` | `/api/sources` | `list_sources()` in `routes_places.py` | `list[SourceOut]` | Returns complete data provenance register with licenses |
-| `POST`| `/api/score` | `compute_score()` in `routes_score.py` | `ScoreResponse` | Dynamic on-demand score computation given custom weights |
-| `GET` | `/api/states/{id}/ranking` | `state_ranking()` in `routes_score.py` | `StateRankingResponse` | Intra-state ranking of municipal centers within a state |
-| `GET` | `/api/factors` | `list_factors()` in `routes_score.py` | `list[FactorOut]` | Returns factor metadata, directions, and trend eligibility |
+### Table 4.6: Data Bundle Exports and Consumer
+| Export Key | Source Artifact | Consumer | Contents |
+|---|---|---|---|
+| `DATA.places` | `data/processed/places.csv` | Map, leaderboard, modal | Identifier, name, type, parent state, coordinates, population |
+| `DATA.rows` | `data/processed/factors_wide.csv` | Scoring engine | Raw factor values by place and year, with series-break and gap flags |
+| `DATA.costRows` | `data/processed/factors_tidy.parquet` | Scoring engine | Cost-of-living snapshots with their own observation year |
+| `DATA.factorDefs` | `src/scoring/factors_config.yaml` | Scoring engine, controls | Bounds, direction, level, source, unit and trend policy per factor |
+| `DATA.meta` | Derived during export | Year selector, map | Baseline year, observed years, available factors, per-factor year ranges |
+
+The exporter is strictly non-inventive: a factor value is written only when the processed table contains an observation, and a factor with no observations is omitted from `DATA.meta.availableFactors` instead of being imputed.
 
 ## 4.7 Core Mathematical and Statistical Algorithms
 
@@ -540,9 +534,9 @@ $\hat{y}_t = clip(\hat{β}_0 + \hat{β}_1 t, 0, 100)$
 $PI_{95\%}(t) = \hat{y}_t ± t_{0.025, n-2} \cdot \hat{σ} √(1 + (1) / (n) + \frac{(t - \bar{t))^2}{Σ (t_i - \bar{t})^2}}$
 
 ## 4.8 Security, Data Provenance, and Access Architecture
-- **In-Memory DataStore Singleton:** Processed datasets are loaded into memory once during FastAPI application lifespan. An LRU cache keyed on file signatures (mtime, byte size, MD5 hash) eliminates file I/O during request servicing.
+- **Generated Read-Only Bundle:** Processed datasets are compiled once into a static ES module. The dashboard holds the bundle in memory after page load, so no request-time I/O or caching layer is required.
 - **Cryptographic Provenance Gate:** All raw inputs are verified against known SHA-256 hashes in `src/utils/provenance.py`. Synthetic placeholder files are prevented from entering the active loader pipeline.
-- **CORS Protection:** Cross-Origin Resource Sharing is restricted via `CORSMiddleware` to authorized frontend origins (`http://localhost:5173`, `http://localhost:3000`).
+- **No Network Surface:** The built dashboard is static. There is no API host, no CORS policy, and no server-side endpoint that could leak or mutate data.
 
 ---
 
@@ -550,7 +544,7 @@ $PI_{95\%}(t) = \hat{y}_t ± t_{0.025, n-2} \cdot \hat{σ} √(1 + (1) / (n) + \
 
 ## 5.1 System Entry Points and Lifespan Execution
 The India Livability Intelligence System incorporates three primary execution entry points:
-1. **Backend Server (`backend/app/main.py`):** Initiates the FastAPI application under Uvicorn (`uvicorn backend.app.main:app --port 8000`). Utilizes an asynchronous `lifespan` context manager that preloads the singleton `DataStore` at server boot.
+1. **Data Bundle Exporter (`src/export_frontend_data.py`):** Builds `frontend/src/data/realData.js` from the processed tables and scoring configuration, and is invoked via `python -m src.export_frontend_data` or `make export`.
 2. **Geospatial Frontend (`frontend/src/main.jsx` & `App.jsx`):** Renders the root React 19 tree, binds global state, initializes the client-side scoring engine from `realData.js`, and sets up event handlers for persona switching and map zooming.
 3. **Pipeline Orchestrator (`src/cleaning/run_pipeline.py`):** Automated ETL runner executed via `python -m src.cleaning.run_pipeline` or `make data`. Coordinates multi-source ingestion, entity aliasing, outlier detection, and analytical export.
 
@@ -582,11 +576,13 @@ The core scoring logic resides in `src/scoring/scoring.py` and is designed as a 
 - **Linear Trend Projections (`src/models/trend.py`):** The function `fit_trend(years, scores, place_id, factor)` filters valid observations. If n ≥ 5, it fits `sm.OLS(scores, sm.add_constant(years))`, extracts slope, p-value, R², classifies qualitative outlook, and computes 10-year forecasts clipped to [0, 100].
 - **K-Means Clustering (`src/models/clustering.py`):** The function `run_clustering(scores_wide, factor_score_cols, k, seed)` standardizes features using `StandardScaler()`, searches k ∈ [2, 7] via `_choose_k()`, records inertia and silhouette scores, and assigns tier labels.
 
-## 5.5 Backend REST Microservice Implementation (`backend/app/`)
-The FastAPI backend is engineered for maximum throughput and architectural separation:
-- `backend/app/core/config.py`: Pydantic `Settings(BaseSettings)` class. Features a custom validator `parse_debug_value` ensuring that environment strings such as `"release"`, `"prod"`, `"true"`, or `"1"` are correctly coerced to boolean values without throwing validation errors.
-- `backend/app/core/loader.py`: Implements `DataStore` and `get_store()`. Evaluates an MD5 file signature across all nine data files. When signatures match, it returns an in-memory cached instance, ensuring zero filesystem latency.
-- `backend/app/api/routes_places.py` & `routes_score.py`: Lightweight router controllers injecting `DataStore` via `Depends(get_store)` and transforming pandas rows into validated Pydantic models.
+## 5.5 Data Delivery Bundle Implementation (`src/export_frontend_data.py`)
+The delivery layer is a single deterministic exporter rather than a service:
+- `_factor_definitions()`: Copies each factor's column, bounds, direction, level and trend policy from `src/scoring/factors_config.yaml` so the browser normalizes with exactly the same anchors as the notebook.
+- `_number()` / `_boolean()` / `_text()`: Convert pandas values into JSON-safe primitives, treating every missing observation as `null` instead of a substituted value.
+- Place rows: Emitted per place and year with the raw factor values plus `seriesBreak` and `gapFlags` maps, preserving the observation year of every inherited state-level value.
+- Metadata: `availableFactors` is derived from the processed tables, so a factor appears in the controls only when it has at least one real observation.
+- The module is written with a fixed key order and no timestamps, so re-running it on unchanged inputs produces a byte-identical bundle.
 
 ## 5.6 Frontend Geospatial Dashboard Implementation (`frontend/src/`)
 The user interface is structured around modern React 19 functional components:
@@ -594,7 +590,7 @@ The user interface is structured around modern React 19 functional components:
 ![Figure 4.4: Frontend Component Architecture](diagrams/frontend_component_hierarchy.png)
 
 - `IndiaMap.jsx`: Renders an interactive vector SVG India map using coordinate paths defined in `indiaMap.js`. Implements mouse hover tooltips, click selection, and dynamic choropleth shading based on the active color mode.
-- `WeightControls.jsx`: Renders five persona buttons and dynamic sliders for Air Quality, Safety, Health, Economy, and Cost of Living. Features slider lock toggles and instant normalization.
+- `WeightControls.jsx`: Renders five persona buttons and dynamic sliders for Air Quality, Safety, Health, Economy, Cost of Living and Water Quality. Features slider lock toggles and instant normalization.
 - `Leaderboard.jsx`: Ranked table displaying entity positions, scores, and pillar breakdowns. Supports search filtering and multi-entity selection for comparative analysis.
 - `PlaceDetailModal.jsx`: Modal displaying a 10-year OLS trend chart, multi-pillar radar profile, and data attribution badges.
 - `CompareModal.jsx` & `CompareBar.jsx`: Multi-entity comparison tray supporting side-by-side analysis of up to four jurisdictions.
@@ -616,27 +612,27 @@ During pipeline startup, `find_unverified_generated_sources()` scans the workspa
 The system implements robust error handling across all layers:
 - **Degenerate Bounds Handling:** In `normalize_value()`, if anchor upper equals anchor lower (hi == lo), the function returns 50.0 to prevent division-by-zero exceptions.
 - **Missing Factor Reweighting:** If an entity has valid data for 3 out of 4 requested factors, weights are proportionally scaled over the observed factors, preventing artificial score penalization.
-- **Environment Variable Parsing Resilience:** In `backend/app/core/config.py`, system environment variables like `DEBUG=release` (frequently set on Windows workstations by C++/Rust toolchains) are safely parsed into `False` rather than causing startup validation crashes.
-- **Network Independence:** The frontend operates completely offline using `realData.js`. If the FastAPI backend is stopped, all map, scoring, radar, and leaderboard features remain fully functional in the browser.
+- **Missing-Factor Resilience:** A place without a selected factor is excluded from that ranking instead of being silently reweighted, and the exclusion is surfaced in the leaderboard and detail modal.
+- **Network Independence:** The frontend operates completely offline using `realData.js`. There is no server to be unavailable: all map, scoring, radar, and leaderboard features run in the browser.
 
 ---
 
 # CHAPTER 6: TESTING AND QUALITY ASSURANCE
 
 ## 6.1 Testing Strategy and Test Harness (`pytest`)
-Quality assurance is fundamental to the engineering lifecycle of the India Livability Intelligence System. To guarantee numerical correctness, mathematical invariant adherence, schema referential integrity, and regression stability, an exhaustive automated test suite was constructed using `pytest` and `pytest-asyncio`.
+Quality assurance is fundamental to the engineering lifecycle of the India Livability Intelligence System. To guarantee numerical correctness, mathematical invariant adherence, schema referential integrity, and regression stability, an exhaustive automated test suite was constructed using `pytest`.
 
-The test suite resides in the `tests/` directory and is structured into six functional modules:
+The test suite resides in the `tests/` directory and consists of a shared fixture module plus seven test modules:
 - `conftest.py`: Defines shared pytest fixtures, test data frames, mock paths, and configuration mocks.
 - `test_data.py`: Schema validation, range constraints, uniqueness, referential integrity, and data coverage.
 - `test_scoring.py`: Mathematical normalization, clipping, direction inversion, dynamic reweighting, and score bounds.
 - `test_scoring_parity.py`: Verifies numerical parity between Python scoring and JavaScript browser scoring.
 - `test_models.py`: Ordinary Least Squares trend fitting, outlook categorization, projection bounds, and K-Means stability.
-- `test_provenance_and_config.py`: Cryptographic placeholder detection, environment parsing, and domain outlier fencing.
+- `test_provenance_and_config.py`: Cryptographic placeholder detection, provenance flags, and domain outlier fencing.
 - `test_model_evaluation.py`: Holdout cross-validation testing of trend prediction errors (MSE, RMSE, R²).
-- `test_api.py`: FastAPI endpoint integration testing, status codes, and Pydantic schema validation.
+- `test_bounds_calibration.py`: Calibrated percentile bounds and scoring-configuration integrity.
 
-## 6.2 Test Suite Execution Results (84 Passed, 1 Skipped)
+## 6.2 Test Suite Execution Results (91 Passed, 1 Skipped)
 Executing the automated test suite across the active workspace yields the following verified results:
 
 ```text
@@ -644,16 +640,12 @@ Executing the automated test suite across the active workspace yields the follow
 platform win32 -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
 rootdir: F:\Codes\Projects\DSP Project\MCA_DSP_Project_2026\India Livability Intelligence System
 plugins: anyio-4.13.0, asyncio-1.4.0
-collected 85 items
+collected 92 items
 
-tests/test_data.py ...............                                       [ 17%]
-tests/test_scoring.py .....................                              [ 44%]
-tests/test_scoring_parity.py ....................                        [ 68%]
-tests/test_models.py ....................                                [ 90%]
-tests/test_provenance_and_config.py .......                              [ 98%]
-tests/test_model_evaluation.py .                                         [100%]
+........................................................................ [ 78%]
+....................                                                     [100%]
 
-======================== 84 passed, 1 skipped in 6.79s ========================
+======================= 91 passed, 1 skipped in 4.34s ========================
 ```
 
 ### Table 6.1: Test Suite Module Distribution and Execution Metrics
@@ -663,9 +655,10 @@ tests/test_model_evaluation.py .                                         [100%]
 | `test_scoring.py` | Normalization, bounds clipping, direction inversion, weights | 23 | 23 Passed | **VERIFIED** |
 | `test_scoring_parity.py` | Exact numerical parity across Python and JavaScript engines | 20 | 20 Passed | **VERIFIED** |
 | `test_models.py` | OLS trend fits, p-values, 10-year forecasts, K-Means clustering | 19 | 19 Passed | **VERIFIED** |
-| `test_provenance_and_config.py` | SHA-256 placeholder quarantine, debug string coercion | 7 | 7 Passed | **VERIFIED** |
+| `test_provenance_and_config.py` | SHA-256 placeholder quarantine, provenance flags, outlier fencing | 5 | 5 Passed | **VERIFIED** |
 | `test_model_evaluation.py` | Holdout error metrics (MSE, RMSE, R2) on trend predictions | 1 | 1 Passed | **VERIFIED** |
-| **Total Automated Suite** | **Comprehensive System Quality Assurance** | **85** | **84 Passed, 1 Skipped** | **PASS (100% Active)** |
+| `test_bounds_calibration.py` | Calibrated percentile bounds and configuration integrity | 9 | 9 Passed | **VERIFIED** |
+| **Total Automated Suite** | **Comprehensive System Quality Assurance** | **92** | **91 Passed, 1 Skipped** | **PASS (100% Active)** |
 
 *Note on Skipped Test:* `test_normalized_scores_in_range` in `test_data.py` is intentionally skipped pending a multi-year panel re-indexing pass; all individual indicator range tests pass unconditionally.
 
@@ -690,15 +683,16 @@ The scoring test harness verifies essential mathematical properties:
 - **No Future Data Leakage:** Ensures that OLS trend models are fitted strictly on observed historical years (t ≤ 2024) without access to forecast evaluation intervals.
 - **K-Means Reproducibility:** Verifies that clustering with a fixed seed (`KMEANS_SEED = 42`) generates identical cluster profiles across consecutive runs.
 
-## 6.6 API Integration Testing and Runtime Observations
-Integration tests in `tests/test_api.py` verify that:
-- `/api/health` returns status code 200 and JSON envelope `{"status": "ok", "version": "1.0.0"}`.
-- `/api/places` returns an array of 61 places matching the `PlaceOut` Pydantic model.
-- `/api/factors` returns definitions for all core factors with correct trend eligibility flags.
-- `/api/score` accepts custom weight dictionaries and returns properly normalized scores and ordinal rankings.
+## 6.6 Data Bundle Integrity Testing
+The generated bundle is validated by the export step and by the browser build:
+- The exporter fails loudly if a configured factor column is missing, rather than writing a partial bundle.
+- Every place in `places.csv` appears exactly once in `DATA.places`.
+- `DATA.meta.availableFactors` lists only factors with at least one real observation.
+- Snapshot factors carry a single observation year and no projection.
+- `npm run build` compiles the bundle into the production build, so a malformed bundle fails the build rather than the runtime.
 
 ### Runtime Environment Analysis (Python 3.14 on Windows)
-During test harness execution on Windows workstations running Python 3.14.5, Starlette's `TestClient` (which utilizes `anyio.from_thread.start_blocking_portal()`) encountered an event loop teardown hang attributable to an upstream AnyIO threading bug in Python 3.14 Windows builds. However, the underlying FastAPI route handlers execute with zero defects when invoked directly or served live via Uvicorn. The Pydantic schemas, routing controllers, and DataStore caching mechanisms have been verified independently.
+The test harness runs on Python 3.14.5. Because the project no longer contains a server component, the suite has no HTTP client, event-loop or ASGI lifecycle dependency, and it completes in a few seconds on a standard workstation.
 
 ## 6.7 Comprehensive Verification Traceability Matrix
 
@@ -843,9 +837,9 @@ Evaluating place rank stability across 10,000 Dirichlet Monte Carlo weight draws
 
 ## 7.4 Key Engineering Achievements
 1. **Deterministic, Sub-5ms Scoring:** Successfully decoupled data processing from client interaction. By compiling pre-processed tables into `realData.js` and implementing pure JavaScript scoring, the dashboard recalculates scores and updates choropleth fills in under 5 milliseconds.
-2. **Zero-File-I/O Backend API:** The FastAPI backend utilizes an LRU-cached in-memory `DataStore` singleton, eliminating disk reads during request handling and serving API requests in < 50 milliseconds.
+2. **Zero-Request Data Delivery:** The dashboard imports the generated bundle at build time, so scoring and map updates require no network request at all.
 3. **Automated Provenance Quarantine Gate:** Implemented automated SHA-256 integrity hashing that detected, quarantined, and eliminated six synthetic placeholder files, upholding academic honesty.
-4. **Exhaustive Automated Test Coverage:** Achieved 84 passed tests across 85 test cases (100% active test pass rate) validating schema conformance, mathematical boundary behavior, and regression determinism.
+4. **Exhaustive Automated Test Coverage:** Achieved 91 passed tests with 1 skipped across 92 test cases validating schema conformance, mathematical boundary behavior, and regression determinism.
 5. **Interactive Geospatial Visualization:** Engineered a custom, interactive vector SVG map of India rendering all 32 states/UTs and 29 metropolitan pinpoints with real-time choropleth shading.
 
 ## 7.5 Verified Limitations and Data Gaps
@@ -873,7 +867,7 @@ The India Livability Intelligence System successfully demonstrates that fragment
 5. Ministry of Statistics and Programme Implementation (MoSPI), National Sample Survey Office, "Periodic Labour Force Survey (PLFS) Annual Report (July 2023 – June 2024)," New Delhi, India, 2024. [Online]. Available: https://www.mospi.gov.in/web/plfs
 6. Ministry of Housing and Urban Affairs (MoHUA), Government of India, "Ease of Living Index (EoLI) Assessment Framework," New Delhi, India, 2020.
 7. World Health Organization (WHO), "WHO Global Air Quality Guidelines: Particulate Matter (PM₂.₅ and PM_{10}), Ozone, Nitrogen Dioxide, Sulfur Dioxide and Carbon Monoxide," Geneva, Switzerland: World Health Organization, 2021.
-8. S. Tiangolo et al., "FastAPI: High-Performance, Easy to Learn, Fast to Code Python Web Framework," 2024. [Online]. Available: https://fastapi.tiangolo.com/
+8. Vite, "Vite: Next Generation Frontend Tooling," 2024. [Online]. Available: https://vite.dev/
 9. React Open Source Community, "React 19 Documentation and Core Principles," Meta Open Source, 2024. [Online]. Available: https://react.dev/
 10. E. Seabold and J. Perktold, "Statsmodels: Econometric and Statistical Modeling with Python," in *Proceedings of the 9th Python in Science Conference*, 2010, pp. 92–96.
 11. F. Pedregosa et al., "Scikit-learn: Machine Learning in Python," *Journal of Machine Learning Research*, vol. 12, pp. 2825–2830, 2011.

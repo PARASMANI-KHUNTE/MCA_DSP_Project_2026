@@ -1,6 +1,6 @@
 # India Livability Intelligence System
 
-An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files combine historic and enriched 2025–2026 air-quality data, longitudinal city cost-of-living estimates, and NCRB safety, NFHS-5 health, RBI NSDP/PLFS economy and CPCB water-quality extracts, but their exact upstream versions and values have not been independently confirmed. It includes a React dashboard, an optional FastAPI service, data processing and analysis code, and project reports.
+An MCA data science project for exploring livability indicators across Indian states/UTs and cities using locally supplied datasets. The currently active files combine historic and enriched 2025–2026 air-quality data, longitudinal city cost-of-living estimates, and NCRB safety, NFHS-5 health, RBI NSDP/PLFS economy and CPCB water-quality extracts, but their exact upstream versions and values have not been independently confirmed. It includes a static React dashboard, data processing and analysis code, and project reports.
 
 > **Course:** Data Science using Python (CAPCTD3 Elective-V)  
 > **Working title:** *Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection*
@@ -10,7 +10,7 @@ An MCA data science project for exploring livability indicators across Indian st
 - **Current workflow:** six raw tables were confirmed byte-for-byte as outputs from the retired placeholder generator and remain quarantined in `data/rejected/generated_placeholders/`. Processed outputs and the frontend bundle combine the remaining local air-quality and longitudinal rent files with public NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment and CPCB water-quality extracts.
 - The dashboard covers **61 places**: 32 states/UTs and 29 cities.
 - Processed analytical tables are in `data/processed/`; source files and their attribution register are in `data/raw/` in the working project. Raw data is excluded from Git by `.gitignore` and must be supplied separately for pipeline runs.
-- The dashboard has embedded data and computes factor scores in the browser. The default balanced view combines air quality, safety, health and economy; earlier years remain factor-specific views. Cost-of-living rankings remain available as a preset. Water quality is integrated into the processed tables and scoring configuration but is not yet exposed in the dashboard weight controls. The FastAPI backend is optional.
+- The dashboard has embedded data and computes factor scores in the browser. The default balanced view combines air quality, safety, health and economy; earlier years remain factor-specific views. Cost-of-living and water-quality rankings are available as selectable factors and presets. There is no server component: the dashboard is a static build served by Vite.
 - There is no hosted demo linked at present.
 
 ## Findings status
@@ -53,19 +53,6 @@ npm run build
 npm run preview
 ```
 
-## Run the optional API
-
-From the repository root, install the backend dependencies and start FastAPI:
-
-```bash
-python -m venv .venv
-# Activate the environment for your shell, then:
-pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --reload --port 8000
-```
-
-The API documentation is at `http://localhost:8000/docs`; health check: `http://localhost:8000/api/health`. It serves health, place, source, factor-availability, score, state-ranking, and factor-trend data. Score requests can rank available factors; they do not produce a composite from missing factors. Trend responses return projections only for eligible time series and label the cost-of-living and water-quality factors as having no trend. The API reloads its processed-data cache after pipeline outputs change. The frontend uses the generated embedded bundle and does not depend on the API for interactive scoring.
-
 ## Data pipeline and analysis
 
 The full Python stack is listed in the root `requirements.txt`. Raw datasets and their attribution records are under `data/raw/`; see [`source_register.csv`](data/raw/source_register.csv). The checked-in place master is `data/processed/places.csv`. Pipeline commands process the files available locally without a source-manifest gate. A successful schema/pipeline run does not independently verify the cited publications.
@@ -88,12 +75,11 @@ python -m src.export_frontend_data     # refresh frontend/src/data/realData.js
 make test        # pytest suite with coverage
 ```
 
-The start script runs the frontend only. The API is optional; start it separately with the command above when API behavior is needed.
+The start script runs the frontend only; there is no separate server to start.
 
 ## Project structure
 
 ```text
-backend/          FastAPI application, schemas, scoring service
 data/raw/         Source downloads, source register, and aliases (gitignored)
 data/processed/   Processed place, factor, score, trend, and cluster tables
 frontend/         React + Vite dashboard and embedded data

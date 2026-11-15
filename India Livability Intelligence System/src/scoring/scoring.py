@@ -5,7 +5,7 @@ Livability scoring engine (M5).
 
 Pure functions only — no file I/O, no network access.
 This makes the module easy to test (M10) and importable
-from both notebooks and the FastAPI backend.
+from both notebooks and the frontend data exporter.
 """
 
 import logging

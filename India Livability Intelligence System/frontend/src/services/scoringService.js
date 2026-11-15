@@ -31,7 +31,7 @@ export const SCORE_GRADIENT_CSS = `linear-gradient(90deg, ${SCORE_BANDS_ASC.map(
   band => `${band.color} ${band.min}%`
 ).join(", ")}, #14532d 100%)`;
 
-const FACTOR_KEYS = ["air", "safety", "health", "economy", "col"];
+const FACTOR_KEYS = ["air", "safety", "health", "economy", "col", "water"];
 
 // Factors whose published geography is the state. A city record for these
 // factors reuses its parent state's observation, so the UI labels it as
@@ -100,17 +100,19 @@ function latestObservedValues(placeId, year) {
     safety: null,
     health: null,
     nsdp: null,
-    unemployment: null
+    unemployment: null,
+    water: null
   };
   const years = {
     air: null,
     safety: null,
     health: null,
     nsdp: null,
-    unemployment: null
+    unemployment: null,
+    water: null
   };
-  const seriesBreaks = { air: false, safety: false, health: false, economy: false };
-  const gapFlags = { air: "", safety: "", health: "", economy: "" };
+  const seriesBreaks = { air: false, safety: false, health: false, economy: false, water: false };
+  const gapFlags = { air: "", safety: "", health: "", economy: "", water: "" };
 
   rows.forEach(row => {
     if (row.year > year) return;
@@ -163,14 +165,16 @@ function factorScoresAt(placeId, year) {
       safety: normalize(values.safety, FACTOR_DEFS.safety),
       health: normalize(values.health, FACTOR_DEFS.health),
       economy: economyScore,
-      col: normalize(costValue, FACTOR_DEFS.col)
+      col: normalize(costValue, FACTOR_DEFS.col),
+      water: normalize(values.water, FACTOR_DEFS.water)
     },
     factorYears: {
       air: years.air,
       safety: years.safety,
       health: years.health,
       economy: economyYear,
-      col: costYear
+      col: costYear,
+      water: years.water
     },
     seriesBreaks,
     gapFlags

@@ -159,10 +159,6 @@ def get_column_widths(header_row, num_cols):
     if "architecture layer" in headers_joined and "architectural role" in headers_joined:
         return [0.90, 1.10, 0.70, 2.10, 1.47]
 
-    # Table 7: REST API Route Catalogue (5 cols)
-    if "route path" in headers_joined and ("schema" in headers_joined or "pydantic" in headers_joined):
-        return [0.65, 1.50, 1.25, 1.25, 1.62]
-
     # Table 8: Indicator Normalization Anchors (6 cols)
     if "factor identifier" in headers_joined and "physical indicator" in headers_joined:
         return [0.85, 1.60, 0.75, 0.80, 0.80, 1.47]
@@ -492,7 +488,7 @@ def build_docx():
         "    4.3 End-to-End System Architecture ........................................................................ Page 11",
         "    4.4 Data Pipeline & ETL Architecture ........................................................................ Page 11",
         "    4.5 Data Modeling & Analytical Schemas ................................................................... Page 12",
-        "    4.6 RESTful API Design & Endpoint Specifications ..................................................... Page 14",
+        "    4.6 Embedded Data Bundle and Delivery Contract ................................................ Page 14",
         "    4.7 Core Mathematical and Statistical Algorithms ...................................................... Page 15",
         "    4.8 Security, Data Provenance, and Access Architecture ........................................... Page 17",
         "CHAPTER 5: IMPLEMENTATION DETAILS ......................................................................... Page 18",
@@ -500,17 +496,17 @@ def build_docx():
         "    5.2 Data Loaders and Entity Aliasing ......................................................................... Page 18",
         "    5.3 Normalization and Scoring Implementation ......................................................... Page 19",
         "    5.4 Machine Learning and Statistical Projections ....................................................... Page 19",
-        "    5.5 Backend REST Microservice Implementation ....................................................... Page 19",
+        "    5.5 Data Delivery Bundle Implementation ......................................................... Page 19",
         "    5.6 Frontend Geospatial Dashboard Implementation ................................................. Page 20",
         "    5.7 Data Provenance and Quality Assurance Modules ............................................. Page 20",
         "    5.8 Error Handling, Edge Cases, and System Reliability ............................................ Page 21",
         "CHAPTER 6: TESTING AND QUALITY ASSURANCE ............................................................ Page 22",
         "    6.1 Testing Strategy and Test Harness ...................................................................... Page 22",
-        "    6.2 Test Suite Execution Results (84 Passed, 1 Skipped) .......................................... Page 22",
+        "    6.2 Test Suite Execution Results (91 Passed, 1 Skipped) .......................................... Page 22",
         "    6.3 Schema and Referential Integrity Test Suite ....................................................... Page 23",
         "    6.4 Scoring Engine Mathematical Parity and Invariant Tests ...................................... Page 23",
         "    6.5 Statistical Modeling and ML Validation Tests ....................................................... Page 24",
-        "    6.6 API Integration Testing and Runtime Observations ............................................. Page 24",
+        "    6.6 Data Bundle Integrity Testing ..................................................................... Page 24",
         "    6.7 Comprehensive Verification Traceability Matrix ................................................... Page 24",
         "CHAPTER 7: RESULTS, EMPIRICAL FINDINGS, AND FUTURE SCOPE ................................. Page 27",
         "    7.1 Inferential Statistics and Empirical Observations ................................................. Page 27",

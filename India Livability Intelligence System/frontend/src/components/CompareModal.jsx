@@ -1,5 +1,6 @@
 import {
   Coins,
+  Droplets,
   ExternalLink,
   HeartPulse,
   Plus,
@@ -18,7 +19,8 @@ const FACTORS = [
   { key: "safety", label: "Safety index", icon: ShieldAlert, color: "#e11d48" },
   { key: "health", label: "Healthcare", icon: HeartPulse, color: "#16a34a" },
   { key: "economy", label: "Economy & jobs", icon: TrendingUp, color: "#d97706" },
-  { key: "col", label: "Cost of living", icon: Coins, color: "#9333ea" }
+  { key: "col", label: "Cost of living", icon: Coins, color: "#9333ea" },
+  { key: "water", label: "Water quality", icon: Droplets, color: "#0891b2" }
 ];
 
 export default function CompareModal({
@@ -33,7 +35,12 @@ export default function CompareModal({
   if (!places.length) return null;
 
   const hasCostData = places.some(place => place.factorScores?.col !== null && place.factorScores?.col !== undefined);
-  const factors = FACTORS.filter(factor => factor.key !== "col" || hasCostData);
+  const hasWaterData = places.some(place => place.factorScores?.water !== null && place.factorScores?.water !== undefined);
+  const factors = FACTORS.filter(factor => {
+    if (factor.key === "col") return hasCostData;
+    if (factor.key === "water") return hasWaterData;
+    return true;
+  });
 
   const leaders = {};
   factors.forEach(factor => {
@@ -194,7 +201,7 @@ export default function CompareModal({
               <span className="text-[10px] text-[#888888]">Category Leaders Highlighted</span>
             </div>
             <p className="mb-3 text-[10px] leading-relaxed text-[#777777]">
-              For cities, public safety, healthcare and economy reuse the parent state&apos;s published values.
+              For cities, public safety, healthcare, economy and water quality reuse the parent state&apos;s published values.
               A year badge marks an inherited pillar; it is the source year, not the selected year.
             </p>
 

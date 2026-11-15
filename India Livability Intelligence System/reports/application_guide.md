@@ -15,11 +15,11 @@ ILIS is a transparent, browser-based decision-support tool for exploring livabil
 - **32 states and Union Territories**
 - **29 major metropolitan cities**
 
-The dashboard combines air quality, public safety, healthcare, economic conditions, and an optional cost-of-living factor into a weighted composite score. Water quality is processed and configured but is not yet exposed in the dashboard weight controls. Every score is computed from the processed local tables; missing factors are never replaced with invented values.
+The dashboard combines air quality, public safety, healthcare and economic conditions into a weighted composite score, with optional cost-of-living and water-quality factors that can be added as priorities or used as single-factor views. Every score is computed from the processed local tables; missing factors are never replaced with invented values.
 
 Observed coverage differs by factor. The year selector runs from **2010 to 2026**, the baseline year of the exported bundle. Trend projection is **disabled for every factor**, so the application does not publish forecast years or projection intervals.
 
-The frontend is a React single-page application with embedded data. A FastAPI backend is optional; when it is unavailable, the interface uses its embedded client scoring engine.
+The frontend is a static React single-page application with embedded data. All scoring runs in the browser; no backend service is required.
 
 ---
 
@@ -33,7 +33,7 @@ The frontend is a React single-page application with embedded data. A FastAPI ba
 | Economy: per-capita NSDP | State | 57 observations, 2023 | RBI NSDP constant-price series |
 | Economy: unemployment | State | 57 observations, 2023 | MoSPI PLFS 2023-24, ages 15+ |
 | Cost of living (1BHK rent) | City | 390 observations, 26 cities, 2010–2024 | Longitudinal rent estimates (modelled/reference) |
-| Water quality (0–100 index) | State | 54 observations, 2021 | CPCB water-body snapshot (processed, not in dashboard controls) |
+| Water quality (0–100 index) | State | 54 observations, 2021 | CPCB water-body snapshot (selectable dashboard factor) |
 
 Important consequences:
 
@@ -111,15 +111,7 @@ npm run preview
 
 The preview server typically runs at `http://localhost:4173`.
 
-### 4.2 Optional FastAPI Backend
-
-From the project root:
-
-```bash
-uvicorn backend.app.main:app --reload --port 8000
-```
-
-The application works without the backend. If the backend is offline, the navigation status shows the client engine and the browser console may report expected CORS/network errors for API requests.
+The frontend is fully static: the built `frontend/dist/` directory can be served by any static file host. No API, database, or server-side process is involved.
 
 ---
 
@@ -130,7 +122,7 @@ The application works without the backend. If the backend is offline, the naviga
 - **Methodology & Data:** Formulas, calibrated bounds, sources, score bands and limitations.
 - **Year selector:** Observed years `2010–2026`; there are no projected years.
 - **Compare tray:** Stages two or three places for side-by-side inspection.
-- **Backend pill:** Indicates live API connectivity or standalone client evaluation.
+- **Engine badge:** Confirms the app is running its embedded client scoring engine.
 
 On smaller screens, the sidebar controls and rankings become vertically stacked to avoid horizontal overflow.
 
@@ -198,7 +190,7 @@ The map legend updates with the active mode.
 - Recalculates when weights, presets, filters or year change.
 - Search filters by place name, parent state or region.
 - Type filters switch between all places, cities and states/UTs.
-- Each row shows score, rank, score bar and outlook.
+- Each row shows score, rank, score bar, the source year of the underlying observations, and a marker when a state value is inherited.
 - Places without a composite score display `—` and are sorted after scored places.
 - With trend projection disabled, outlook is **Insufficient data** rather than a projected direction.
 - The compare checkbox stages a place for comparison.
@@ -285,7 +277,7 @@ It does not claim that missing data is replaced by equal-weight fallbacks.
 8. **No projections:** Trend eligibility is disabled, so no outlook or forecast should be read from the app.
 9. **Descriptive correlations:** Associations are not causal estimates.
 10. **Offline clustering:** K-Means tiers are not used in the interface.
-11. **Water not exposed:** Water quality is processed and configured but is not available as a dashboard weight or color mode.
+11. **State-level water:** Water quality is a single 2021 CPCB state snapshot inherited by cities, so it cannot show intra-state or temporal variation.
 
 ---
 
@@ -307,7 +299,6 @@ It does not claim that missing data is replaced by equal-weight fallbacks.
 
 ## 16. Troubleshooting
 
-- **Backend errors in the console:** The backend is optional. Start it on port 8000 or ignore the expected API/CORS messages.
 - **All places unranked:** Every weight is zero. Reset priorities or raise at least one weight.
 - **A factor shows unavailable:** That place has no observation at or before the selected year for that factor.
 - **No projection line:** Expected. Trend projection is disabled for every factor.
@@ -355,7 +346,6 @@ python reports/generate_slides.py
 ## 18. Deliverable Files
 
 - `frontend/` — React/Vite application.
-- `backend/` — optional FastAPI service.
 - `src/` — cleaning, scoring, analysis and export pipeline.
 - `data/processed/` — processed datasets used by the app and reports.
 - `reports/findings.md` — EDA and statistical findings.

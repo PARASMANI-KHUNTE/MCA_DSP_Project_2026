@@ -12,7 +12,7 @@ NPM    ?= npm
 NB_DIR        = notebooks
 REPORT_SCRIPT = ../docs/project-report/make_report.py
 
-.PHONY: help install data notebooks scoring ml eda export analysis api web report test clean
+.PHONY: help install data notebooks scoring ml eda export analysis web report test clean
 
 help:
 	@echo ""
@@ -24,7 +24,6 @@ help:
 	@echo "  make eda         Run statistics, findings, and figures"
 	@echo "  make export      Refresh the embedded frontend data bundle"
 	@echo "  make analysis    data + scoring + ml + eda + export"
-	@echo "  make api         Start FastAPI backend on port 8000"
 	@echo "  make web         Start frontend dev server"
 	@echo "  make report      Build the academic project report (docs/project-report)"
 	@echo "  make test        Run the full pytest suite"
@@ -69,9 +68,6 @@ export:
 
 analysis: data scoring ml eda export
 	@echo "Full analysis refresh complete."
-
-api:
-	uvicorn backend.app.main:app --reload --port 8000
 
 web:
 	cd frontend && $(NPM) run dev

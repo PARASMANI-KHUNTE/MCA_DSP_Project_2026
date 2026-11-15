@@ -54,7 +54,7 @@ export const DATA = {
       "cities": 29,
       "factorRows": 643,
       "costSnapshots": 390,
-      "inheritedRows": 55,
+      "inheritedRows": 196,
       "imputedRows": 0,
       "airCityYears": 85,
       "airStateYears": 70,
@@ -62,10 +62,16 @@ export const DATA = {
         "air_quality": 155,
         "cost_of_living": 390,
         "health": 61,
+        "per_capita_nsdp_constant": 57,
+        "safety": 183,
+        "unemployment_rate": 57,
         "water_quality": 54
       },
       "inheritedByFactor": {
         "health": 29,
+        "per_capita_nsdp_constant": 27,
+        "safety": 87,
+        "unemployment_rate": 27,
         "water_quality": 26
       }
     },

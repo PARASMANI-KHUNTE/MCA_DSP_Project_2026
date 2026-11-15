@@ -1,12 +1,12 @@
 # Data Quality Report
 
-**Generated (UTC):** 2026-11-15T09:39:15+00:00  
+**Generated (UTC):** 2026-11-15T11:10:19+00:00  
 **Place master:** 61 places (32 states/UTs, 29 cities)  
-**Tidy rows:** 660  
-**Wide rows:** 540  
+**Tidy rows:** 957  
+**Wide rows:** 643  
 **Duplicate (place, year, factor) rows:** 0  
 **Imputed values:** 0  
-**Inherited state-level rows:** 55
+**Inherited state-level rows:** 196
 
 ## Factor coverage
 
@@ -15,6 +15,9 @@
 | `air_quality` | 155 | 46 | 2015–2026 | 0 | 26 |
 | `cost_of_living` | 390 | 26 | 2010–2024 | 0 | 0 |
 | `health` | 61 | 61 | 2021–2021 | 29 | 0 |
+| `per_capita_nsdp_constant` | 57 | 57 | 2023–2023 | 27 | 0 |
+| `safety` | 183 | 61 | 2020–2022 | 87 | 0 |
+| `unemployment_rate` | 57 | 57 | 2023–2023 | 27 | 0 |
 | `water_quality` | 54 | 54 | 2021–2021 | 26 | 0 |
 
 Inherited rows are city records that reuse the latest state-level observation for a factor whose published geography is the state. The dashboard shows the source year for each pillar.
@@ -25,14 +28,17 @@ Factors are stored only where an observation exists; the pipeline does not fill 
 
 | Factor | Wide rows with a value | Blank rows | Coverage of place-years |
 |---|---:|---:|---:|
-| `air_quality` | 155 | 385 | 28.7% |
-| `health` | 61 | 479 | 11.3% |
-| `cost_of_living` | 390 | 150 | 72.2% |
-| `water_quality` | 54 | 486 | 10.0% |
+| `air_quality` | 155 | 488 | 24.1% |
+| `safety` | 183 | 460 | 28.5% |
+| `health` | 61 | 582 | 9.5% |
+| `per_capita_nsdp_constant` | 57 | 586 | 8.9% |
+| `unemployment_rate` | 57 | 586 | 8.9% |
+| `cost_of_living` | 390 | 253 | 60.7% |
+| `water_quality` | 54 | 589 | 8.4% |
 
 ## Outliers
 
-1982 source rows were flagged by the domain/IQR rules. See `reports/outlier_log.csv` for the original value, rule, and action.
+1997 source rows were flagged by the domain/IQR rules. See `reports/outlier_log.csv` for the original value, rule, and action.
 
 ## Structural validation
 

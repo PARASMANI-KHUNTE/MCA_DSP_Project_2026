@@ -76,9 +76,15 @@ DATA.rows.forEach(row => {
 });
 ROWS_BY_PLACE.forEach(rows => rows.sort((a, b) => a.year - b.year));
 
-const COST_BY_PLACE = new Map(
-  DATA.costSnapshots.map(snapshot => [snapshot.placeId, snapshot])
-);
+// Cost-of-living is a snapshot series, not a single value. Keep every observed
+// year per place so the selected analysis year can pick the matching snapshot
+// instead of collapsing the history to whichever row happens to be exported last.
+const COST_BY_PLACE = new Map();
+DATA.costSnapshots.forEach(snapshot => {
+  if (!COST_BY_PLACE.has(snapshot.placeId)) COST_BY_PLACE.set(snapshot.placeId, []);
+  COST_BY_PLACE.get(snapshot.placeId).push(snapshot);
+});
+COST_BY_PLACE.forEach(rows => rows.sort((a, b) => a.year - b.year));
 
 function normalize(value, definition) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
@@ -155,9 +161,19 @@ function factorScoresAt(placeId, year) {
         ? Math.max(years.nsdp ?? -Infinity, years.unemployment ?? -Infinity)
         : null;
 
-  const cost = COST_BY_PLACE.get(placeId);
-  const costValue = cost && cost.year <= year ? cost.value : null;
-  const costYear = costValue !== null ? cost.year : null;
+  // Pick the latest cost-of-living snapshot published on or before the selected
+  // year. Earlier years therefore get the snapshot that was actually current
+  // then, and years before the first snapshot stay unscored.
+  const costRows = COST_BY_PLACE.get(placeId) || [];
+  let costValue = null;
+  let costYear = null;
+  for (const snapshot of costRows) {
+    if (snapshot.year > year) break;
+    if (Number.isFinite(Number(snapshot.value))) {
+      costValue = snapshot.value;
+      costYear = snapshot.year;
+    }
+  }
 
   return {
     factorScores: {
@@ -199,12 +215,27 @@ function compositeScore(placeId, year, weights) {
 
   const hasScore = activeWeight > 0;
   const isPartial = missingFactors.length > 0;
+  // A factor that is present but observed before the selected year is carried
+  // forward. Record the lag so the UI can say "air as of 2019" rather than
+  // implying a 2026 measurement.
+  const staleFactors = selectedFactors.filter(
+    key =>
+      factorScores[key] !== null &&
+      Number.isFinite(factorYears[key]) &&
+      factorYears[key] < year
+  );
+  const stalenessYears = staleFactors.reduce(
+    (max, key) => Math.max(max, year - factorYears[key]),
+    0
+  );
 
   return {
     year,
     score: hasScore ? Number((weightedSum / activeWeight).toFixed(1)) : null,
     partialData: isPartial && hasScore,
     missingFactors,
+    staleFactors,
+    stalenessYears,
     trendEligible: !isPartial && hasScore,
     seriesBreak: selectedFactors.some(key => seriesBreaks[key]),
     gapFlag: selectedFactors.map(key => gapFlags[key]).filter(Boolean).join("|"),
@@ -238,6 +269,8 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
       baseScore: baselinePoint?.score ?? null,
       partialData: factorPoint?.partialData ?? false,
       missingFactors: factorPoint?.missingFactors ?? [],
+      staleFactors: factorPoint?.staleFactors ?? [],
+      stalenessYears: factorPoint?.stalenessYears ?? 0,
       factorScores: factorPoint?.factorScores || {},
       factorYears: factorPoint?.factorYears || {},
       availablePillars: Object.values(factorPoint?.factorScores || {}).filter(
@@ -264,9 +297,18 @@ export function calculateScores(weights, filterType = "all", year = BASELINE_YEA
     return a.name.localeCompare(b.name);
   });
 
-  let nextRank = 1;
-  scoredList.forEach(place => {
-    place.rank = Number.isFinite(place.overallScore) ? nextRank++ : null;
+  // Competition ranking: equal scores share a rank and the next distinct score
+  // skips ahead (1, 1, 3). This matches the Python `method="min"` ranking.
+  scoredList.forEach((place, index) => {
+    if (!Number.isFinite(place.overallScore)) {
+      place.rank = null;
+      return;
+    }
+    const previous = scoredList[index - 1];
+    place.rank =
+      previous && previous.overallScore === place.overallScore
+        ? previous.rank
+        : index + 1;
   });
 
   return scoredList;

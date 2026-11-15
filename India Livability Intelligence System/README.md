@@ -85,7 +85,7 @@ data/processed/   Processed place, factor, score, trend, and cluster tables
 frontend/         React + Vite dashboard and embedded data
 models/           Model metrics
 notebooks/        Coverage, profiling, cleaning, EDA, scoring, ML analysis
-reports/          Findings, project report, application guide, audit reports
+reports/          Findings, project report, SRS, application guide, audit reports
 src/              Data loaders, cleaning, scoring, analysis, and models
 tests/            Pytest suite
 start.ps1         Start the local frontend from PowerShell

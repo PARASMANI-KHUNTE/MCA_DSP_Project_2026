@@ -30,11 +30,11 @@ export default function Navbar({
             <div className="min-w-0">
                <div className="mb-3 flex flex-col gap-1">
                  
-                  <h1 className="text-xl font-extrabold tracking-tight text-[#111111] sm-base:text">
+                  <h1 className="text-xl font-extrabold tracking-tight text-[#111111]">
                     Spatial Explorer & Livability Rankings
                   </h1>
                   <p className="text-xs text-[#666666] sm:text-sm">
-                    Rank places by available observations, inspect their coverage, and view eligible air trend projections.
+                    Rank places by available observations, compare their coverage, and inspect the observation year behind every score.
                   </p>
                 </div>
               <p className="hidden text-[11px] text-[#777777] md:block truncate">
@@ -85,7 +85,7 @@ export default function Navbar({
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Mobile Navigation"
       >
-        <div className="mx-auto grid grid-cols-2 px-1">
+        <div className="mx-auto grid grid-cols-3 px-1">
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;

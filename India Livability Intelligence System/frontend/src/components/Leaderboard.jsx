@@ -199,7 +199,7 @@ export default function Leaderboard({
                           <span>·</span>
                           <span
                             className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1 py-0.5 text-[9px] font-medium text-[#666666]"
-                            title="Range of source years behind this place's available pillars"
+                            title={`Pillars observed between ${minSourceYear} and ${maxSourceYear}; carried forward to ${year}`}
                           >
                             {sourceYearLabel}
                           </span>

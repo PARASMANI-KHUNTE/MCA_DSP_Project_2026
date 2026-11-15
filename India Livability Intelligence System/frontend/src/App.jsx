@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Map, SlidersHorizontal, Trophy } from "lucide-react";
-import Navbar from "./components/Navbar";
+import { Compass, Map, Menu, SlidersHorizontal, Trophy } from "lucide-react";
+import Sidebar from "./components/Sidebar";
 import WeightControls from "./components/WeightControls";
 import IndiaMap from "./components/IndiaMap";
 import Leaderboard from "./components/Leaderboard";
@@ -12,7 +12,8 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import PipelineView from "./components/PipelineView";
-import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
+import YearSelector from "./components/YearSelector";
+import { BASELINE_YEAR, DATA_COVERAGE, OBSERVED_YEARS, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
@@ -27,10 +28,15 @@ const MOBILE_PANELS = [
   { id: "weights", label: "Weights", icon: SlidersHorizontal }
 ];
 
+// Newest first so the default baseline sits at the top of the selector.
+const YEAR_OPTIONS = [...OBSERVED_YEARS].sort((a, b) => b - a);
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("map");
   const [selectedYear, setSelectedYear] = useState(BASELINE_YEAR);
   const [mobilePanel, setMobilePanel] = useState("map");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [weights, setWeights] = useState(() =>
     DATA_COVERAGE.compositeAvailable
@@ -92,32 +98,19 @@ export default function App() {
   const handleWeightChange = (factor, value) => {
     setSelectedPresetId("custom");
     setWeights(previous => ({ ...previous, [factor]: value }));
-    if (value > 0) {
-      const availableYear = DATA_COVERAGE.lastYearByFactor?.[factor];
-      if (availableYear != null && selectedYear < DATA_COVERAGE.firstYearByFactor?.[factor]) {
-        setSelectedYear(availableYear);
-      }
-    }
   };
 
   const handleSelectPreset = preset => {
     setSelectedPresetId(preset.id);
     setWeights(preset.weights);
-    const factor = preset.id.endsWith("_only") ? preset.id.replace("_only", "") : null;
-    const latestYear = factor && DATA_COVERAGE.lastYearByFactor?.[factor];
-    if (latestYear != null) setSelectedYear(latestYear);
   };
 
   const handleChangeActiveFactor = factor => {
     setActiveFactor(factor);
-    const firstYear = DATA_COVERAGE.firstYearByFactor?.[factor];
-    const latestYear = DATA_COVERAGE.lastYearByFactor?.[factor];
-    if (firstYear != null && latestYear != null && selectedYear < firstYear) {
-      setSelectedYear(latestYear);
-    }
   };
 
   const handleReset = () => {
+    setSelectedYear(BASELINE_YEAR);
     if (DATA_COVERAGE.compositeAvailable) {
       setSelectedPresetId(COMPOSITE_DEFAULT.id);
       setWeights({ ...COMPOSITE_DEFAULT.weights });
@@ -176,31 +169,68 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F2] p-2 sm:p-4 lg:p-6 text-[#111111] flex flex-col font-sans">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[#E5E5E5] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] overflow-hidden">
-        {/* Navigation Bar */}
-        <Navbar
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-        />
+    <div className="flex min-h-screen flex-col bg-[#F5F5F2] font-sans text-[#111111] md:flex-row">
+      {/* Sticky Mobile Top Header */}
+      <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-[#E5E5E5] bg-white/95 px-4 backdrop-blur-md md:hidden">
+        <button
+          onClick={() => setActiveTab("map")}
+          className="flex items-center gap-2 text-left"
+          aria-label="Go to explorer"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] text-[#111111]">
+            <Compass size={17} className="text-[#B51F3B]" />
+          </div>
+          <span className="text-sm font-extrabold tracking-tight text-[#111111]">
+            Spatial Explorer
+          </span>
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] px-2 py-1 text-[11px] font-semibold text-[#666666]">
+            {selectedYear}
+          </span>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E5E5E5] bg-white text-[#111111] hover:bg-[#F5F5F2] transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={18} />
+          </button>
+        </div>
+      </header>
 
-        {/* Main Content Surfaces */}
-        <div className="flex-1 px-4 sm:px-8 lg:px-10 py-4 sm:py-6">
+      {/* Left Sidebar Drawer / Rail */}
+      <Sidebar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+      />
+
+      {/* Main Content */}
+      <main className="min-w-0 flex-1">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-6 xl:px-8">
+          {dataAvailable && activeTab !== "pipeline" && (
+            <YearSelector
+              year={selectedYear}
+              years={YEAR_OPTIONS}
+              onChange={setSelectedYear}
+            />
+          )}
+
           {/* Interactive Views */}
-          <main className="flex-1">
+          <div className="flex-1 min-h-0 flex flex-col">
             {/* View 1: Explorer (Decision System) */}
             {dataAvailable && activeTab === "map" && (
               <div className="flex flex-col">    
 
                 <QuickStartBanner
+                  onOpenTour={() => setShowTourModal(true)}
                   onSelectPreset={handleSelectPreset}
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}
                 />
-
-                <div className="mb-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-3.5 py-2.5 text-xs leading-relaxed text-[#666666]">
-                  <strong className="text-[#111111]">Local, unverified data:</strong> this dashboard runs entirely in your browser on locally supplied extracts that have not been independently reconciled with their cited publishers. Scores, ranks and comparisons are exploratory views, not official statistics.
-                </div>
 
                 {!DATA_COVERAGE.compositeAvailable && (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900">
@@ -209,7 +239,7 @@ export default function App() {
                 )}
 
                 {/* Mobile View Toggle */}
-                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 lg:hidden">
+                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 xl:hidden">
                   {MOBILE_PANELS.map(panel => {
                     const Icon = panel.icon;
                     const active = mobilePanel === panel.id;
@@ -232,10 +262,10 @@ export default function App() {
                 </div>
 
                 {/* 3-Column Decision Grid */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:h-[calc(100dvh-13rem)] lg:min-h-[580px]">
+                <div className="grid grid-cols-1 gap-4 xl:h-[calc(100dvh-13rem)] xl:min-h-[580px] xl:grid-cols-12">
                   {/* Left Column: Weights */}
                   <div
-                    className={`custom-scrollbar min-h-0 lg:col-span-3 lg:block lg:overflow-y-auto lg:pr-1 ${
+                    className={`custom-scrollbar min-h-0 xl:col-span-3 xl:block xl:overflow-y-auto xl:pr-1 ${
                       mobilePanel === "weights" ? "block" : "hidden"
                     }`}
                   >
@@ -256,9 +286,9 @@ export default function App() {
 
                   {/* Center Column: Interactive Map */}
                   <div
-                    className={`h-[460px] sm:h-[540px] lg:col-span-6 lg:h-full flex flex-col min-h-0 ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-6 xl:h-full ${
                       mobilePanel === "map" ? "flex" : "hidden"
-                    } lg:flex`}
+                    } xl:flex`}
                   >
                     <IndiaMap
                       places={rankedPlaces}
@@ -272,9 +302,9 @@ export default function App() {
 
                   {/* Right Column: Leaderboard */}
                   <div
-                    className={`h-[460px] sm:h-[540px] lg:col-span-3 lg:h-full flex flex-col min-h-0 ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-3 xl:h-full ${
                       mobilePanel === "rankings" ? "flex" : "hidden"
-                    } lg:flex`}
+                    } xl:flex`}
                   >
                     <Leaderboard
                       rankedPlaces={rankedPlaces}
@@ -301,11 +331,9 @@ export default function App() {
             )}
 
             {/* About section removed — kept only Explorer and Insights views */}
-          </main>
+          </div>
         </div>
-
-
-      </div>
+      </main>
 
       {/* Floating Elements */}
       {dataAvailable && (

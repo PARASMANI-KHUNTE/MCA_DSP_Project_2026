@@ -4,7 +4,7 @@
 > **Historical audit:** The remainder of this report predates the placeholder quarantine, the current rebuild and the removal of the FastAPI backend (revision 1.6). Its test counts, output counts, source-gate and API behavior are not current. Use this note and the [fabrication audit](data_fabrication_audit.md) for current status.
 
 
-**Scope:** Checked the implementation against `India Livability Intelligence System.md` (SRS version 1.4, including the provenance and accuracy updates), with emphasis on M1 functional/non-functional requirements and M2–M10 deliverables.
+**Scope:** Checked the implementation against the SRS, now archived at [`India_Livability_Intelligence_System_SRS.md`](India_Livability_Intelligence_System_SRS.md) (version 1.6, including the provenance and accuracy updates), with emphasis on M1 functional/non-functional requirements and M2–M10 deliverables.
 **Date:** 3 November 2026
 **Method:** Source and data inspection, full pytest suite, frontend production build/lint, local startup script, and HTTP/API smoke checks. The pipeline is intentionally blocked at provenance preflight; notebooks and interactive browser/accessibility checks were not run.
 

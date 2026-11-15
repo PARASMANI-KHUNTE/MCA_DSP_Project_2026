@@ -20,7 +20,7 @@ const FACTORS = [
     colorMeaning: "Higher score indicates cleaner ambient air with lower annual PM2.5 concentration."
   },
   {
-    key: "safety", label: "Public Safety", source: "No active observations", icon: ShieldAlert, color: "#e11d48", max: 100,
+    key: "safety", label: "Public Safety", source: "NCRB cognizable crimes per lakh · published state records", icon: ShieldAlert, color: "#e11d48", max: 100,
     colorMeaning: "Higher score indicates lower recorded cognizable crime rates per capita."
   },
   {
@@ -28,7 +28,7 @@ const FACTORS = [
     colorMeaning: "Higher score indicates stronger maternal and child health on the NFHS-5 composite index."
   },
   {
-    key: "economy", label: "Economy & Jobs", source: "No active observations", icon: TrendingUp, color: "#d97706", max: 100,
+    key: "economy", label: "Economy & Jobs", source: "RBI constant NSDP per capita & MoSPI PLFS employment", icon: TrendingUp, color: "#d97706", max: 100,
     colorMeaning: "Higher score combines higher per-capita net state domestic product and employment rates."
   },
   {

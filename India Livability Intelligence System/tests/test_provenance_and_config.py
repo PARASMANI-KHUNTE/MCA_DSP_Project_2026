@@ -26,7 +26,7 @@ def test_domain_outlier_is_excluded_and_iqr_extreme_is_retained():
 
 def test_placeholder_fingerprints_detect_exact_content(monkeypatch):
     relative_path = "reports/.provenance-test.csv"
-    raw = Path(relative_path)
+    raw = (provenance.ROOT / relative_path).resolve()
     content = b"generated placeholder fixture\n"
     raw.parent.mkdir(parents=True, exist_ok=True)
     raw.write_bytes(content)

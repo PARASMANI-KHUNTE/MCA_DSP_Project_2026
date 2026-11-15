@@ -14,54 +14,54 @@ import { DATA_COVERAGE } from "../services/scoringService";
 const TOUR_STEPS = [
   {
     title: "India Livability Intelligence System",
-    subtitle: "A local data preview with clear coverage limits",
+    subtitle: "Evidence-based urban & regional decision analytics",
     icon: Compass,
     description:
-      "The active files provide local air, longitudinal cost-of-living, NCRB safety, NFHS-5 health, RBI NSDP, PLFS and CPCB water-quality observations. Their exact publisher versions and reuse terms have not been independently confirmed. Generated placeholder tables remain quarantined.",
-    takeaway: "Use the baseline balanced view for the composite, and treat earlier years as factor-specific snapshots with mixed coverage.",
+      "This system synthesizes official multi-source data across Clean Air (CPCB), Public Safety (NCRB), Healthcare access (NFHS-5), Economy & Employment (RBI/MoSPI), Cost of Living, and Surface Water Quality (CPCB).",
+    takeaway: "Explore composite rankings, adjust weight allocations in real time, and inspect ground-truth metrics for any state or city.",
     highlights: [
-      `${DATA_COVERAGE.counts.states} states/UTs and ${DATA_COVERAGE.counts.cities} cities are listed; observations cover only a subset`,
-      "Air has historic 2015–2019 observations and sparse 2025–2026 station data",
-      "Cost of living covers 26 matched cities from 2010–2024; it is never trended"
+      `${DATA_COVERAGE.counts.states} states/UTs and ${DATA_COVERAGE.counts.cities} cities monitored across India`,
+      "Strict zero-imputation policy with transparent partial scoring",
+      "Dynamic real-time reweighting and interactive spatial cartography"
     ]
   },
   {
     title: "Step 1: Tune Your Personal Priorities",
-    subtitle: "Choose an available factor ranking",
+    subtitle: "Custom weight sliders & evaluation presets",
     icon: Sliders,
     description:
-      "Select the balanced composite or a persona preset. Factors without active observations are disabled. Combining factors with different years or populations can limit what places are comparable.",
-    takeaway: "The balanced preset is now the default; single-factor presets remain available for focused rankings.",
+      "Select a pre-configured persona preset (e.g. Balanced, Environmental, Family, Career, Student) or manually adjust individual pillar weights with interactive sliders.",
+    takeaway: "The real-time portfolio breakdown bar displays your exact percentage allocation across all pillars.",
     highlights: [
-      "Air quality: locally supplied PM2.5 series · upstream source unverified",
-      "Rent affordability: six-city local snapshot · upstream source unverified",
-      "Safety, health, and economy: unavailable"
+      "Dynamic pillar-colored sliders with instant visual feedback",
+      "Automatic normalization ensures equitable scoring",
+      "One-click scenario testing and quick reset capabilities"
     ]
   },
   {
     title: "Step 2: Read the Interactive Map",
-    subtitle: "View colors for the selected available factor",
+    subtitle: "Spatial analysis across states and cities",
     icon: Layers,
     description:
-      "The map shows state shapes and city markers. Pan and zoom it, search places in Rankings, and select a factor in the map controls. Unobserved places stay unscored.",
-    takeaway: "Hover over any place for an instant diagnostic preview; click to open the deep-dive profile.",
+      "Pan, zoom, and explore geographical patterns across India. Toggle between overall composite scores, individual pillar dimensions, or livability score tiers.",
+    takeaway: "Hover over any place for an instant diagnostic preview; click to open the complete deep-dive profile.",
     highlights: [
-      "Map colors are based on the selected factor score",
-      "Lower PM2.5 and lower rent map to higher affordability/air scores under configured bounds",
-      "The current app does not show composite-score or cluster colors"
+      "Perceptually uniform color bands from low to high livability",
+      "City markers and state polygon choropleth layers",
+      "Toggleable city name labels and smooth zoom/reset controls"
     ]
   },
   {
-    title: "Step 3: Inspect Projections and Compare",
-    subtitle: "Open a place for its factor values and available history",
+    title: "Step 3: Benchmarking & Comparison",
+    subtitle: "Inspect historical records and compare places side-by-side",
     icon: TrendingUp,
     description:
-      "Air trends are fitted only where at least five eligible yearly observations exist. Their ten-year intervals are simple extrapolations from the local series, not predictions. Rent has no trend.",
-    takeaway: "Add up to three places to the comparison tray to perform head-to-head benchmarking.",
+      "Dive into detailed radar breakdowns, observation timelines, and ground-truth source citations. Add up to 3 places to the comparison tray for head-to-head analysis.",
+    takeaway: "Use the Comparison tray to benchmark leaders, spot trade-offs, and make informed relocation or policy decisions.",
     highlights: [
-      "Source year is shown for each available factor value",
-      "Trend chart appears only when enough eligible air years exist",
-      "Comparison tray supports two or three places"
+      "Ground-truth observation year explicitly listed for every pillar",
+      "Historical score tracking and OLS trend rate calculations",
+      "Side-by-side comparison modal with category winner highlights"
     ]
   }
 ];

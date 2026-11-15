@@ -177,13 +177,13 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
 
   return (
     <div
-      className="group rounded-2xl border border-gray-200 bg-white overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-[#D4D4D4]"
+      className="group rounded-2xl border border-[#E5E5E5] bg-white overflow-hidden transition-all duration-300 hover:shadow-md hover:border-[#D4D4D4]"
       style={{ animationDelay: `${index * 50}ms` }}
     >
       {/* Collapsed Header */}
       <button
         onClick={onToggle}
-        className="w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#B51F3B] focus:ring-offset-2"
+        className="w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAF8] transition-colors focus:outline-none focus:ring-2 focus:ring-[#B51F3B] focus:ring-offset-2"
         aria-expanded={isExpanded}
         aria-controls={`step-content-${step.id}`}
       >
@@ -191,14 +191,14 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="relative">
             <div
-              className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.main} shadow-lg`}
+              className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.main} shadow-md`}
             >
               <Icon size={22} className="text-white" aria-hidden="true" />
             </div>
             <StatusDot status={step.status} color={step.color} size={16} className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full" />
           </div>
           <div className="hidden sm:block">
-            <span className="text-xs font-mono text-gray-500 font-medium">
+            <span className="text-xs font-mono text-[#777777] font-semibold">
               {String(index + 1).padStart(2, "0")}
             </span>
           </div>
@@ -207,22 +207,22 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
         {/* Step Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="font-semibold text-gray-900 truncate flex-1">{step.label}</h3>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${colors.light}`}>
+            <h3 className="font-bold text-[#111111] truncate flex-1">{step.label}</h3>
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${colors.light}`}>
               {step.keyOutputs.length} outputs
             </span>
-            <span className="text-xs text-gray-500 font-mono hidden md:inline">
+            <span className="text-xs text-[#777777] font-mono hidden md:inline">
               {step.estimatedTime}
             </span>
           </div>
-          <p className="mt-1 text-sm text-gray-600 line-clamp-2">{step.description}</p>
+          <p className="mt-1 text-xs text-[#666666] line-clamp-2 leading-relaxed">{step.description}</p>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <ChevronDown
-            size={20}
-            className={`text-gray-500 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            size={18}
+            className={`text-[#777777] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
         </div>
@@ -237,38 +237,38 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
         role="region"
         aria-label={`${step.label} details`}
       >
-        <div className="border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white p-5 animate-slide-down">
+        <div className="border-t border-[#E5E5E5] bg-[#FAFAF8] p-5 animate-slide-down">
           {/* Action Bar */}
-          <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+          <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-[#E5E5E5]">
             <div className="flex flex-wrap items-center gap-2">
               <a
                 href={`/pipeline/${step.filename}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-xl hover:bg-[#333333] transition-all duration-200 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#111111] rounded-xl hover:bg-[#333333] transition-all duration-200 shadow-xs"
               >
-                <ExternalLink size={14} />
+                <ExternalLink size={13} />
                 <span className="hidden sm:inline">Open in New Tab</span>
               </a>
               <button
                 onClick={copyUrl}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-900 border border-gray-200 rounded-xl hover:bg-white hover:border-[#D4D4D4] transition-all duration-200"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#111111] bg-white border border-[#E5E5E5] rounded-xl hover:border-[#D4D4D4] hover:bg-[#FAFAF8] transition-all duration-200"
                 title="Copy notebook URL"
               >
-                <Copy size={14} />
+                <Copy size={13} />
                 <span className="hidden sm:inline">Copy Link</span>
               </button>
               <a
                 href={`/pipeline/${step.filename}`}
                 download
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-900 border border-gray-200 rounded-xl hover:bg-white hover:border-[#D4D4D4] transition-all duration-200"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#111111] bg-white border border-[#E5E5E5] rounded-xl hover:border-[#D4D4D4] hover:bg-[#FAFAF8] transition-all duration-200"
               >
-                <Download size={14} />
+                <Download size={13} />
                 <span className="hidden sm:inline">Download HTML</span>
               </a>
             </div>
             <div className="flex-1" />
-            <span className={`text-xs font-medium px-3 py-1 rounded-full ${colors.light} flex items-center gap-1`}>
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${colors.light} flex items-center gap-1`}>
               <StatusDot status={step.status} size={10} />
               <span className="capitalize">{step.status}</span>
             </span>
@@ -276,17 +276,17 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
 
           {/* Key Outputs - Compact */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <FileText size={14} className="text-gray-500" />
+            <h4 className="text-xs font-bold text-[#111111] mb-2.5 flex items-center gap-1.5">
+              <FileText size={13} className="text-[#B51F3B]" />
               Key Outputs
             </h4>
             <div className="flex flex-wrap gap-2">
               {step.keyOutputs.map((output, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#D4D4D4] hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-white border border-[#E5E5E5] rounded-lg text-[#555555] hover:border-[#D4D4D4] hover:bg-[#FAFAF8] transition-colors"
                 >
-                  <output.icon size={12} className="text-gray-500" aria-hidden="true" />
+                  <output.icon size={12} className="text-[#777777]" aria-hidden="true" />
                   {output.label}
                 </span>
               ))}
@@ -294,14 +294,14 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
           </div>
 
           {/* Notebook Viewer */}
-          <div className="relative rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <div className="relative rounded-xl border border-[#E5E5E5] bg-white overflow-hidden shadow-xs">
             {/* Loading State */}
             {!iframeLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                 <div className="text-center p-8">
-                  <Loader2 size={32} className="mx-auto mb-3 text-accent animate-spin" />
-                  <p className="text-sm text-gray-600">Loading notebook...</p>
-                  <p className="text-xs text-gray-500 mt-1">{step.filename}</p>
+                  <Loader2 size={32} className="mx-auto mb-3 text-[#B51F3B] animate-spin" />
+                  <p className="text-xs font-semibold text-[#111111]">Loading notebook...</p>
+                  <p className="text-[11px] text-[#777777] mt-1">{step.filename}</p>
                 </div>
               </div>
             )}
@@ -318,19 +318,19 @@ function PipelineStepCard({ step, index, isExpanded, onToggle }) {
             />
 
             {/* Fallback for blocked iframes */}
-            <div className="hidden absolute inset-0 flex flex-col items-center justify-center p-8 bg-gray-50 z-20" id={`fallback-${step.id}`}>
-              <ExternalLink size={48} className="text-[#D4D4D4] mb-4" />
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Notebook cannot be embedded</h4>
-              <p className="text-sm text-gray-600 text-center mb-4 max-w-md">
+            <div className="hidden absolute inset-0 flex flex-col items-center justify-center p-8 bg-[#FAFAF8] z-20" id={`fallback-${step.id}`}>
+              <ExternalLink size={44} className="text-[#D4D4D4] mb-3" />
+              <h4 className="text-base font-bold text-[#111111] mb-1.5">Notebook cannot be embedded</h4>
+              <p className="text-xs text-[#666666] text-center mb-4 max-w-md">
                 Your browser settings may prevent embedding. Use the links above to view the full notebook.
               </p>
               <a
                 href={`/pipeline/${step.filename}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#111111] rounded-xl hover:bg-[#333333] transition-colors"
               >
-                <ExternalLink size={14} />
+                <ExternalLink size={13} />
                 Open in New Tab
               </a>
             </div>
@@ -364,58 +364,58 @@ export default function PipelineView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] tracking-tight">
             Data Pipeline Transparency
           </h1>
-          <p className="mt-1.5 text-gray-600 max-w-2xl">
+          <p className="mt-1.5 text-xs sm:text-sm text-[#666666] max-w-2xl leading-relaxed">
             Every step below is a fully executed Jupyter notebook — code, outputs, tables, and visualizations.
             Click to expand, or open in a new tab for the complete scrollable experience.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-50 border border-green-100">
-            <CheckCircle size={14} className="text-green-600" />
-            <span className="text-sm font-medium text-green-700">
-              {completedCount} of {PIPELINE_STEPS.length} steps complete
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200">
+            <CheckCircle size={13} className="text-emerald-700" />
+            <span className="text-xs font-bold text-emerald-800">
+              {completedCount} of {PIPELINE_STEPS.length} complete
             </span>
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1">
             <button
               onClick={() => setViewMode("cards")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 viewMode === "cards"
-                  ? "bg-[#111111] text-white"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-[#111111] text-white shadow-xs"
+                  : "text-[#666666] hover:bg-white hover:text-[#111111]"
               }`}
             >
-              <Layers size={14} className="mr-1" />
-              Cards
+              <Layers size={13} />
+              <span>Cards</span>
             </button>
             <button
               onClick={() => setViewMode("timeline")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 viewMode === "timeline"
-                  ? "bg-[#111111] text-white"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-[#111111] text-white shadow-xs"
+                  : "text-[#666666] hover:bg-white hover:text-[#111111]"
               }`}
             >
-              <GitBranch size={14} className="mr-1" />
-              Timeline
+              <GitBranch size={13} />
+              <span>Timeline</span>
             </button>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={expandedStep ? collapseAll : expandAll}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 border border-gray-200 rounded-xl hover:bg-white hover:border-[#D4D4D4] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#111111] bg-white border border-[#E5E5E5] rounded-xl hover:border-[#D4D4D4] hover:bg-[#FAFAF8] transition-colors"
             >
               {expandedStep ? (
                 <>
-                  <ChevronUp size={14} />
+                  <ChevronUp size={13} />
                   Collapse All
                 </>
               ) : (
                 <>
-                  <ChevronDown size={14} />
+                  <ChevronDown size={13} />
                   Expand All
                 </>
               )}
@@ -438,8 +438,8 @@ export default function PipelineView() {
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold transition-all duration-300 ${
                     step.status === "complete"
-                      ? `${COLOR_MAP[step.color].main} ring-4 ring-white shadow-lg`
-                      : "bg-gray-200 text-gray-400"
+                      ? `${COLOR_MAP[step.color].main} ring-4 ring-white shadow-md`
+                      : "bg-[#E5E5E5] text-[#888888]"
                   }`}
                 >
                   {step.status === "complete" ? (
@@ -450,8 +450,8 @@ export default function PipelineView() {
                 </div>
                 {/* Labels */}
                 <div className="mt-2 text-center w-32">
-                  <p className="text-xs font-semibold text-gray-900 truncate">{step.shortLabel}</p>
-                  <p className="text-[10px] text-gray-500">{step.estimatedTime}</p>
+                  <p className="text-xs font-bold text-[#111111] truncate">{step.shortLabel}</p>
+                  <p className="text-[10px] text-[#777777]">{step.estimatedTime}</p>
                 </div>
               </div>
             </React.Fragment>
@@ -466,15 +466,15 @@ export default function PipelineView() {
             key={step.id}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors ${
               step.status === "complete"
-                ? "bg-green-50 border-green-100"
-                : "bg-white border-gray-200"
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-white border-[#E5E5E5]"
             }`}
           >
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                 step.status === "complete"
                   ? `${COLOR_MAP[step.color].main} text-white`
-                  : "bg-gray-100 text-gray-400"
+                  : "bg-[#FAFAF8] text-[#888888]"
               }`}
             >
               {step.status === "complete" ? (
@@ -484,8 +484,8 @@ export default function PipelineView() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-gray-900 truncate">{step.label}</p>
-              <p className="text-xs text-gray-600">{step.estimatedTime}</p>
+              <p className="font-bold text-xs text-[#111111] truncate">{step.label}</p>
+              <p className="text-[11px] text-[#666666]">{step.estimatedTime}</p>
             </div>
             <StatusDot status={step.status} size={16} />
           </div>
@@ -507,14 +507,14 @@ export default function PipelineView() {
       </div>
 
       {/* Footer Info */}
-      <div className="mt-10 p-5 rounded-2xl border border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+      <div className="mt-10 p-5 rounded-2xl border border-[#E5E5E5] bg-[#FAFAF8]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <Sparkles size={18} className="text-accent" />
+            <h4 className="font-bold text-xs text-[#111111] mb-2 flex items-center gap-2">
+              <Sparkles size={16} className="text-[#B51F3B]" />
               How to Use This
             </h4>
-            <ul className="text-sm text-gray-600 space-y-1.5">
+            <ul className="text-xs text-[#666666] space-y-1.5 leading-relaxed">
               <li className="flex items-start gap-2">{"•"} Click any step to expand and explore the full notebook</li>
               <li className="flex items-start gap-2">{"•"} "Open in New Tab" for the complete scrollable experience with interactive tables</li>
               <li className="flex items-start gap-2">{"•"} Download HTML to save locally or share with collaborators</li>
@@ -522,11 +522,11 @@ export default function PipelineView() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <Eye size={18} className="text-accent" />
+            <h4 className="font-bold text-xs text-[#111111] mb-2 flex items-center gap-2">
+              <Eye size={16} className="text-[#B51F3B]" />
               What You'll See
             </h4>
-            <ul className="text-sm text-gray-600 space-y-1.5">
+            <ul className="text-xs text-[#666666] space-y-1.5 leading-relaxed">
               <li className="flex items-start gap-2">{"•"} Raw code cells with syntax highlighting</li>
               <li className="flex items-start gap-2">{"•"} All outputs: tables, plots, statistics, warnings</li>
               <li className="flex items-start gap-2">{"•"} High-resolution figures (right-click to save)</li>
@@ -534,11 +534,11 @@ export default function PipelineView() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <FileCode size={18} className="text-accent" />
+            <h4 className="font-bold text-xs text-[#111111] mb-2 flex items-center gap-2">
+              <FileCode size={16} className="text-[#B51F3B]" />
               Reproducibility
             </h4>
-            <ul className="text-sm text-gray-600 space-y-1.5">
+            <ul className="text-xs text-[#666666] space-y-1.5 leading-relaxed">
               <li className="flex items-start gap-2">{"•"} Each notebook runs end-to-end on the current dataset</li>
               <li className="flex items-start gap-2">{"•"} What you see is exactly what executed — no hidden steps</li>
               <li className="flex items-start gap-2">{"•"} Source data, parameters, and random seeds are all visible</li>

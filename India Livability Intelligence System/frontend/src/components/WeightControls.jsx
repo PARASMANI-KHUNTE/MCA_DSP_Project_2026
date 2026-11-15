@@ -12,7 +12,6 @@ import {
   Wind
 } from "lucide-react";
 import { PRESETS } from "../data/methodologyData";
-import { SCORE_GRADIENT_CSS } from "../services/scoringService";
 
 const FACTORS = [
   {
@@ -179,7 +178,7 @@ export default function WeightControls({
 
       {/* Factor Sliders */}
       <div className="border-t border-[#E5E5E5] pt-3">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
           <span className="eyebrow text-[#888888]">Custom Pillar Weights</span>
           <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${
             totalWeight === 0
@@ -190,11 +189,40 @@ export default function WeightControls({
           </span>
         </div>
 
+        {/* Dynamic Weight Portfolio Breakdown Bar */}
+        {totalWeight > 0 && (
+          <div className="mb-3.5 flex flex-col gap-1.5 rounded-xl border border-[#EBEBE8] bg-[#FAFAF8] p-2">
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#E5E5E5]">
+              {FACTORS.filter(f => availableFactors.includes(f.key) && Number(weights[f.key] || 0) > 0).map(f => {
+                const pct = normalizedPct(weights[f.key]);
+                return (
+                  <div
+                    key={f.key}
+                    className="h-full transition-all duration-300"
+                    style={{ width: `${pct}%`, backgroundColor: f.color }}
+                    title={`${f.label}: ${pct}%`}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-[#666666]">
+              {FACTORS.filter(f => availableFactors.includes(f.key) && Number(weights[f.key] || 0) > 0).map(f => (
+                <span key={f.key} className="inline-flex items-center gap-1 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: f.color }} />
+                  <span>{f.label.split(" ")[0]}</span>
+                  <span className="font-mono font-bold text-[#111111]">{normalizedPct(weights[f.key])}%</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-3.5">
           {FACTORS.map(factor => {
             const Icon = factor.icon;
             const value = Number(weights[factor.key] || 0);
             const isAvail = availableFactors.includes(factor.key);
+            const sliderFillPct = factor.max > 0 ? (value / factor.max) * 100 : 0;
 
             return (
               <div key={factor.key} className="flex flex-col gap-1">
@@ -228,7 +256,10 @@ export default function WeightControls({
                   onChange={event => onChangeWeight(factor.key, Number(event.target.value))}
                   aria-label={`${factor.label} weight`}
                   className="my-1"
-                  style={{ "--slider-accent": "#111111", "--slider-track": SCORE_GRADIENT_CSS }}
+                  style={{
+                    "--slider-accent": factor.color,
+                    "--slider-track": `linear-gradient(to right, ${factor.color} 0%, ${factor.color} ${sliderFillPct}%, #E5E5E5 ${sliderFillPct}%, #E5E5E5 100%)`
+                  }}
                 />
 
                 {openInfoId === factor.key && (

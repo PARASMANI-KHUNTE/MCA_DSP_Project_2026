@@ -22,6 +22,7 @@ const PILLARS = [
     name: "Air Quality",
     icon: Wind,
     weightKey: "air",
+    color: "#0284c7",
     desc: "PM2.5 concentration index; higher in coastal & southern cities.",
   },
   {
@@ -29,6 +30,7 @@ const PILLARS = [
     name: "Public Safety",
     icon: Shield,
     weightKey: "safety",
+    color: "#e11d48",
     desc: "Cognizable crime rate per lakh (NCRB published records).",
   },
   {
@@ -36,6 +38,7 @@ const PILLARS = [
     name: "Healthcare",
     icon: Heart,
     weightKey: "health",
+    color: "#16a34a",
     desc: "NFHS-5 composite: institutional births, vaccination, & nutrition.",
   },
   {
@@ -43,6 +46,7 @@ const PILLARS = [
     name: "Jobs & Economy",
     icon: Briefcase,
     weightKey: "economy",
+    color: "#d97706",
     desc: "Constant per-capita NSDP combined with PLFS employment.",
   },
   {
@@ -50,6 +54,7 @@ const PILLARS = [
     name: "Water Quality",
     icon: Droplets,
     weightKey: "water",
+    color: "#0891b2",
     desc: "CPCB 2021 surface-water index from BOD and dissolved oxygen.",
   },
 ];
@@ -207,10 +212,12 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
         {/* ── 2. Top 4 Executive KPI Cards ──────────────────────────── */}
         <div className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E5E5E5] pt-5 sm:grid-cols-4 sm:gap-4">
           {/* KPI 1: National Average */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 sm:p-4">
+          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 shadow-2xs transition-shadow hover:shadow-xs sm:p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-[#777777]">
               <span>National Average</span>
-              <Activity size={14} className="text-[#B51F3B]" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-50 text-[#B51F3B]">
+                <Activity size={14} />
+              </span>
             </div>
             <div className="my-2">
               <span className="font-mono text-2xl font-black text-[#111111] sm:text-3xl">
@@ -218,16 +225,18 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
               </span>
               <span className="text-xs text-[#888888]"> / 100</span>
             </div>
-            <span className="inline-block self-start rounded-md bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-semibold text-[#555555]">
+            <span className="inline-block self-start rounded-md border border-[#EBEBE8] bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-semibold text-[#555555]">
               {getTierLabel(summary.avgScore)}
             </span>
           </div>
 
           {/* KPI 2: Top Ranked State */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 sm:p-4">
+          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 shadow-2xs transition-shadow hover:shadow-xs sm:p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-[#777777]">
               <span>Top State</span>
-              <Award size={14} className="text-amber-500" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <Award size={14} />
+              </span>
             </div>
             <div className="my-2">
               <span className="block truncate text-lg font-extrabold text-[#111111] sm:text-xl">
@@ -243,10 +252,12 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
           </div>
 
           {/* KPI 3: Top Ranked City */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 sm:p-4">
+          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 shadow-2xs transition-shadow hover:shadow-xs sm:p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-[#777777]">
               <span>Top City</span>
-              <MapPin size={14} className="text-[#B51F3B]" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-50 text-[#B51F3B]">
+                <MapPin size={14} />
+              </span>
             </div>
             <div className="my-2">
               <span className="block truncate text-lg font-extrabold text-[#111111] sm:text-xl">
@@ -262,10 +273,12 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
           </div>
 
           {/* KPI 4: Leading Region */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 sm:p-4">
+          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E5] bg-white p-3.5 shadow-2xs transition-shadow hover:shadow-xs sm:p-4">
             <div className="flex items-center justify-between text-xs font-semibold text-[#777777]">
               <span>Leading Region</span>
-              <Compass size={14} className="text-blue-600" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <Compass size={14} />
+              </span>
             </div>
             <div className="my-2">
               <span className="block truncate text-lg font-extrabold text-[#111111] sm:text-xl">
@@ -367,8 +380,8 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-[#111111] shadow-2xs">
-                          <Icon size={13} className="text-[#B51F3B]" />
+                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white shadow-2xs">
+                          <Icon size={13} style={{ color: p.color }} />
                         </div>
                         <span className="text-xs font-bold text-[#111111]">{p.name}</span>
                         <span className="text-[10px] text-[#888888]">
@@ -414,7 +427,7 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Finding 1: Geographic Disparity */}
-          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-shadow hover:shadow-xs">
+          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] border-l-4 border-l-[#B51F3B] bg-white p-5 shadow-2xs transition-shadow hover:shadow-xs">
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold text-[#B51F3B]">Geographic Patterns</span>
@@ -435,10 +448,10 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
           </div>
 
           {/* Finding 2: Metro Cities vs States */}
-          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-shadow hover:shadow-xs">
+          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] border-l-4 border-l-[#0284c7] bg-white p-5 shadow-2xs transition-shadow hover:shadow-xs">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold text-[#B51F3B]">Urban Dynamics</span>
+                <span className="text-xs font-bold text-[#0284c7]">Urban Dynamics</span>
                 <span className="rounded-full bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-bold text-[#111111]">
                   {summary.citiesCount} Cities Monitored
                 </span>
@@ -456,10 +469,10 @@ export default function InsightsView({ rankedPlaces = [], year = 2026, weights =
           </div>
 
           {/* Finding 3: Economic Link */}
-          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-shadow hover:shadow-xs">
+          <div className="flex flex-col justify-between rounded-2xl border border-[#E5E5E5] border-l-4 border-l-[#16a34a] bg-white p-5 shadow-2xs transition-shadow hover:shadow-xs">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold text-[#B51F3B]">Development Link</span>
+                <span className="text-xs font-bold text-[#16a34a]">Development Link</span>
                 <span className="rounded-full bg-[#FAFAF8] px-2 py-0.5 text-[10px] font-bold text-[#111111]">
                   {summary.econHealthCorr !== null
                     ? `Pearson r = ${summary.econHealthCorr > 0 ? "+" : ""}${summary.econHealthCorr}`

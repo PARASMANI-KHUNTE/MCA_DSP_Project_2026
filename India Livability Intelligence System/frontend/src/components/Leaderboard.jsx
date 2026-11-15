@@ -48,12 +48,12 @@ export default function Leaderboard({
 
   const filteredPlaces = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    return rankedPlaces.filter(place => {
+    return (rankedPlaces || []).filter(place => {
       const matchesSearch =
         !query ||
-        place.name.toLowerCase().includes(query) ||
-        place.state.toLowerCase().includes(query) ||
-        place.region.toLowerCase().includes(query);
+        place.name?.toLowerCase().includes(query) ||
+        place.state?.toLowerCase().includes(query) ||
+        place.region?.toLowerCase().includes(query);
       return matchesSearch && (filterType === "all" || place.type === filterType);
     });
   }, [rankedPlaces, searchTerm, filterType]);

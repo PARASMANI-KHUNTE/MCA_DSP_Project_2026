@@ -275,14 +275,16 @@ function NotebookIframe({ step }) {
 
   const handleLoad = useCallback(() => {
     setLoaded(true);
+    setLoadError(false);
   }, []);
 
   useEffect(() => {
+    if (loaded) return;
     const timer = setTimeout(() => {
       setLoadError(true);
     }, 8000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [loaded]);
 
   const copyUrl = () => {
     const url = `${window.location.origin}/pipeline/${step.filename}`;

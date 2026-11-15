@@ -91,7 +91,7 @@ export default function IndiaMap({
 
   const scoreMap = useMemo(() => {
     const map = {};
-    places.forEach(place => {
+    (places || []).forEach(place => {
       map[place.id] = place;
     });
     return map;
@@ -99,7 +99,7 @@ export default function IndiaMap({
 
   const cities = useMemo(
     () =>
-      places
+      (places || [])
         .filter(place => place.type === "city")
         .sort((a, b) => {
           const aScore = Number.isFinite(a.overallScore) ? a.overallScore : -1;

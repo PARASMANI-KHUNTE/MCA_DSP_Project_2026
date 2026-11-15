@@ -43,8 +43,8 @@ def test_placeholder_fingerprints_detect_exact_content(monkeypatch):
         raw.unlink(missing_ok=True)
 
 
-def test_source_manifest_requires_hash_and_human_review_record():
-    root = Path("reports/.source-manifest-test").resolve()
+def test_source_manifest_requires_hash_and_human_review_record(tmp_path):
+    root = tmp_path / "source-manifest-test"
     raw_root = root / "data/raw"
     inputs = {
         "air_kaggle/city_day.csv": ("air_quality", b"air\n"),

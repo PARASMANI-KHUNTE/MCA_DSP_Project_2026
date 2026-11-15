@@ -37,4 +37,4 @@ The following are explicit design/reference values, not observations: place mast
 
 ## Output status
 
-Processed factor tables and `frontend/src/data/realData.js` were regenerated on 14 November 2026. Trend projection is disabled for every factor (`trend: never`), so `data/processed/trends.csv` is header-only and `models/metrics.json` records `n_fitted: 0`. Old analytical figures were moved to `reports/archive/withdrawn_figures_20261103/` and are not cited by active reports. A successful pipeline run checks processing structure; it does not verify upstream authenticity.
+Processed factor tables and `frontend/src/data/realData.js` were regenerated on 14 November 2026. Trend projection is disabled for every factor (`trend: never`), so `data/processed/trends.csv` is header-only and `models/metrics.json` records `n_fitted: 0`. Old analytical figures from retired placeholder generators have been permanently purged and are not cited by active reports. A successful pipeline run checks processing structure; it does not verify upstream authenticity.

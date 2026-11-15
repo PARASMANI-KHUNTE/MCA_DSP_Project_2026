@@ -1,8 +1,8 @@
 import { ArrowRight, Scale, Trash2, X } from "lucide-react";
 import { getScoreColor } from "../services/scoringService";
 
-export default function CompareBar({ places, onRemove, onClear, onOpen }) {
-  if (!places.length) return null;
+export default function CompareBar({ places = [], onRemove, onClear, onOpen }) {
+  if (!places?.length) return null;
 
   const canCompare = places.length >= 2;
 

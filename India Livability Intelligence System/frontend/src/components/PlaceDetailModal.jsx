@@ -95,13 +95,14 @@ export default function PlaceDetailModal({
   const hasChart = plotHistory.length >= 2 || plotProjections.length > 0;
   const hasProjection = plotHistory.length > 0 && plotProjections.length > 0;
 
-  const totalWeight = Object.values(weights).reduce((total, value) => total + Number(value || 0), 0);
+  const safeWeights = weights || {};
+  const totalWeight = Object.values(safeWeights).reduce((total, value) => total + Number(value || 0), 0);
   const weightPct = factor => {
     if (!totalWeight) return 0;
-    return Math.round((Number(weights[factor] || 0) / totalWeight) * 100);
+    return Math.round((Number(safeWeights[factor] || 0) / totalWeight) * 100);
   };
 
-  const stateCities = allPlaces.filter(candidate => candidate.type === "city" && candidate.state === place.name);
+  const stateCities = (allPlaces || []).filter(candidate => candidate.type === "city" && candidate.state === place.name);
 
   const svgWidth = 640;
   const svgHeight = 220;

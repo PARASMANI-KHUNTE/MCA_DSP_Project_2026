@@ -57,8 +57,8 @@ FACTOR_HEALTH   = "health"
 FACTOR_ECONOMY  = "economy"
 FACTOR_COL      = "cost_of_living"
 FACTOR_WATER    = "water_quality"
-CORE_FACTORS    = [FACTOR_AIR, FACTOR_SAFETY, FACTOR_HEALTH, FACTOR_ECONOMY]
-ALL_FACTORS     = CORE_FACTORS + [FACTOR_COL, FACTOR_WATER]
+CORE_FACTORS    = [FACTOR_AIR, FACTOR_SAFETY, FACTOR_HEALTH, FACTOR_ECONOMY, FACTOR_WATER]
+ALL_FACTORS     = CORE_FACTORS + [FACTOR_COL]
 
 # ── Place types ────────────────────────────────────────────────────────────
 PLACE_STATE = "state"

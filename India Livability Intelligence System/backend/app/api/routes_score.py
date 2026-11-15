@@ -89,10 +89,17 @@ def state_ranking(
     state_info = state_row.iloc[0]
     state_name = state_info["place_name"]
 
-    # Get state score
-    weights = {"air_quality": air_quality, "safety": safety,
-               "health": health, "economy": economy,
-               "cost_of_living": cost_of_living}
+    # Get state score - build weights from query params, filtering to configured factors
+    configured_factors = set(store.scoring_config.get("factors", {}).keys())
+    weights = {
+        "air_quality": air_quality,
+        "safety": safety,
+        "health": health,
+        "economy": economy,
+        "cost_of_living": cost_of_living,
+    }
+    # Only keep factors that exist in config
+    weights = {k: v for k, v in weights.items() if k in configured_factors}
     if not any(weights.values()):
         raise HTTPException(status_code=422, detail="At least one ranking weight must be greater than zero.")
     used_year, norm_w, all_results = score_all_places(store, weights, year, None)

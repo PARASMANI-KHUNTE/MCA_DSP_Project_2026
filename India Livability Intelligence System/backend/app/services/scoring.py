@@ -19,11 +19,6 @@ from src.utils.constants import RAW_COL
 
 logger = logging.getLogger(__name__)
 
-# Factors that are always inherited from the state at city level
-_INHERITED_FACTORS = {
-    "safety", "health", "per_capita_nsdp_constant",
-    "unemployment_rate", "water_quality",
-}
 _FACTOR_ALIASES = {
     "air": "air_quality",
     "col": "cost_of_living",
@@ -31,6 +26,23 @@ _FACTOR_ALIASES = {
     "unemployment": "unemployment_rate",
     "water": "water_quality",
 }
+
+
+def _get_inherited_factors(config: dict) -> set[str]:
+    """
+    Derive inherited (state-level) factors from scoring config.
+    Returns factor IDs + economy sub-indicator column names for city-level display.
+    """
+    inherited = set()
+    factors_cfg = config.get("factors", {})
+    for factor_id, fcfg in factors_cfg.items():
+        if fcfg.get("level") == "state":
+            inherited.add(factor_id)
+            # For economy, also include sub-indicator names for transparency
+            if factor_id == "economy" and "indicators" in fcfg:
+                for ind in fcfg["indicators"]:
+                    inherited.add(ind["column"])
+    return inherited
 
 
 def score_all_places(
@@ -116,6 +128,7 @@ def score_all_places(
     ]].to_dict("index")
 
     factor_cols = [c for c in scored.columns if c.endswith("_score")]
+    inherited_factors = _get_inherited_factors(config)
 
     results = []
     for _, row in scored.iterrows():
@@ -130,7 +143,7 @@ def score_all_places(
             display_name = {"air_quality": "air", "cost_of_living": "col"}.get(fname, fname)
             factor_scores[display_name] = None if pd.isna(val) else float(val)
 
-        inherited = list(_INHERITED_FACTORS) if is_city else []
+        inherited = list(inherited_factors) if is_city else []
 
         results.append({
             "place_id":        pid,

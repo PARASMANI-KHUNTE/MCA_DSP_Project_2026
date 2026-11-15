@@ -425,8 +425,8 @@ export default function PipelineView() {
       </div>
 
       {/* Pipeline Progress Timeline */}
-      <div className="relative hidden lg:block mb-8">
-        <div className="flex items-start justify-between">
+      <div className="relative mb-8 hidden overflow-x-auto pb-1 lg:block">
+        <div className="flex min-w-max items-start justify-between gap-2">
           {PIPELINE_STEPS.map((step, idx) => (
             <React.Fragment key={step.id}>
               <div className="flex flex-col items-center relative z-10">

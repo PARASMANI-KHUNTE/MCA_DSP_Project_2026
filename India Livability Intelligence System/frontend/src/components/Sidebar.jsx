@@ -17,7 +17,6 @@ const TABS = [
 export default function Sidebar({
   activeTab,
   onSelectTab,
-  compositeAvailable,
   isOpen = false,
   onClose = () => {},
   isCollapsed = false,
@@ -121,28 +120,6 @@ export default function Sidebar({
             );
           })}
         </nav>
-
-        {/* Footer: Data Status */}
-        <div className="p-3 border-t border-[#E5E5E5] transition-all duration-300">
-          {isCollapsed ? (
-            <div className="flex justify-center" title="Local Engine: All scores are computed locally in your browser.">
-              <Compass size={16} className="text-[#999999]" />
-            </div>
-          ) : (
-            <div
-              className="flex items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-2.5 py-2 text-xs font-semibold text-[#666666]"
-              title="All scores are computed locally in your browser from the embedded dataset."
-            >
-              <Compass size={12} className="text-[#999999] flex-shrink-0" />
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="truncate">Local Engine</span>
-                <span className="text-[10px] text-[#888888] truncate">
-                  {compositeAvailable ? "Composite scores active" : "Factor-specific view"}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
       </aside>
     </>
   );

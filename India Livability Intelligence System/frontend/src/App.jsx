@@ -202,7 +202,6 @@ export default function App() {
       <Sidebar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        compositeAvailable={DATA_COVERAGE.compositeAvailable}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isCollapsed={sidebarCollapsed}

@@ -301,7 +301,7 @@ export default function PlaceDetailModal({
                 the year label is the published source year, not the selected year.
               </p>
             )}
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {FACTOR_CARDS.map(card => {
                 const Icon = card.icon;
                 const value = place.factorScores?.[card.key];

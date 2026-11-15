@@ -4,7 +4,13 @@ import { PRESETS } from "../data/methodologyData";
 
 const QUICK_PRESETS = ["environmental", "family", "career", "student"];
 
-export default function QuickStartBanner({ onOpenTour, onSelectPreset, compositeAvailable, availableFactors = [] }) {
+export default function QuickStartBanner({
+  onOpenTour,
+  onSelectPreset,
+  selectedPresetId,
+  compositeAvailable,
+  availableFactors = []
+}) {
   const [visible, setVisible] = useState(() => {
     try {
       return window.localStorage.getItem("livability-quickstart-dismissed") !== "1";
@@ -53,24 +59,43 @@ export default function QuickStartBanner({ onOpenTour, onSelectPreset, composite
           </button>
 
           {!compositeAvailable && availableFactors.map(factor => {
+            const presetId = `${factor}_only`;
+            const isActive = selectedPresetId === presetId;
             const preset = {
-              id: `${factor}_only`,
+              id: presetId,
               weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, [factor]: 100 }
             };
             const label = factor === "air" ? "Air ranking" : factor === "col" ? "Cost of living" : factor;
-            return <button key={factor} onClick={() => onSelectPreset(preset)} className="rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1.5 text-xs font-medium text-[#444444] hover:border-[#B51F3B] hover:text-[#B51F3B]">{label}</button>;
+            return (
+              <button
+                key={factor}
+                onClick={() => onSelectPreset(preset)}
+                className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                  isActive
+                    ? "border-[#B51F3B] bg-[#B51F3B]/10 text-[#B51F3B] shadow-2xs"
+                    : "border-[#E5E5E5] bg-white text-[#444444] hover:border-[#D4D4D4] hover:text-[#111111]"
+                }`}
+              >
+                {label}
+              </button>
+            );
           })}
 
           {compositeAvailable &&
             QUICK_PRESETS.map(id => {
               const preset = PRESETS.find(item => item.id === id);
               if (!preset) return null;
+              const isActive = selectedPresetId === id;
               return (
                 <button
                   key={id}
                   onClick={() => onSelectPreset(preset)}
                   title={preset.desc}
-                  className="rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1.5 text-xs font-medium text-[#444444] transition-colors hover:border-[#B51F3B] hover:text-[#B51F3B]"
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                    isActive
+                      ? "border-[#B51F3B] bg-[#B51F3B]/10 text-[#B51F3B] shadow-2xs"
+                      : "border-[#E5E5E5] bg-white text-[#444444] hover:border-[#D4D4D4] hover:text-[#111111]"
+                  }`}
                 >
                   {preset.name}
                 </button>

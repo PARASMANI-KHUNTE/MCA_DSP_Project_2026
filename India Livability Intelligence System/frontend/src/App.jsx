@@ -228,6 +228,7 @@ export default function App() {
                 <QuickStartBanner
                   onOpenTour={() => setShowTourModal(true)}
                   onSelectPreset={handleSelectPreset}
+                  selectedPresetId={selectedPresetId}
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}
                 />
@@ -239,7 +240,7 @@ export default function App() {
                 )}
 
                 {/* Mobile View Toggle */}
-                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 xl:hidden">
+                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 lg:hidden">
                   {MOBILE_PANELS.map(panel => {
                     const Icon = panel.icon;
                     const active = mobilePanel === panel.id;
@@ -262,10 +263,10 @@ export default function App() {
                 </div>
 
                 {/* 3-Column Decision Grid */}
-                <div className="grid min-h-0 grid-cols-1 gap-4 xl:flex-1 xl:min-h-[520px] xl:grid-cols-12">
+                <div className="grid min-h-0 grid-cols-1 gap-4 lg:flex-1 lg:min-h-[520px] lg:grid-cols-12">
                   {/* Left Column: Weights */}
                   <div
-                    className={`min-h-0 xl:col-span-3 xl:block ${
+                    className={`min-h-0 lg:col-span-3 lg:block ${
                       mobilePanel === "weights" ? "block" : "hidden"
                     }`}
                   >
@@ -286,9 +287,9 @@ export default function App() {
 
                   {/* Center Column: Interactive Map */}
                   <div
-                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-6 xl:h-full ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] lg:col-span-6 lg:h-full ${
                       mobilePanel === "map" ? "flex" : "hidden"
-                    } xl:flex`}
+                    } lg:flex`}
                   >
                     <IndiaMap
                       places={rankedPlaces}
@@ -302,9 +303,9 @@ export default function App() {
 
                   {/* Right Column: Leaderboard */}
                   <div
-                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-3 xl:h-full ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] lg:col-span-3 lg:h-full ${
                       mobilePanel === "rankings" ? "flex" : "hidden"
-                    } xl:flex`}
+                    } lg:flex`}
                   >
                     <Leaderboard
                       rankedPlaces={rankedPlaces}

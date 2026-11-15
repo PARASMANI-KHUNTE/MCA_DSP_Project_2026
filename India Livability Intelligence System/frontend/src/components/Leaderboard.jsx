@@ -171,13 +171,13 @@ export default function Leaderboard({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                   <span
-                    className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold ${
+                    className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-black ${
                       place.rank === 1
-                        ? "bg-amber-100 text-amber-900 border border-amber-300"
+                        ? "bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"
                         : place.rank === 2
-                        ? "bg-slate-100 text-slate-800 border border-slate-300"
+                        ? "bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs"
                         : place.rank === 3
-                        ? "bg-orange-100 text-orange-900 border border-orange-300"
+                        ? "bg-amber-50 text-amber-950 border border-amber-200 shadow-2xs"
                         : "bg-[#FAFAF8] text-[#777777] border border-[#E5E5E5]"
                     }`}
                   >

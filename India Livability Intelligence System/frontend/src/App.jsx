@@ -209,8 +209,8 @@ export default function App() {
       />
 
       {/* Main Content */}
-      <main className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-6 xl:px-8">
+      <main className="flex min-w-0 flex-1 flex-col md:h-[100dvh] md:min-h-0 md:overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6 md:min-h-0 xl:px-8">
           {dataAvailable && activeTab !== "pipeline" && (
             <YearSelector
               year={selectedYear}
@@ -223,7 +223,7 @@ export default function App() {
           <div className="flex-1 min-h-0 flex flex-col">
             {/* View 1: Explorer (Decision System) */}
             {dataAvailable && activeTab === "map" && (
-              <div className="flex flex-col">    
+              <div className="flex min-h-0 flex-1 flex-col">
 
                 <QuickStartBanner
                   onOpenTour={() => setShowTourModal(true)}
@@ -262,10 +262,10 @@ export default function App() {
                 </div>
 
                 {/* 3-Column Decision Grid */}
-                <div className="grid grid-cols-1 gap-4 xl:h-[calc(100dvh-13rem)] xl:min-h-[580px] xl:grid-cols-12">
+                <div className="grid min-h-0 grid-cols-1 gap-4 xl:flex-1 xl:min-h-[520px] xl:grid-cols-12">
                   {/* Left Column: Weights */}
                   <div
-                    className={`custom-scrollbar min-h-0 xl:col-span-3 xl:block xl:overflow-y-auto xl:pr-1 ${
+                    className={`min-h-0 xl:col-span-3 xl:block ${
                       mobilePanel === "weights" ? "block" : "hidden"
                     }`}
                   >

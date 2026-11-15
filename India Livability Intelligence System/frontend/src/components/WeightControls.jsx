@@ -84,7 +84,7 @@ export default function WeightControls({
   };
 
   return (
-    <div className="surface flex w-full flex-col gap-5 p-4 sm:p-5">
+    <div className="surface custom-scrollbar flex h-full w-full flex-col gap-5 overflow-y-auto p-4 sm:p-5">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b border-[#E5E5E5] pb-3">
         <div className="flex min-w-0 items-center gap-2">

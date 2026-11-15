@@ -154,7 +154,7 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
 - **Table 4.3:** Consolidated Cross-Sectional Table (`factors_wide.csv`)
 - **Table 4.4:** Composite Scoring Output Schema (`scores_wide.csv`)
 - **Table 4.5:** Longitudinal Trend Projections Schema (`trends.csv`)
-- **Table 4.6:** REST API Route Catalogue and Response Envelopes
+- **Table 4.6:** Embedded Data Bundle Exports and Consumers
 - **Table 4.7:** Indicator Direction, Boundaries, and Normalization Anchors
 - **Table 4.8:** System Persona Weight Allocations
 - **Table 5.1:** Data Loader Registry and Upstream Provenance Sources

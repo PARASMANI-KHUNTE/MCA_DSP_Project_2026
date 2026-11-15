@@ -25,5 +25,12 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Temporary, swap, and Office lock files
+~$*
+*.tmp
+mso*.tmp
+*.bak
+*.swp
+
 # Logs
 *.log

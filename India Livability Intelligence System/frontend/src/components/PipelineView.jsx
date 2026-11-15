@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronRight, Download, ExternalLink, FileText, Search, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { ChevronRight, Download, ExternalLink, FileText, Search, AlertCircle } from "lucide-react";
 
 const PIPELINE_STEPS = [
   {

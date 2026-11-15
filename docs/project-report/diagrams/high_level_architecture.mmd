@@ -9,7 +9,7 @@ graph TB
         WATER[CPCB Water Quality 2021]
     end
 
-    subgraph DataEngineering [Data Engineering & Modeling]
+    subgraph DataEngineering [Data Engineering & Modeling - offline]
         ETL[Pipeline ETL & Outlier Fencing]
         TIDY[(factors_tidy.parquet)]
         WIDE[(factors_wide.csv)]
@@ -23,15 +23,12 @@ graph TB
         SCORES[(scores_wide.csv)]
         TRENDDATA[(trends.csv)]
         CLUSTERDATA[(clusters.csv)]
-        BUNDLE[frontend/src/data/realData.js]
+        DEFS[factors_config.yaml]
     end
 
-    subgraph Backend [FastAPI Service :8000]
-        DATASTORE[In-Memory DataStore Singleton]
-        API_PLACES[GET /api/places]
-        API_TRENDS[GET /api/places/{id}/trend]
-        API_SCORE[POST /api/score]
-        SWAGGER[Swagger UI /docs]
+    subgraph Delivery [Static Data Delivery]
+        EXPORT[export_frontend_data.py]
+        BUNDLE[frontend/src/data/realData.js]
     end
 
     subgraph Frontend [React 19 + Vite Dashboard :5173]
@@ -45,20 +42,18 @@ graph TB
     RawData --> ETL
     ETL --> TIDY
     ETL --> WIDE
+    ETL --> PLACES
     WIDE --> SCORING
     WIDE --> TRENDS
     WIDE --> KMEANS
     SCORING --> SCORES
     TRENDS --> TRENDDATA
     KMEANS --> CLUSTERDATA
-    SCORES --> BUNDLE
-    PLACES --> DATASTORE
-    SCORES --> DATASTORE
-    TRENDDATA --> DATASTORE
-    CLUSTERDATA --> DATASTORE
-    DATASTORE --> API_PLACES
-    DATASTORE --> API_TRENDS
-    DATASTORE --> API_SCORE
+    PLACES --> EXPORT
+    WIDE --> EXPORT
+    SCORES --> EXPORT
+    DEFS --> EXPORT
+    EXPORT --> BUNDLE
     BUNDLE --> CLIENT_SCORING
     CLIENT_SCORING --> MAP
     CLIENT_SCORING --> LEADERBOARD

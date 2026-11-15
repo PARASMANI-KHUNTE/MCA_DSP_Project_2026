@@ -16,7 +16,7 @@ if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
 
 Push-Location $PSScriptRoot
 try {
-    # Match the API's configured local CORS origin and the URL users should open.
+    # Serve the dashboard locally on the URL users should open.
     & npm.cmd --prefix frontend run dev -- --host localhost
     if ($LASTEXITCODE -ne 0) {
         throw "Vite exited with code $LASTEXITCODE."

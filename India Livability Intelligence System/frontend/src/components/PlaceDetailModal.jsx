@@ -237,6 +237,18 @@ export default function PlaceDetailModal({
             </div>
           )}
 
+          {place.stalenessYears > 0 && (
+            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 text-xs text-[#444444] flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="font-bold text-[#111111]">Mixed observation years:</span>{" "}
+                {place.staleFactors?.join(", ")} {place.staleFactors?.length === 1 ? "was" : "were"} observed before {year}. The oldest active pillar is carried forward {place.stalenessYears} {place.stalenessYears === 1 ? "year" : "years"}.
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#666666] bg-white border border-[#E5E5E5] px-2 py-0.5 rounded-md shrink-0">
+                Carried forward
+              </span>
+            </div>
+          )}
+
           {/* Key Metric Tiles */}
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
             <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">

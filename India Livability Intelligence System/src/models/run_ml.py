@@ -18,6 +18,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 from src.utils.constants import (
     DATA_PROCESSED,
+    FACTORS_WIDE,
     SCORES_WIDE,
     TRENDS_CSV,
     CLUSTERS_CSV,
@@ -79,11 +80,23 @@ def _metric_summary(actual: list[float], predicted: list[float]) -> dict:
     }
 
 
-def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
+def evaluate_air_holdout(
+    scores_wide: pd.DataFrame,
+    observed_years: list[int] | None = None,
+) -> dict:
     """Evaluate city air-score OLS against a last-observation baseline.
 
-    The fixed SRS split is train 2015–2018, validation 2019, and test 2023–2024.
+    The configured split is train 2015-2018, validation 2019, and test 2023-2024.
     Metrics pool eligible city-year predictions; missing city-years are omitted.
+    A split with no observations is reported as unavailable instead of as an
+    empty metric, so a saved metrics file cannot imply a holdout that the
+    current data does not support.
+
+    ``observed_years`` should list the years with raw air observations. The
+    scoring table repeats the last observation into every later year, so
+    without this filter a carried-forward 2019 value would look like a 2024
+    measurement. The observed air years are included in the result so the
+    mismatch is visible without opening the score table.
     """
     required = {"place_id", "year", "air_quality_score"}
     if not required.issubset(scores_wide.columns):
@@ -93,6 +106,22 @@ def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
     table["year"] = pd.to_numeric(table["year"], errors="coerce")
     table["air_quality_score"] = pd.to_numeric(table["air_quality_score"], errors="coerce")
     table = table.dropna(subset=["year", "air_quality_score"])
+
+    known_years = sorted(int(year) for year in table["year"].unique())
+    if observed_years is not None:
+        allowed = {int(year) for year in observed_years}
+        table = table[table["year"].isin(allowed)]
+    observed = known_years if observed_years is None else sorted(int(year) for year in observed_years)
+
+    if table.empty:
+        return {
+            "status": "unavailable",
+            "reason": "no raw air-quality observations fall inside the configured split years",
+            "target": "air_quality_score",
+            "observed_years": observed,
+            "score_years": known_years,
+        }
+
     predictions = {"validation": {"actual": [], "ols": [], "baseline": []},
                    "test": {"actual": [], "ols": [], "baseline": []}}
 
@@ -114,10 +143,12 @@ def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
             predictions[split_name]["ols"].extend(forecast.astype(float).tolist())
             predictions[split_name]["baseline"].extend([baseline_value] * len(split_rows))
 
-    return {
+    result = {
         "target": "air_quality_score",
         "unit_of_evaluation": "pooled city-year predictions",
         "split_years": {"train": "2015-2018", "validation": "2019", "test": "2023-2024"},
+        "observed_years": observed,
+        "score_years": known_years,
         "validation": {
             "ols": _metric_summary(predictions["validation"]["actual"], predictions["validation"]["ols"]),
             "naive_last_value": _metric_summary(predictions["validation"]["actual"], predictions["validation"]["baseline"]),
@@ -127,6 +158,18 @@ def evaluate_air_holdout(scores_wide: pd.DataFrame) -> dict:
             "naive_last_value": _metric_summary(predictions["test"]["actual"], predictions["test"]["baseline"]),
         },
     }
+
+    for split_name, label in (("validation", "2019"), ("test", "2023-2024")):
+        if result[split_name]["ols"]["n"] == 0:
+            result[split_name]["status"] = f"unavailable: no air observations in {label}"
+        else:
+            result[split_name]["status"] = "ok"
+
+    if result["validation"]["status"] != "ok" and result["test"]["status"] != "ok":
+        result["status"] = "unavailable"
+        result["reason"] = "configured holdout years have no air observations"
+
+    return result
 
 
 def run() -> None:
@@ -147,7 +190,17 @@ def run() -> None:
     logger.info("Loaded scores_wide: %d rows.", len(scores_wide))
 
     config = load_config(SCORING_CONFIG)
-    model_evaluation = evaluate_air_holdout(scores_wide)
+
+    # Air scores are carried forward in scores_wide, so the holdout must be
+    # restricted to years with a raw air observation. Otherwise a 2019 value
+    # repeated into 2023-2024 would be scored as if it were a fresh measurement.
+    raw_air_years = None
+    if FACTORS_WIDE.exists():
+        factor_table = pd.read_csv(FACTORS_WIDE, usecols=["year", "air_quality"])
+        air_years = pd.to_numeric(factor_table.loc[factor_table["air_quality"].notna(), "year"], errors="coerce")
+        raw_air_years = sorted(int(year) for year in air_years.dropna().unique())
+
+    model_evaluation = evaluate_air_holdout(scores_wide, observed_years=raw_air_years)
 
     # ── Trend projection ────────────────────────────────────────────────────
     logger.info("Fitting trend projections...")

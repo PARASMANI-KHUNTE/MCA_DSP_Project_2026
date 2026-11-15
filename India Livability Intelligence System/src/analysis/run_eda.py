@@ -27,6 +27,17 @@ from src.utils.constants import (
     PLACES_CSV,
 )
 
+
+def _read_csv_if_present(path: Path) -> pd.DataFrame:
+    """Read a generated CSV, treating a missing or zero-byte file as empty."""
+    if not path.exists() or path.stat().st_size == 0:
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame()
+
+
 def run_eda() -> None:
     """Regenerate analysis figures and ``reports/findings.md`` from processed tables."""
     FIGURES.mkdir(parents=True, exist_ok=True)
@@ -143,23 +154,22 @@ def run_eda() -> None:
     # 5. Figure 5: K-Means Clustering Silhouette Curve & Profiles
     kmeans_metrics_path = DATA_PROCESSED / "kmeans_metrics.csv"
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    if kmeans_metrics_path.exists():
-        k_df = pd.read_csv(kmeans_metrics_path)
+    k_df = _read_csv_if_present(kmeans_metrics_path)
+    if not k_df.empty:
         ax1.plot(k_df["k"], k_df["silhouette"], marker="s", color="#8e44ad", linewidth=2)
         ax1.set_title("K-Means Silhouette Score by Cluster Count (k)", fontsize=12, fontweight="bold")
         ax1.set_xlabel("Number of Clusters (k)")
         ax1.set_ylabel("Mean Silhouette Score")
         ax1.grid(True)
-    
+
     cluster_profiles_path = DATA_PROCESSED / "cluster_profiles.csv"
-    if cluster_profiles_path.exists():
-        c_prof = pd.read_csv(cluster_profiles_path)
-        if "score" in c_prof.columns and "cluster_id" in c_prof.columns:
-            c_prof = c_prof.sort_values("score", ascending=False)
-            sns.barplot(data=c_prof, x="cluster_id", y="score", ax=ax2, palette="viridis")
-            ax2.set_title("Mean Composite Score by K-Means Cluster", fontsize=12, fontweight="bold")
-            ax2.set_xlabel("Cluster ID")
-            ax2.set_ylabel("Mean Score")
+    c_prof = _read_csv_if_present(cluster_profiles_path)
+    if not c_prof.empty and "score" in c_prof.columns and "cluster_id" in c_prof.columns:
+        c_prof = c_prof.sort_values("score", ascending=False)
+        sns.barplot(data=c_prof, x="cluster_id", y="score", ax=ax2, palette="viridis")
+        ax2.set_title("Mean Composite Score by K-Means Cluster", fontsize=12, fontweight="bold")
+        ax2.set_xlabel("Cluster ID")
+        ax2.set_ylabel("Mean Score")
     plt.tight_layout()
     fig5_path = FIGURES / "05_kmeans_clusters.png"
     plt.savefig(fig5_path, dpi=200, bbox_inches="tight")
@@ -254,21 +264,19 @@ def run_eda() -> None:
     cluster_path = DATA_PROCESSED / "cluster_profiles.csv"
     best_k = None
     best_silhouette = None
-    if metrics_path.exists():
-        metrics_df = pd.read_csv(metrics_path)
-        if not metrics_df.empty:
-            best_row = metrics_df.loc[metrics_df["silhouette"].idxmax()]
-            best_k = int(best_row["k"])
-            best_silhouette = float(best_row["silhouette"])
+    metrics_df = _read_csv_if_present(metrics_path)
+    if not metrics_df.empty:
+        best_row = metrics_df.loc[metrics_df["silhouette"].idxmax()]
+        best_k = int(best_row["k"])
+        best_silhouette = float(best_row["silhouette"])
 
     cluster_score_range = None
-    if cluster_path.exists():
-        profile_df = pd.read_csv(cluster_path)
-        if "score" in profile_df.columns and not profile_df.empty:
-            cluster_score_range = (
-                float(profile_df["score"].min()),
-                float(profile_df["score"].max()),
-            )
+    profile_df = _read_csv_if_present(cluster_path)
+    if "score" in profile_df.columns and not profile_df.empty:
+        cluster_score_range = (
+            float(profile_df["score"].min()),
+            float(profile_df["score"].max()),
+        )
 
     region_summary = (
         regional_cross_section.groupby("region")["score"]
@@ -282,6 +290,7 @@ def run_eda() -> None:
     )
 
     regional_significance = "statistically significant" if anova_p < 0.05 else "not statistically significant"
+    air_significance = "statistically significant" if p_val < 0.05 else "not statistically significant"
 
     if len(valid_corr) > 5:
         air_corr_summary = f"$r = {r_val:.2f}, p = {p_val:.4f}$"

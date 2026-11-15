@@ -12,7 +12,8 @@ import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
 import PipelineView from "./components/PipelineView";
-import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
+import YearSelector from "./components/YearSelector";
+import { BASELINE_YEAR, DATA_COVERAGE, OBSERVED_YEARS, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
@@ -26,6 +27,9 @@ const MOBILE_PANELS = [
   { id: "rankings", label: "Rankings", icon: Trophy },
   { id: "weights", label: "Weights", icon: SlidersHorizontal }
 ];
+
+// Newest first so the default baseline sits at the top of the selector.
+const YEAR_OPTIONS = [...OBSERVED_YEARS].sort((a, b) => b - a);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("map");
@@ -92,32 +96,19 @@ export default function App() {
   const handleWeightChange = (factor, value) => {
     setSelectedPresetId("custom");
     setWeights(previous => ({ ...previous, [factor]: value }));
-    if (value > 0) {
-      const availableYear = DATA_COVERAGE.lastYearByFactor?.[factor];
-      if (availableYear != null && selectedYear < DATA_COVERAGE.firstYearByFactor?.[factor]) {
-        setSelectedYear(availableYear);
-      }
-    }
   };
 
   const handleSelectPreset = preset => {
     setSelectedPresetId(preset.id);
     setWeights(preset.weights);
-    const factor = preset.id.endsWith("_only") ? preset.id.replace("_only", "") : null;
-    const latestYear = factor && DATA_COVERAGE.lastYearByFactor?.[factor];
-    if (latestYear != null) setSelectedYear(latestYear);
   };
 
   const handleChangeActiveFactor = factor => {
     setActiveFactor(factor);
-    const firstYear = DATA_COVERAGE.firstYearByFactor?.[factor];
-    const latestYear = DATA_COVERAGE.lastYearByFactor?.[factor];
-    if (firstYear != null && latestYear != null && selectedYear < firstYear) {
-      setSelectedYear(latestYear);
-    }
   };
 
   const handleReset = () => {
+    setSelectedYear(BASELINE_YEAR);
     if (DATA_COVERAGE.compositeAvailable) {
       setSelectedPresetId(COMPOSITE_DEFAULT.id);
       setWeights({ ...COMPOSITE_DEFAULT.weights });
@@ -186,6 +177,14 @@ export default function App() {
 
         {/* Main Content Surfaces */}
         <div className="flex-1 px-4 sm:px-8 lg:px-10 py-4 sm:py-6">
+          {dataAvailable && activeTab !== "pipeline" && (
+            <YearSelector
+              year={selectedYear}
+              years={YEAR_OPTIONS}
+              onChange={setSelectedYear}
+            />
+          )}
+
           {/* Interactive Views */}
           <main className="flex-1">
             {/* View 1: Explorer (Decision System) */}

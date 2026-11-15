@@ -133,7 +133,7 @@ The India Livability Intelligence System is designed to operate efficiently acro
 | **Central Processing Unit (CPU)** | Intel Core i7 / AMD Ryzen 7 (8 Cores, 16 Threads @ 3.6 GHz) | Dual-Core x86_64 or ARM64 processor | Quad-Core 2.5 GHz+ (e.g., AWS c6i.xlarge or GCP e2-standard-4) |
 | **System Memory (RAM)** | 16 GB DDR4 / DDR5 | 4 GB RAM | 8 GB RAM (sufficient for caching complete tabular panels) |
 | **Storage Capacity** | 512 GB NVMe Solid-State Drive (SSD) | 5 GB available disk space | 20 GB SSD (allows storage of raw PDFs, intermediate artifacts, and logs) |
-| **Network Interface** | Standard Gigabit Ethernet / 802.11ac Wi-Fi | TCP/IP network connection for public data fetching | 100 Mbps network interface for REST API serving |
+| **Network Interface** | Standard Gigabit Ethernet / 802.11ac Wi-Fi | TCP/IP network connection for public data fetching | 100 Mbps network interface for data export and local development |
 | **Display Device** | 1080p Full HD monitor (1920×1080 resolution) | 1280×720 display resolution | Responsive desktop/tablet/mobile viewport |
 
 *Note:* Because the entire analytical dataset comprises 61 places across approximately 15 observation years, all tabular matrices occupy less than 10 MB in active RAM. This lightweight memory footprint permits the entire analytical pipeline, model training, and API server to run on resource-constrained micro-instances without paging.

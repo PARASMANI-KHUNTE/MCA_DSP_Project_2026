@@ -281,7 +281,6 @@ npm run lint
 MCA_DSP_Project_2026/
 ├── README.md                                 # Master repository documentation (this file)
 └── India Livability Intelligence System/
-    ├── README.md                             # Subsystem documentation & pipeline manual
     ├── Makefile                              # Make targets (make data, make test, make notebooks)
     ├── requirements.txt                      # Python dependencies
     ├── start.ps1                             # Automated PowerShell startup script

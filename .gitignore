@@ -1,36 +1,76 @@
-# Repository-root ignores
+# ==============================================================================
+# India Livability Intelligence System — Unified Repository .gitignore
+# ==============================================================================
 
-# Python
+# Python bytecode & packages
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+.Python
 *.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# Virtual environments
 .venv/
 venv/
+env/
+ENV/
 
-# Node / frontend
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Node / Frontend build outputs
 node_modules/
+frontend/node_modules/
+frontend/dist/
 dist/
 .vite/
+frontend/.next/
 
-# Test and coverage output
+# Test & coverage outputs
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Environment and editor files
+# Data — Raw source files (large/unverified; tracked separately)
+**/data/raw/*
+!**/data/raw/source_register.csv
+!**/data/raw/name_aliases.csv
+!**/data/raw/source_validation_manifest.csv
+**/data/interim/
+
+# Data — Large processed binary artifacts
+**/data/processed/*.parquet
+**/data/processed/versions/
+
+# Models & Weights (large binary files)
+**/models/*.pkl
+**/models/*.joblib
+
+# Environment variables & secrets
 .env
 .env.*
+!.env.example
+
+# IDE, OS & Editor files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Temporary, swap, and Office lock files
+desktop.ini
+*.swp
+*.swo
+*.bak
 ~$*
 *.tmp
 mso*.tmp
-*.bak
-*.swp
 
 # Logs
 *.log
+logs/

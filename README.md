@@ -7,7 +7,6 @@ Repository for the MCA Data Science capstone **India Livability Intelligence Sys
 | Path | Contents |
 | --- | --- |
 | `India Livability Intelligence System/` | The project: data pipeline (`src/`), static React dashboard (`frontend/`), notebooks, tests, reports, and the main [`README`](India%20Livability%20Intelligence%20System/README.md). |
-| `.kilo/` | Local agent configuration. |
 
 Start with the project README:
 

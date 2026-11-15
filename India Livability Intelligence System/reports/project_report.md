@@ -32,18 +32,18 @@ The system delivers a high-performance, client-side **React 19 + Vite** geospati
 ---
 
 ## Table of Contents
-1. [Chapter 1: Introduction & Background](#chapter-1-introduction--background)
-2. [Chapter 2: Project Objectives & Scope](#chapter-2-project-objectives--scope)
-3. [Chapter 3: Software Requirements Specification (SRS)](#chapter-3-software-requirements-specification-srs)
-4. [Chapter 4: Data Engineering, Sources & Provenance](#chapter-4-data-engineering-sources--provenance)
-5. [Chapter 5: Methodology & Mathematical Engine](#chapter-5-methodology--mathematical-engine)
-6. [Chapter 6: System Architecture & Workflow Design](#chapter-6-system-architecture--workflow-design)
-7. [Chapter 7: Frontend Decision Intelligence Interface](#chapter-7-frontend-decision-intelligence-interface)
-8. [Chapter 8: Verification, Testing & Quality Assurance](#chapter-8-verification-testing--quality-assurance)
-9. [Chapter 9: Empirical Findings & Policy Implications](#chapter-9-empirical-findings--policy-implications)
-10. [Chapter 10: Limitations, Ethical Considerations & Algorithmic Accountability](#chapter-10-limitations-ethical-considerations--algorithmic-accountability)
-11. [Chapter 11: Conclusion & Future Scope](#chapter-11-conclusion--future-scope)
-12. [References & Government Publications](#references--government-publications)
+- **Chapter 1:** Introduction & Background
+- **Chapter 2:** Project Objectives & Scope
+- **Chapter 3:** Software Requirements Specification (SRS)
+- **Chapter 4:** Data Engineering, Sources & Provenance
+- **Chapter 5:** Methodology & Mathematical Engine
+- **Chapter 6:** System Architecture & Workflow Design
+- **Chapter 7:** Frontend Decision Intelligence Interface
+- **Chapter 8:** Verification, Testing & Quality Assurance
+- **Chapter 9:** Empirical Findings & Policy Implications
+- **Chapter 10:** Limitations, Ethical Considerations & Algorithmic Accountability
+- **Chapter 11:** Conclusion & Future Scope
+- **References & Government Publications**
 
 ---
 

@@ -169,9 +169,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F2] text-[#111111] font-sans flex flex-col">
+    <div className="flex min-h-screen flex-col bg-[#F5F5F2] font-sans text-[#111111] md:flex-row">
       {/* Sticky Mobile Top Header */}
-      <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-[#E5E5E5] bg-white/95 px-4 backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-[#E5E5E5] bg-white/95 px-4 backdrop-blur-md md:hidden">
         <button
           onClick={() => setActiveTab("map")}
           className="flex items-center gap-2 text-left"
@@ -210,8 +210,8 @@ export default function App() {
       />
 
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 min-h-screen ${sidebarCollapsed ? "lg:pl-16" : "lg:pl-[260px]"}`}>
-        <div className="mx-auto max-w-[1600px] w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className="min-w-0 flex-1">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-6 xl:px-8">
           {dataAvailable && activeTab !== "pipeline" && (
             <YearSelector
               year={selectedYear}
@@ -233,10 +233,6 @@ export default function App() {
                   availableFactors={DATA_COVERAGE.availableFactors || []}
                 />
 
-                <div className="mb-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-3.5 py-2.5 text-xs leading-relaxed text-[#666666]">
-                  <strong className="text-[#111111]">Local, unverified data:</strong> this dashboard runs entirely in your browser on locally supplied extracts that have not been independently reconciled with their cited publishers. Scores, ranks and comparisons are exploratory views, not official statistics.
-                </div>
-
                 {!DATA_COVERAGE.compositeAvailable && (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900">
                     Composite rankings are unavailable because required indicators are missing. The map shows only available observed factors; missing tables remain unscored.
@@ -244,7 +240,7 @@ export default function App() {
                 )}
 
                 {/* Mobile View Toggle */}
-                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 lg:hidden">
+                <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-1 sm:mb-4 xl:hidden">
                   {MOBILE_PANELS.map(panel => {
                     const Icon = panel.icon;
                     const active = mobilePanel === panel.id;
@@ -267,10 +263,10 @@ export default function App() {
                 </div>
 
                 {/* 3-Column Decision Grid */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:h-[calc(100dvh-13rem)] lg:min-h-[580px]">
+                <div className="grid grid-cols-1 gap-4 xl:h-[calc(100dvh-13rem)] xl:min-h-[580px] xl:grid-cols-12">
                   {/* Left Column: Weights */}
                   <div
-                    className={`custom-scrollbar min-h-0 lg:col-span-3 lg:block lg:overflow-y-auto lg:pr-1 ${
+                    className={`custom-scrollbar min-h-0 xl:col-span-3 xl:block xl:overflow-y-auto xl:pr-1 ${
                       mobilePanel === "weights" ? "block" : "hidden"
                     }`}
                   >
@@ -291,9 +287,9 @@ export default function App() {
 
                   {/* Center Column: Interactive Map */}
                   <div
-                    className={`h-[460px] sm:h-[540px] lg:col-span-6 lg:h-full flex flex-col min-h-0 ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-6 xl:h-full ${
                       mobilePanel === "map" ? "flex" : "hidden"
-                    } lg:flex`}
+                    } xl:flex`}
                   >
                     <IndiaMap
                       places={rankedPlaces}
@@ -307,9 +303,9 @@ export default function App() {
 
                   {/* Right Column: Leaderboard */}
                   <div
-                    className={`h-[460px] sm:h-[540px] lg:col-span-3 lg:h-full flex flex-col min-h-0 ${
+                    className={`flex h-[460px] min-h-0 flex-col sm:h-[540px] xl:col-span-3 xl:h-full ${
                       mobilePanel === "rankings" ? "flex" : "hidden"
-                    } lg:flex`}
+                    } xl:flex`}
                   >
                     <Leaderboard
                       rankedPlaces={rankedPlaces}

@@ -5,10 +5,11 @@ Livability scoring engine (M5).
 
 Pure functions only — no file I/O, no network access.
 This makes the module easy to test (M10) and importable
-from both notebooks and the FastAPI backend.
+from both notebooks and the frontend data exporter.
 """
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # ── Config loading ─────────────────────────────────────────────────────────
 
-def load_config(path=SCORING_CONFIG) -> dict:
+def load_config(path: str | Path = SCORING_CONFIG) -> dict:
     """Load and return the factors_config.yaml as a dict."""
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -110,6 +111,7 @@ def score_factor(
                 continue
             sub_scores.append(normalize_series(df[col], lo, hi, direction))
         if not sub_scores:
+            logger.error("Economy factor: no indicator columns found in DataFrame — factor will be NaN for all places.")
             return pd.Series(np.nan, index=df.index)
         indicator_scores = pd.concat(sub_scores, axis=1)
         return indicator_scores.mean(axis=1).where(indicator_scores.notna().all(axis=1))
@@ -287,7 +289,11 @@ def sensitivity_analysis(
     rng = np.random.default_rng(seed)
     factors_cfg = config.get("factors", {})
     if factors is None:
-        factors = [f for f in CORE_FACTORS if f in factors_cfg]
+        # Use all factors defined in config that have trend != 'never' (eligible for sensitivity)
+        # Fallback to CORE_FACTORS for backward compatibility
+        factors = [f for f, cfg in factors_cfg.items() if cfg.get("trend", "eligible") != "never"]
+        if not factors:
+            factors = [f for f in CORE_FACTORS if f in factors_cfg]
 
     all_ranks: dict[str, list[int]] = {}
 
@@ -300,10 +306,12 @@ def sensitivity_analysis(
         except Exception:
             continue
         for _, row in res.iterrows():
-            if pd.isna(row["rank"]):
+            rank_val = row["rank"]
+            # Handle nullable Int64 (pd.NA) and np.nan
+            if rank_val is pd.NA or pd.isna(rank_val):
                 continue
             pid = row["place_id"]
-            all_ranks.setdefault(pid, []).append(int(row["rank"]))
+            all_ranks.setdefault(pid, []).append(int(rank_val))
 
     rows = []
     for pid, ranks in all_ranks.items():

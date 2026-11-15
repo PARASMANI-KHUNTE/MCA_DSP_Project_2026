@@ -39,7 +39,7 @@ I hereby declare that this project report titled **"India Livability Intelligenc
 I further declare that this work adheres strictly to academic integrity standards:
 1. All public datasets ingested from official statutory bodies (CPCB, NCRB, MoHFW NFHS-5, RBI, MoSPI) and open repositories are explicitly registered with citations in `data/raw/source_register.csv`.
 2. A formal provenance and fabrication audit was completed on 3 November 2026 (`reports/data_fabrication_audit.md`) that identified, quarantined, and eliminated six synthetic placeholder files from the active pipeline, ensuring that all published scores derive from verifiable inputs.
-3. Every component—including the FastAPI REST microservice, React 19 geospatial dashboard, OLS trend projection models, and K-Means clustering—has been implemented and verified against an automated test suite comprising 85 test specifications with 84 passing and 0 failures.
+3. Every component—including the React 19 geospatial dashboard, the generated data bundle, OLS trend models, and K-Means clustering—has been implemented and verified against an automated test suite comprising 92 test specifications with 91 passing, 1 skipped and 0 failures.
 
 <br/><br/>
 **Parasmani Khunte**  
@@ -65,17 +65,17 @@ Selecting an urban center or state to reside in within India is conventionally s
 To resolve these empirical challenges, this project establishes the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture and geospatial decision-support platform spanning 61 geographic entities (32 states/Union Territories and 29 primary metropolitan centers). The system implements a complete data engineering lifecycle comprising:
 1. **Multi-Source Data Ingestion & Governance:** Ingestion of public environmental, demographic, public safety, and economic indicators spanning 2010–2026, backed by a cryptographic SHA-256 provenance quarantine gate and non-destructive Tukey Interquartile Range (IQR) outlier fencing.
 2. **Direction-Aware Mathematical Normalization:** A bounded $[0, 100]$ Min-Max normalization engine that enforces direction inversion for negative externalities (PM2.5 particulate matter, IPC cognizable crime rates, unemployment rates) and positive scaling for developmental goods (per-capita NSDP, NFHS-5 maternal/child healthcare composite).
-3. **Dynamic Composite Scoring & Stakeholder Personas:** A flexible multi-criteria evaluation framework featuring client-side and server-side weight normalization, minimum-factor gating, and customizable persona presets (Balanced, Clean Air First, Family Wellbeing, Career Growth, and Student Budget).
+3. **Dynamic Composite Scoring & Stakeholder Personas:** A flexible multi-criteria evaluation framework featuring client-side weight normalization, minimum-factor gating, and customizable persona presets (Balanced, Clean Air First, Family Wellbeing, Career Growth, and Student Budget).
 4. **Longitudinal Trend Modeling & Inferential Statistics:** Ordinary Least Squares (OLS) regression models generating 10-year forward projections (2025–2034) with 95% prediction intervals; One-Way ANOVA proving statistically significant regional disparity ($F = 7.23, p = 2.89 \\times 10^{-5}$ across the complete 61-place panel, and $F = 13.27, p = 3.38 \\times 10^{-4}$ on the 2023 cross-section); and unsupervised K-Means clustering ($k=5$, Silhouette Score $= 0.647$).
-5. **Decoupled Dual-Tier Architecture:** A high-throughput Python FastAPI REST service equipped with an in-memory, LRU-cached `DataStore` singleton, paired with an interactive single-page application built on React 19, Vite, Tailwind CSS, and an interactive vector SVG India map with client-side real-time calculation.
+5. **Decoupled Two-Tier Architecture:** A generated static data bundle that carries every processed value with its observation year and provenance flags, paired with an interactive single-page application built on React 19, Vite, Tailwind CSS, and an interactive vector SVG India map with client-side real-time calculation.
 
-The software architecture is substantiated by 85 automated test cases achieving comprehensive coverage across schema integrity, mathematical normalization invariants, regression determinism, and data provenance verification.
+The software architecture is substantiated by 92 automated test cases with 91 passing and 1 skipped, achieving comprehensive coverage across schema integrity, mathematical normalization invariants, regression determinism, and data provenance verification.
 
 ---
 
 ## KEYWORDS
 
-Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), Spatial Intelligence, Directional Min-Max Normalization, Ordinary Least Squares (OLS) Projections, K-Means Clustering, One-Way ANOVA, FastAPI, React 19, Automated Provenance Verification.
+Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), Spatial Intelligence, Directional Min-Max Normalization, Ordinary Least Squares (OLS) Projections, K-Means Clustering, One-Way ANOVA, Static Data Bundles, React 19, Automated Provenance Verification.
 
 ---
 
@@ -113,7 +113,7 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
   - 4.3 End-to-End System Architecture
   - 4.4 Data Pipeline & ETL Architecture
   - 4.5 Data Modeling & Analytical Schemas
-  - 4.6 RESTful API Design & Endpoint Specifications
+  - 4.6 Embedded Data Bundle and Delivery Contract
   - 4.7 Core Mathematical and Statistical Algorithms
   - 4.8 Security, Data Provenance, and Access Architecture
 - **CHAPTER 5: IMPLEMENTATION DETAILS**
@@ -121,17 +121,17 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
   - 5.2 Data Loaders and Entity Aliasing (`src/loaders/`)
   - 5.3 Normalization and Scoring Implementation (`src/scoring/`)
   - 5.4 Machine Learning and Statistical Projections (`src/models/`)
-  - 5.5 Backend REST Microservice Implementation (`backend/app/`)
+  - 5.5 Data Delivery Bundle Implementation (`src/export_frontend_data.py`)
   - 5.6 Frontend Geospatial Dashboard Implementation (`frontend/src/`)
   - 5.7 Data Provenance and Quality Assurance Modules (`src/utils/`)
   - 5.8 Error Handling, Edge Cases, and System Reliability
 - **CHAPTER 6: TESTING AND QUALITY ASSURANCE**
   - 6.1 Testing Strategy and Test Harness (`pytest`)
-  - 6.2 Test Suite Execution Results (84 Passed, 1 Skipped)
+  - 6.2 Test Suite Execution Results (91 Passed, 1 Skipped)
   - 6.3 Schema and Referential Integrity Test Suite
   - 6.4 Scoring Engine Mathematical Parity and Invariant Tests
   - 6.5 Statistical Modeling and ML Validation Tests
-  - 6.6 API Integration Testing and Runtime Observations
+  - 6.6 Data Bundle Integrity Testing
   - 6.7 Comprehensive Verification Traceability Matrix
 - **CHAPTER 7: RESULTS, EMPIRICAL FINDINGS, AND FUTURE SCOPE**
   - 7.1 Inferential Statistics and Empirical Observations
@@ -173,7 +173,6 @@ Livability Index, Urban Data Science, Multi-Criteria Decision Analysis (MCDA), S
 - **Figure 4.2:** End-to-End Data Ingestion, Cleaning, and Analytical Pipeline
 - **Figure 4.3:** Mathematical Normalization and Composite Scoring Engine Workflow
 - **Figure 4.4:** React 19 Frontend Component Hierarchy and Interaction Model
-- **Figure 4.5:** Sequence Diagram of API Request Execution and In-Memory DataStore Lifecycle
 - **Figure 7.1:** Univariate Feature Distributions and Density Estimates of Core Indicators
 - **Figure 7.2:** Regional Boxplots Illustrating Geographic Score Disparities
 - **Figure 7.3:** Pearson Correlation Heatmap Across Core Quality-of-Life Indicators

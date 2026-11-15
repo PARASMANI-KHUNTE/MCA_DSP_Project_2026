@@ -1,20 +1,4 @@
 {
-  "input_source_status": "local files not independently verified against publishers",
-  "analysis_scope": "factor-level exploratory trends only; no composite score is available",
-  "composite_available": true,
-  "clustering": {
-    "status": "complete",
-    "k_chosen": 7,
-    "year": 2023,
-    "n_places": 24
-  },
-  "trends": {
-    "n_fitted": 26,
-    "n_insufficient": 218,
-    "improving": 10,
-    "declining": 0,
-    "stable": 16
-  },
   "holdout_evaluation": {
     "target": "air_quality_score",
     "unit_of_evaluation": "pooled city-year predictions",
@@ -26,30 +10,39 @@
     "validation": {
       "ols": {
         "n": 14,
-        "mse": 107.81262104016365,
-        "rmse": 10.383285657255302,
-        "r2": 0.7612688693371642
+        "mse": 140.38068031493322,
+        "rmse": 11.848235324930595,
+        "r2": 0.7612688693371668
       },
       "naive_last_value": {
         "n": 14,
-        "mse": 71.85578270892947,
-        "rmse": 8.476779029143644,
-        "r2": 0.8408886447127996
+        "mse": 93.56199268621658,
+        "rmse": 9.672744837232944,
+        "r2": 0.8408886447127997
       }
     },
     "test": {
       "ols": {
-        "n": 14,
-        "mse": 269.5957293406119,
-        "rmse": 16.41937055250937,
-        "r2": 0.4030300658085323
+        "n": 28,
+        "mse": 324.9510955185946,
+        "rmse": 18.0263999600196,
+        "r2": 0.44738875556633007
       },
       "naive_last_value": {
-        "n": 14,
-        "mse": 71.85578270892947,
-        "rmse": 8.476779029143644,
-        "r2": 0.8408886447127996
+        "n": 28,
+        "mse": 93.56199268621658,
+        "rmse": 9.672744837232944,
+        "r2": 0.8408886447127997
       }
     }
+  },
+  "clustering": {
+    "k_chosen": null,
+    "year": 2026,
+    "n_places": 0
+  },
+  "trends": {
+    "n_fitted": 0,
+    "n_insufficient": 0
   }
 }

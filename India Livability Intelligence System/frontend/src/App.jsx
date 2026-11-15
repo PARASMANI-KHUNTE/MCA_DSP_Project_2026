@@ -11,13 +11,14 @@ import Toast from "./components/Toast";
 import OnboardingTourModal from "./components/OnboardingTourModal";
 import QuickStartBanner from "./components/QuickStartBanner";
 import InsightsView from "./components/InsightsView";
+import PipelineView from "./components/PipelineView";
 import { BASELINE_YEAR, DATA_COVERAGE, calculateScores } from "./services/scoringService";
 import { DATA } from "./data/realData";
 import { PRESETS } from "./data/methodologyData";
 
 const COMPOSITE_DEFAULT = PRESETS.find(preset => preset.id === "balanced") || {
   id: "balanced",
-  weights: { air: 35, safety: 25, health: 25, economy: 15, col: 0 }
+  weights: { air: 35, safety: 25, health: 25, economy: 15, col: 0, water: 0 }
 };
 
 const MOBILE_PANELS = [
@@ -39,7 +40,8 @@ export default function App() {
           safety: 0,
           health: 0,
           economy: 0,
-          col: 0
+          col: 0,
+          water: 0
         }
   );
   const [selectedPresetId, setSelectedPresetId] = useState(() => {
@@ -55,7 +57,6 @@ export default function App() {
   const [compareIds, setCompareIds] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
-  const [backendStatus, setBackendStatus] = useState("offline");
   const [showTourModal, setShowTourModal] = useState(false);
   const dataAvailable = DATA.rows.length > 0;
 
@@ -123,7 +124,7 @@ export default function App() {
       return;
     }
     const defaultFactor = DATA_COVERAGE.availableFactors?.includes("air") ? "air" : DATA_COVERAGE.availableFactors?.[0];
-    const resetWeights = { air: 0, safety: 0, health: 0, economy: 0, col: 0 };
+    const resetWeights = { air: 0, safety: 0, health: 0, economy: 0, col: 0, water: 0 };
     if (defaultFactor) resetWeights[defaultFactor] = 100;
     setSelectedPresetId(defaultFactor === "col" ? "col_only" : "air_only");
     setWeights(resetWeights);
@@ -174,48 +175,6 @@ export default function App() {
     setSelectedPlaceId(place.id);
   };
 
-  const checkHealth = useCallback(async () => {
-    try {
-      const response = await fetch("http://localhost:8000/api/health", { method: "GET" });
-      const health = response.ok ? await response.json() : null;
-      const status = health?.status === "ok" ? "ok" : "offline";
-      setBackendStatus(status);
-      return status;
-    } catch {
-      setBackendStatus("offline");
-      return "offline";
-    }
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const probe = async () => {
-      const online = await checkHealth();
-      if (!mounted) return;
-      setBackendStatus(online);
-    };
-
-    probe();
-    const interval = window.setInterval(probe, 30000);
-
-    return () => {
-      mounted = false;
-      window.clearInterval(interval);
-    };
-  }, [checkHealth]);
-
-  const handleRetryBackend = async () => {
-    const status = await checkHealth();
-    notify(
-      status === "ok"
-        ? "FastAPI backend connected."
-        : "Backend offline. The embedded scoring engine continues running.",
-      status === "offline" ? "info" : "success"
-    );
-  };
-
-
   return (
     <div className="min-h-screen bg-[#F5F5F2] p-2 sm:p-4 lg:p-6 text-[#111111] flex flex-col font-sans">
       <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[#E5E5E5] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] overflow-hidden">
@@ -223,9 +182,6 @@ export default function App() {
         <Navbar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
-          backendStatus={backendStatus}
-          onRetryBackend={handleRetryBackend}
-          dataAvailable={dataAvailable}
         />
 
         {/* Main Content Surfaces */}
@@ -241,6 +197,10 @@ export default function App() {
                   compositeAvailable={DATA_COVERAGE.compositeAvailable}
                   availableFactors={DATA_COVERAGE.availableFactors || []}
                 />
+
+                <div className="mb-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-3.5 py-2.5 text-xs leading-relaxed text-[#666666]">
+                  <strong className="text-[#111111]">Local, unverified data:</strong> this dashboard runs entirely in your browser on locally supplied extracts that have not been independently reconciled with their cited publishers. Scores, ranks and comparisons are exploratory views, not official statistics.
+                </div>
 
                 {!DATA_COVERAGE.compositeAvailable && (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900">
@@ -335,6 +295,11 @@ export default function App() {
               <InsightsView rankedPlaces={rankedPlaces} year={selectedYear} weights={weights} />
             )}
 
+            {/* View 3: Pipeline */}
+            {dataAvailable && activeTab === "pipeline" && (
+              <PipelineView />
+            )}
+
             {/* About section removed — kept only Explorer and Insights views */}
           </main>
         </div>
@@ -370,6 +335,7 @@ export default function App() {
       {dataAvailable && showCompareModal && (
         <CompareModal
           comparePlaces={comparePlaces}
+          year={selectedYear}
           onClose={() => setShowCompareModal(false)}
           onRemovePlace={handleRemoveCompare}
           onSelectPlace={handleSelectFromCompare}

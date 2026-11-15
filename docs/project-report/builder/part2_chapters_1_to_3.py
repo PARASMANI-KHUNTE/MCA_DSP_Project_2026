@@ -32,7 +32,7 @@ The primary domestic benchmark is the **Ease of Living Index (EoLI)** formulated
 3. **Data Quality and Fabrication Risks:** Academic and public hobbyist repositories often ingest secondary uncurated web aggregations or introduce synthetic placeholder values without establishing cryptographic provenance gates.
 
 ## 1.4 Proposed Solution
-To resolve these systemic challenges, this project engineers the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture, RESTful backend microservice, and interactive spatial decision-support platform.
+To resolve these systemic challenges, this project engineers the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture and interactive spatial decision-support platform.
 
 ILIS addresses existing gaps through five core architectural pillars:
 1. **Multi-Source Empirical Ingestion:** Integrates verified public datasets across five foundational quality-of-life pillars: Air Quality (CPCB / Kaggle), Public Safety (NCRB), Public Health (MoHFW NFHS-5 factsheets), Economic Productivity (RBI NSDP & MoSPI PLFS), and Cost of Living (longitudinal municipal rental series).
@@ -44,7 +44,7 @@ ILIS addresses existing gaps through five core architectural pillars:
 ## 1.5 High-Level Project Overview
 The ILIS platform is engineered as a decoupled, full-stack software system:
 - **Data Engineering Core (`src/`):** Python modules handling domain-specific ingestion loaders, name aliasing, Tukey IQR outlier fencing, normalization, scoring, OLS trend modeling, and K-Means clustering.
-- **FastAPI REST Service (`backend/app/`):** A high-performance Python ASGI backend that preloads processed datasets into an in-memory, LRU-cached `DataStore` singleton, exposing nine documented endpoints.
+- **Generated Data Bundle (`frontend/src/data/realData.js`):** An ES module built by `src/export_frontend_data.py` that carries every processed place, factor value, observation year, series-break flag and gap flag from the pipeline to the browser, with no server process.
 - **React 19 Geospatial Dashboard (`frontend/src/`):** A modern, responsive single-page application built on Vite and Tailwind CSS. It features an interactive vector SVG India map covering 32 states/UTs and 29 metropolitan pinpoints, an interactive leaderboard, multi-pillar radar visualizations, and an embedded analytical data bundle (`realData.js`).
 
 ---
@@ -73,7 +73,7 @@ The engineering and empirical objectives of the India Livability Intelligence Sy
    - Execute K-Means unsupervised clustering across normalized feature spaces, performing silhouette analysis to discover natural multi-dimensional entity archetypes.
 
 5. **Decoupled Full-Stack Architecture:**
-   - Engineer an asynchronous FastAPI backend microservice with dependency-injected in-memory caching and strict Pydantic v2 validation.
+   - Generate a deterministic static data bundle that delivers every processed value, observation year and provenance flag to the browser.
    - Construct a responsive React 19 geospatial dashboard supporting real-time choropleth mapping, client-side score recalculation, and multi-entity comparative analysis.
 
 6. **Quality Assurance, Provenance & Verification:**
@@ -167,16 +167,13 @@ npm run build                   # Verify production build compilation
 ```
 
 ## 3.4 Comprehensive Technology Stack Inventory
-Every library, framework, and tool deployed in the ILIS architecture has been verified against the project repository manifests (`requirements.txt`, `backend/requirements.txt`, and `frontend/package.json`).
+Every library, framework, and tool deployed in the ILIS architecture has been verified against the project repository manifests (`requirements.txt` and `frontend/package.json`).
 
 ### Table 3.2: Comprehensive Technology Stack Inventory
 | Architecture Layer | Technology / Library | Verified Version | Purpose & Function | Architectural Role |
 |---|---|---|---|---|
-| **Language Runtime** | Python | 3.14.5 | Core execution engine for data pipelines, ML, and API | Primary Backend & Modeling Runtime |
+| **Language Runtime** | Python | 3.14.5 | Core execution engine for data pipelines, ML, and the data bundle exporter | Primary Analytics & Modeling Runtime |
 | **Language Runtime** | JavaScript / Node.js | ES2022 / Node v20+ | Client-side execution and modern bundle compilation | Primary Frontend Runtime |
-| **Web API Framework** | FastAPI | >=0.111.0 (0.136.3) | Asynchronous REST routing, OpenAPI generation, DI | Core Backend Microservice |
-| **ASGI Web Server** | Uvicorn | >=0.30.0 (0.49.0) | High-concurrency asynchronous HTTP server | Production ASGI Application Server |
-| **Data Validation** | Pydantic / Pydantic-Settings | >=2.7.0 / >=2.3.0 | Strict runtime schema parsing, request/response models | Data Validation & Configuration Layer |
 | **Data Processing** | Pandas | >=2.2.2 (3.0.3) | Tabular transformations, merging, aggregations, pivoting | Core Analytical Engine |
 | **Numerical Computing** | NumPy | >=1.26.4 (2.4.6) | Vectorized arithmetic, clipping, matrix operations | Numerical Foundation |
 | **Columnar Storage** | PyArrow | >=15.0.0 (26.0.0) | High-speed Parquet serialization for tidy factor logs | Columnar Data Persistence |
@@ -194,7 +191,7 @@ Every library, framework, and tool deployed in the ILIS architecture has been ve
 
 ## 3.5 Technology Selection and Architectural Justification
 The selection of each foundational technology was governed by strict architectural requirements:
-- **FastAPI over Monoliths:** FastAPI provides native asynchronous request processing, automatic OpenAPI specification generation, and sub-millisecond JSON serialization powered by Pydantic v2 (compiled in Rust). In contrast to monolithic frameworks like Django, FastAPI minimizes memory consumption and overhead for read-heavy analytical APIs.
+- **Static Bundle over a REST Service:** A read-only analytics dashboard does not need a running server. Exporting the processed tables into a single ES module removes HTTP latency, CORS configuration, and process supervision while keeping one source of truth for both the notebook and the browser. It also removes an entire dependency and deployment surface.
 - **React 19 & Vite over Server-Side Rendering:** An interactive decision support tool requires instantaneous feedback when a user adjusts weight sliders. By compiling an embedded analytical bundle (`realData.js`) and implementing in-browser scoring (`scoringService.js`), React 19 calculates composite scores and updates choropleth fills in under 5 milliseconds—completely eliminating network latency.
 - **Statsmodels & Scikit-Learn over Deep Learning:** Urban livability indices must remain transparent, defensible, and interpretable to policy makers and academic evaluators. Deep neural networks act as black boxes and overfit short temporal series ($n \le 10$). Linear OLS and K-Means clustering provide rigorous statistical test statistics ($R^2$, p-values, F-statistics, silhouette coefficients) that are mathematically verifiable.
 - **Parquet for Tidy Long Tables:** Storing long analytical panels containing boolean flags (`is_imputed`, `is_inherited`, `series_break`) in Apache Parquet preserves strict data types, enables Snappy/ZSTD compression, and loads up to 10× faster than raw CSVs.

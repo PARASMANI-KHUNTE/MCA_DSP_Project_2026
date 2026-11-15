@@ -4,6 +4,8 @@
 **Plan:** [`new_data_integration_plan.md`](new_data_integration_plan.md)  
 **Decision:** No files from `data/raw/newData` have been activated in the analytical pipeline. Several are useful candidates, but none currently supplies a fully verified, definition-compatible replacement for all blocked core inputs.
 
+> **Current status (14 November 2026):** this audit is preserved as the record of the 3 November intake review. The runtime source-validation gate has since been removed at the project owner's direction, and the active health factor is an NFHS-5 composite, not infant mortality. The intake decisions below still stand: none of these `newData` files is used by an active loader. See [`data_fabrication_audit.md`](data_fabrication_audit.md) for the current provenance status.
+
 ## Inventory
 
 | File in `data/raw/newData` | Size | SHA-256 |
@@ -31,12 +33,12 @@ The ZIP files were inspected without extracting or modifying them. The CSV insid
 ## Accuracy and scope notes
 
 - “Publicly downloadable” and “verified source” are different checks. Kaggle's own documentation treats the uploader's selected license as dataset metadata; it does not establish the underlying source's rights or verify every value.
-- The currently planned health indicator is infant mortality. RHS counts health facilities and staff; these values cannot be substituted without changing the construct and score interpretation.
+- The active health factor is an NFHS-5 (2019–21) composite of institutional births, full vaccination, child stunting, and women's anaemia. An earlier plan considered infant mortality; RHS counts health facilities and staff, so it cannot be substituted for that composite without changing the construct and score interpretation.
 - The existing safety score is a rate per lakh population. CrimeBase's state panel provides reported counts in rows, not the denominator needed to calculate that rate. The dictionary also warns that crime scopes overlap and must not be summed together.
 - The existing unemployment definition expects annual/survey-period PLFS state estimates. Monthly CMIE observations are a different series and must not be averaged or renamed into PLFS values without an approved methodology.
 - The optional cost dataset contains both observed-source labels and modeled city rows. Numbeo terms require attribution for academic reuse and state that site data may not be accurate; the Kaggle MIT declaration does not by itself prove the rights to third-party source content.
-- `data/raw/newData` remains an intake/archive folder and is not scanned as an active loader input. The current source-validation gate and existing processed outputs remain unchanged; no new scores or empirical claims were generated.
+- `data/raw/newData` remains an intake/archive folder and is not scanned as an active loader input. The runtime source-validation gate has been removed, but no `newData` file has been promoted into the pipeline; existing processed outputs are unchanged by this audit.
 
 ## Recommended next step
 
-Keep the current score blocked until each required indicator has a rights-cleared, definition-compatible input with a completed checksum record and source-level spot checks. Decide separately whether to add RHS health-system capacity as a new descriptive factor. For safety, acquire or verify a state population denominator matching CrimeBase's years and geography before deriving any per-lakh rate. For economics, obtain the original workbook source citation/license and compare extracted values to it. For city cost estimates, either use only independently verified observed values with attribution or omit the modeled values from comparisons.
+Do not promote any `newData` candidate until each required indicator has a rights-cleared, definition-compatible input with a completed checksum record and source-level spot checks. Decide separately whether to add RHS health-system capacity as a new descriptive factor. For safety, acquire or verify a state population denominator matching CrimeBase's years and geography before deriving any per-lakh rate. For economics, obtain the original workbook source citation/license and compare extracted values to it. For city cost estimates, either use only independently verified observed values with attribution or omit the modeled values from comparisons.

@@ -17,21 +17,21 @@ The system implements a rigorous set of functional requirements:
 - **FR-07 (OLS Trend Projections):** The system shall compute OLS linear regression models for entities with $\ge 5$ observed historical points, projecting scores 10 years forward (2025–2034) with 95% confidence bounds.
 - **FR-08 (Interactive Geospatial Visualization):** The system shall render an interactive SVG India map supporting real-time choropleth coloring, hover tooltips, and place selection.
 - **FR-09 (Detailed Entity Diagnostics):** The system shall display longitudinal historical trajectories, radar profiles, and source attribution badges upon entity selection.
-- **FR-10 (RESTful Service Exposure):** The system shall expose all entities, scores, trends, clusters, and source attributions via documented REST API endpoints.
+- **FR-10 (Embedded Data Delivery):** The system shall deliver all entities, factor values, observation years, and provenance flags to the dashboard through a generated static data bundle.
 
 ## 4.2 Non-Functional Requirements Specification
-- **NFR-01 (Performance & Latency):** Client-side scoring recalculations upon slider adjustment shall execute in $< 10$ milliseconds. Backend API response times for pre-loaded endpoints shall not exceed 50 milliseconds under standard concurrency.
+- **NFR-01 (Performance & Latency):** Client-side scoring recalculations upon slider adjustment shall execute in $< 10$ milliseconds, with no network round-trip.
 - **NFR-02 (Data Integrity & Reproducibility):** All scoring computations and machine learning fits shall be strictly deterministic. Re-running the pipeline with identical seeds (`KMEANS_SEED = 42`) shall produce identical outputs.
 - **NFR-03 (Transparency & Attribution):** The system shall never present proxy state-level metrics as municipal measurements without explicitly attaching an `is_inherited` indicator.
 - **NFR-04 (Graceful Degradation):** If an indicator file is unavailable, the system shall log the absence, compute scores over the remaining available factors, and alert the user rather than terminating with an unhandled exception.
 - **NFR-05 (Cross-Platform Compatibility):** The software shall execute identically across Windows, Linux, and macOS environments without requiring platform-specific binary dependencies.
 
 ## 4.3 End-to-End System Architecture
-The India Livability Intelligence System is organized into three decoupled tiers: the Offline Data Engineering Core, the Backend REST Microservice, and the Client-Side Geospatial Dashboard.
+The India Livability Intelligence System is organized into three decoupled stages: the Offline Data Engineering Core, the Generated Data Delivery Bundle, and the Client-Side Geospatial Dashboard.
 
 ![Figure 4.1: High-Level System Architecture](diagrams/high_level_architecture.png)
 
-*Figure 4.1 illustrates the structural interaction between the public data sources, the Python data engineering core, the FastAPI service, and the React 19 single-page application.*
+*Figure 4.1 illustrates the structural interaction between the public data sources, the Python data engineering core, the generated data bundle, and the React 19 single-page application.*
 
 ## 4.4 Data Pipeline & ETL Architecture
 The extract, transform, load (ETL) pipeline is orchestrated by `src/cleaning/run_pipeline.py`. It executes sequentially across four modular stages:
@@ -103,21 +103,19 @@ The wide table pivots indicators into tabular feature vectors per `place_id` × 
 | `outlook` | `VARCHAR(24)` | Classification: `Improving, Declining, Stable or uncertain, Insufficient data` |
 | `projections` | `VARCHAR(1024)` | JSON array of 10-year forecasts with 95% confidence intervals |
 
-## 4.6 RESTful API Design & Endpoint Specifications
-The FastAPI application exposes nine read-only REST endpoints structured under the `/api` prefix:
+## 4.6 Embedded Data Bundle and Delivery Contract
+The dashboard is served as a static build. `src/export_frontend_data.py` converts the processed tables and the scoring configuration into one ES module, `frontend/src/data/realData.js`, which the application imports at build time. No HTTP endpoint, server process, or CORS policy exists.
 
-### Table 4.6: REST API Route Catalogue and Response Envelopes
-| HTTP Method | Route Path | Handler Function & Module | Response Pydantic Schema | Description & Query Parameters |
-|---|---|---|---|---|
-| `GET` | `/api/health` | `health()` in `main.py` | `HealthResponse` | Verifies service health, version, and data directory path |
-| `GET` | `/api/places` | `list_places()` in `routes_places.py` | `list[PlaceOut]` | Returns catalogue of all 61 places with spatial coordinates |
-| `GET` | `/api/places/{place_id}` | `place_detail()` in `routes_places.py` | `PlaceDetailOut` | Detailed metadata and full yearly factor history for a place |
-| `GET` | `/api/places/{place_id}/trend` | `place_trend()` in `routes_places.py` | `TrendResponse` | 10-year OLS projections and outlook classifications per factor |
-| `GET` | `/api/clusters` | `list_clusters()` in `routes_places.py` | `list[ClusterOut]` | Returns K-Means cluster assignments and tier labels |
-| `GET` | `/api/sources` | `list_sources()` in `routes_places.py` | `list[SourceOut]` | Returns complete data provenance register with licenses |
-| `POST`| `/api/score` | `compute_score()` in `routes_score.py` | `ScoreResponse` | Dynamic on-demand score computation given custom weights |
-| `GET` | `/api/states/{id}/ranking` | `state_ranking()` in `routes_score.py` | `StateRankingResponse` | Intra-state ranking of municipal centers within a state |
-| `GET` | `/api/factors` | `list_factors()` in `routes_score.py` | `list[FactorOut]` | Returns factor metadata, directions, and trend eligibility |
+### Table 4.6: Data Bundle Exports and Consumer
+| Export Key | Source Artifact | Consumer | Contents |
+|---|---|---|---|
+| `DATA.places` | `data/processed/places.csv` | Map, leaderboard, modal | Identifier, name, type, parent state, coordinates, population |
+| `DATA.rows` | `data/processed/factors_wide.csv` | Scoring engine | Raw factor values by place and year, with series-break and gap flags |
+| `DATA.costRows` | `data/processed/factors_tidy.parquet` | Scoring engine | Cost-of-living snapshots with their own observation year |
+| `DATA.factorDefs` | `src/scoring/factors_config.yaml` | Scoring engine, controls | Bounds, direction, level, source, unit and trend policy per factor |
+| `DATA.meta` | Derived during export | Year selector, map | Baseline year, observed years, available factors, per-factor year ranges |
+
+The exporter is strictly non-inventive: a factor value is written only when the processed table contains an observation, and a factor with no observations is omitted from `DATA.meta.availableFactors` instead of being imputed.
 
 ## 4.7 Core Mathematical and Statistical Algorithms
 
@@ -170,9 +168,9 @@ $$\hat{y}_t = \text{clip}(\hat{\beta}_0 + \hat{\beta}_1 t, 0, 100)$$
 $$\text{PI}_{95\%}(t) = \hat{y}_t \pm t_{0.025, n-2} \cdot \hat{\sigma} \sqrt{1 + \frac{1}{n} + \frac{(t - \bar{t})^2}{\sum (t_i - \bar{t})^2}}$$
 
 ## 4.8 Security, Data Provenance, and Access Architecture
-- **In-Memory DataStore Singleton:** Processed datasets are loaded into memory once during FastAPI application lifespan. An LRU cache keyed on file signatures (mtime, byte size, MD5 hash) eliminates file I/O during request servicing.
+- **Generated Read-Only Bundle:** Processed datasets are compiled once into a static ES module. The dashboard holds the bundle in memory after page load, so no request-time I/O or caching layer is required.
 - **Cryptographic Provenance Gate:** All raw inputs are verified against known SHA-256 hashes in `src/utils/provenance.py`. Synthetic placeholder files are prevented from entering the active loader pipeline.
-- **CORS Protection:** Cross-Origin Resource Sharing is restricted via `CORSMiddleware` to authorized frontend origins (`http://localhost:5173`, `http://localhost:3000`).
+- **No Network Surface:** The built dashboard is static. There is no API host, no CORS policy, and no server-side endpoint that could leak or mutate data.
 
 ---
 
@@ -180,7 +178,7 @@ $$\text{PI}_{95\%}(t) = \hat{y}_t \pm t_{0.025, n-2} \cdot \hat{\sigma} \sqrt{1 
 
 ## 5.1 System Entry Points and Lifespan Execution
 The India Livability Intelligence System incorporates three primary execution entry points:
-1. **Backend Server (`backend/app/main.py`):** Initiates the FastAPI application under Uvicorn (`uvicorn backend.app.main:app --port 8000`). Utilizes an asynchronous `lifespan` context manager that preloads the singleton `DataStore` at server boot.
+1. **Data Bundle Exporter (`src/export_frontend_data.py`):** Builds `frontend/src/data/realData.js` from the processed tables and scoring configuration, and is invoked via `python -m src.export_frontend_data` or `make export`.
 2. **Geospatial Frontend (`frontend/src/main.jsx` & `App.jsx`):** Renders the root React 19 tree, binds global state, initializes the client-side scoring engine from `realData.js`, and sets up event handlers for persona switching and map zooming.
 3. **Pipeline Orchestrator (`src/cleaning/run_pipeline.py`):** Automated ETL runner executed via `python -m src.cleaning.run_pipeline` or `make data`. Coordinates multi-source ingestion, entity aliasing, outlier detection, and analytical export.
 
@@ -212,11 +210,13 @@ The core scoring logic resides in `src/scoring/scoring.py` and is designed as a 
 - **Linear Trend Projections (`src/models/trend.py`):** The function `fit_trend(years, scores, place_id, factor)` filters valid observations. If $n \ge 5$, it fits `sm.OLS(scores, sm.add_constant(years))`, extracts slope, p-value, $R^2$, classifies qualitative outlook, and computes 10-year forecasts clipped to $[0, 100]$.
 - **K-Means Clustering (`src/models/clustering.py`):** The function `run_clustering(scores_wide, factor_score_cols, k, seed)` standardizes features using `StandardScaler()`, searches $k \in [2, 7]$ via `_choose_k()`, records inertia and silhouette scores, and assigns tier labels.
 
-## 5.5 Backend REST Microservice Implementation (`backend/app/`)
-The FastAPI backend is engineered for maximum throughput and architectural separation:
-- `backend/app/core/config.py`: Pydantic `Settings(BaseSettings)` class. Features a custom validator `parse_debug_value` ensuring that environment strings such as `"release"`, `"prod"`, `"true"`, or `"1"` are correctly coerced to boolean values without throwing validation errors.
-- `backend/app/core/loader.py`: Implements `DataStore` and `get_store()`. Evaluates an MD5 file signature across all nine data files. When signatures match, it returns an in-memory cached instance, ensuring zero filesystem latency.
-- `backend/app/api/routes_places.py` & `routes_score.py`: Lightweight router controllers injecting `DataStore` via `Depends(get_store)` and transforming pandas rows into validated Pydantic models.
+## 5.5 Data Delivery Bundle Implementation (`src/export_frontend_data.py`)
+The delivery layer is a single deterministic exporter rather than a service:
+- `_factor_definitions()`: Copies each factor's column, bounds, direction, level and trend policy from `src/scoring/factors_config.yaml` so the browser normalizes with exactly the same anchors as the notebook.
+- `_number()` / `_boolean()` / `_text()`: Convert pandas values into JSON-safe primitives, treating every missing observation as `null` instead of a substituted value.
+- Place rows: Emitted per place and year with the raw factor values plus `seriesBreak` and `gapFlags` maps, preserving the observation year of every inherited state-level value.
+- Metadata: `availableFactors` is derived from the processed tables, so a factor appears in the controls only when it has at least one real observation.
+- The module is written with a fixed key order and no timestamps, so re-running it on unchanged inputs produces a byte-identical bundle.
 
 ## 5.6 Frontend Geospatial Dashboard Implementation (`frontend/src/`)
 The user interface is structured around modern React 19 functional components:
@@ -224,7 +224,7 @@ The user interface is structured around modern React 19 functional components:
 ![Figure 4.4: Frontend Component Architecture](diagrams/frontend_component_hierarchy.png)
 
 - `IndiaMap.jsx`: Renders an interactive vector SVG India map using coordinate paths defined in `indiaMap.js`. Implements mouse hover tooltips, click selection, and dynamic choropleth shading based on the active color mode.
-- `WeightControls.jsx`: Renders five persona buttons and dynamic sliders for Air Quality, Safety, Health, Economy, and Cost of Living. Features slider lock toggles and instant normalization.
+- `WeightControls.jsx`: Renders five persona buttons and dynamic sliders for Air Quality, Safety, Health, Economy, Cost of Living and Water Quality. Features slider lock toggles and instant normalization.
 - `Leaderboard.jsx`: Ranked table displaying entity positions, scores, and pillar breakdowns. Supports search filtering and multi-entity selection for comparative analysis.
 - `PlaceDetailModal.jsx`: Modal displaying a 10-year OLS trend chart, multi-pillar radar profile, and data attribution badges.
 - `CompareModal.jsx` & `CompareBar.jsx`: Multi-entity comparison tray supporting side-by-side analysis of up to four jurisdictions.
@@ -246,6 +246,6 @@ During pipeline startup, `find_unverified_generated_sources()` scans the workspa
 The system implements robust error handling across all layers:
 - **Degenerate Bounds Handling:** In `normalize_value()`, if anchor upper equals anchor lower ($hi == lo$), the function returns 50.0 to prevent division-by-zero exceptions.
 - **Missing Factor Reweighting:** If an entity has valid data for 3 out of 4 requested factors, weights are proportionally scaled over the observed factors, preventing artificial score penalization.
-- **Environment Variable Parsing Resilience:** In `backend/app/core/config.py`, system environment variables like `DEBUG=release` (frequently set on Windows workstations by C++/Rust toolchains) are safely parsed into `False` rather than causing startup validation crashes.
-- **Network Independence:** The frontend operates completely offline using `realData.js`. If the FastAPI backend is stopped, all map, scoring, radar, and leaderboard features remain fully functional in the browser.
+- **Missing-Factor Resilience:** A place without a selected factor is excluded from that ranking instead of being silently reweighted, and the exclusion is surfaced in the leaderboard and detail modal.
+- **Network Independence:** The frontend operates completely offline using `realData.js`. There is no server to be unavailable: all map, scoring, radar, and leaderboard features run in the browser.
 """

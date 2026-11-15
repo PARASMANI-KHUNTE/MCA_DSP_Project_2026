@@ -1,64 +1,56 @@
-<div align="center">
+# MCA DSP Project 2026 — India Livability Intelligence System
 
-# 🇮🇳 India Livability Intelligence System
-### Data Science Project — MCA 2026
-**Course:** CAPCTD3 Elective-V | **Capstone Project**
+Repository for the MCA Data Science capstone **India Livability Intelligence System** (course CAPCTD3 Elective-V, MCA Batch 2026).
 
-[![React](https://img.shields.io/badge/Frontend-React_19_%2B_Vite-61DAFB.svg?logo=react&logoColor=black)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/Academic-MCA_Capstone_2026-orange.svg)](#acknowledgments)
+## Where things live
 
-<p align="center">
-  <b>Research Question:</b><br/>
-  <i>"Is India Becoming Less Livable? A Data-Driven Livability Index with Interactive Map and Trend Projection"</i>
-</p>
+| Path | Contents |
+| --- | --- |
+| `India Livability Intelligence System/` | The project: data pipeline (`src/`), static React dashboard (`frontend/`), notebooks, tests, reports, and the main [`README`](India%20Livability%20Intelligence%20System/README.md). |
+| `docs/project-report/` | Scripts that build the academic project report (`PROJECT_REPORT.md/.docx/.pdf`). |
+| `.kilo/` | Local agent configuration. |
 
-</div>
-
----
-
-## 👥 Authors & Team Members
-
-- **Parasmani Khunte**
-- **Shuchi Trivedi**
-
-*Master of Computer Applications (MCA) — Batch 2026*  
-*Specialization:* Data Science using Python (DSP)
-
----
-
-## 📌 Executive Summary
-
-The **India Livability Intelligence System** is an interactive, empirical intelligence dashboard and decision-support system evaluating multi-criteria quality of life across 36 Indian States and Union Territories and 61 cities.
-
-Rather than relying on subjective opinions or anecdotal perceptions, this platform integrates multi-source official public datasets (CPCB, NCRB, RBI, MoSPI, Registrar General of India) into a standardized multi-factor composite index, supported by:
-1. **Multi-Pillar Composite Scoring:** Evaluates Air Quality, Healthcare Infrastructure, Public Safety, Economic Vitality, and Cost of Living with customizable weights and presets.
-2. **Inferential Statistics & Hypothesis Testing:** One-Way ANOVA for regional disparity, Pearson correlation matrices, and sensitivity testing.
-3. **Time-Series Trend Projection:** Ordinary Least Squares (OLS) regression models projecting historical trajectories with 95% confidence intervals through 2034.
-4. **Unsupervised Machine Learning & Archetypes:** K-Means clustering ($k=5$, Silhouette Score $= 0.647$) for grouping regions by multi-dimensional profiles.
-5. **Interactive React Application:** Modern React 19 + Vite dashboard featuring dynamic choropleth maps, radar comparisons, factor breakdowns, side-by-side comparison tray, and what-if simulation.
-
----
-
-## 🚀 Running the Application
+Start with the project README:
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server on port 3000
-npm run dev
-
-# Build for production
-npm run build
+cd "India Livability Intelligence System"
+cat README.md
 ```
 
----
+## Quick start
 
-## 🛠️ Technology Stack
+```bash
+cd "India Livability Intelligence System"
 
-- **Framework:** React 19 with Vite 6
-- **Styling:** Tailwind CSS v4
-- **Icons:** Lucide React
-- **Animations:** Canvas Confetti
-- **Analytics & Engine:** Embedded client-side multi-criteria scoring and OLS projection engine
+# Python environment
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+
+# Full analysis refresh
+make data
+python -m src.scoring.run_scoring
+python -m src.models.run_ml
+python -m src.analysis.run_eda
+python -m src.export_frontend_data
+
+# Dashboard
+cd frontend
+npm install
+npm run dev                     # http://localhost:5173
+```
+
+Tests:
+
+```bash
+cd "India Livability Intelligence System"
+python -m pytest tests/ -q
+```
+
+## Data disclaimer
+
+The pipeline runs on locally supplied extracts. Their values, exact upstream versions, and reuse terms have not been independently verified against the cited publishers. Treat all results as exploratory local-data views rather than verified public-data findings. See [`reports/data_fabrication_audit.md`](India%20Livability%20Intelligence%20System/reports/data_fabrication_audit.md) and [`reports/data_provenance_notice.md`](India%20Livability%20Intelligence%20System/reports/data_provenance_notice.md).
+
+## Repository history note
+
+An earlier revision of this repository kept a second, stale copy of the React app at the repository root (including a committed `node_modules/`). That copy was removed; `India Livability Intelligence System/frontend/` is the single source of truth. The old files remain available in Git history.

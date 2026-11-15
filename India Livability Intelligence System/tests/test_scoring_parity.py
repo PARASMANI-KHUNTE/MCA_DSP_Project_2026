@@ -1,7 +1,7 @@
 """
 tests/test_scoring_parity.py
 ────────────────────────────
-Integration and parity tests ensuring that backend Python scoring logic
+Integration and parity tests ensuring that Python scoring logic
 (src.scoring.scoring) and frontend JavaScript scoring logic
 (frontend/src/services/scoringService.js) produce identical results.
 """
@@ -56,7 +56,7 @@ def js_composite_score(factor_scores: dict[str, float | None], weights: dict[str
 
 
 class TestNormalizationParity:
-    """Verify backend and frontend normalization logic match across entire range."""
+    """Verify Python and JavaScript normalization logic match across entire range."""
 
     @pytest.mark.parametrize("x", [-10.0, 10.0, 30.0, 55.0, 80.0, 100.0, 150.0])
     @pytest.mark.parametrize("direction", ["higher_is_better", "lower_is_better"])
@@ -88,7 +88,7 @@ class TestCompositeScoringParity:
         # Frontend JS calculation
         js_result = js_composite_score(factor_scores, weights)
 
-        # Backend Python calculation: normalized weights sum to 1.0
+        # Python calculation: normalized weights sum to 1.0
         norm_w = {k: v / sum(weights.values()) for k, v in weights.items()}
         py_result = sum(factor_scores[k] * norm_w[k] for k in factor_scores)
 

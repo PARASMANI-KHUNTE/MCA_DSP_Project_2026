@@ -2,15 +2,15 @@
 Export the processed project data to a frontend ES module.
 
 The frontend is intentionally static (Vite dev server or preview), so it consumes
-a generated module rather than querying a development-only API. Every value
-written here comes from data/processed or the scoring configuration; no
-placeholder or synthetic observations are added.
+a generated module instead of fetching from a server. Every value written here
+comes from data/processed or the scoring configuration; no placeholder or
+synthetic observations are added, and the output contains no timestamps so it is
+byte-identical when regenerated from unchanged inputs.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -69,6 +69,7 @@ def _factor_definitions(config: dict) -> dict:
     health = factors["health"]
     economy = factors["economy"]
     col = factors["cost_of_living"]
+    water = factors["water_quality"]
 
     return {
         "air": {
@@ -143,6 +144,19 @@ def _factor_definitions(config: dict) -> dict:
             "unit": "₹/month",
             "trend": col.get("trend"),
         },
+        "water": {
+            "key": "water",
+            "column": water["column"],
+            "label": "Water Quality",
+            "shortLabel": "Water",
+            "direction": water["direction"],
+            "bounds": water["bounds"],
+            "level": water["level"],
+            "source": "CPCB water-body snapshot (2021); local extraction unverified",
+            "sourceId": water.get("source_id"),
+            "unit": "index (0-100)",
+            "trend": water.get("trend"),
+        },
     }
 
 
@@ -156,6 +170,7 @@ def _cost_snapshot_year() -> int | None:
 
 
 def build_payload() -> dict:
+    """Assemble the JSON-serializable payload embedded in the dashboard bundle."""
     places = pd.read_csv(PLACES_CSV, dtype=str)
     factors = pd.read_csv(FACTORS_WIDE)
     tidy = pd.read_parquet(FACTORS_TIDY)
@@ -179,17 +194,20 @@ def build_payload() -> dict:
             "health": _number(row.get("health")),
             "nsdp": _number(row.get("per_capita_nsdp_constant")),
             "unemployment": _number(row.get("unemployment_rate")),
+            "water": _number(row.get("water_quality")),
             "seriesBreak": {
                 "air": _boolean(row.get("air_quality_series_break")),
                 "safety": _boolean(row.get("safety_series_break")),
                 "health": _boolean(row.get("health_series_break")),
                 "economy": _boolean(row.get("economy_series_break")),
+                "water": _boolean(row.get("water_quality_series_break")),
             },
             "gapFlags": {
                 "air": _text(row.get("air_quality_gap_flag")),
                 "safety": _text(row.get("safety_gap_flag")),
                 "health": _text(row.get("health_gap_flag")),
                 "economy": _text(row.get("economy_gap_flag")),
+                "water": _text(row.get("water_quality_gap_flag")),
             },
         })
 
@@ -212,7 +230,7 @@ def build_payload() -> dict:
     first_year = {}
     for factor_key, column in {
         "air": "air", "safety": "safety", "health": "health",
-        "economy": "nsdp", "col": "value",
+        "economy": "nsdp", "col": "value", "water": "water",
     }.items():
         if factor_key == "col":
             values = [row["year"] for row in cost_rows if row["value"] is not None]
@@ -241,6 +259,8 @@ def build_payload() -> dict:
         available_factors.append("economy")
     if any(row["value"] is not None for row in cost_rows):
         available_factors.append("col")
+    if factors.get("water_quality", pd.Series(dtype=float)).notna().any():
+        available_factors.append("water")
     observed_air_sources = sorted({
         source_id
         for source_id in tidy.loc[tidy["factor"] == "air_quality", "source_id"].dropna().astype(str)
@@ -272,7 +292,6 @@ def build_payload() -> dict:
 
     return {
         "meta": {
-            "generated": date.today().isoformat(),
             "sourceStatus": "local_pipeline_data",
             "availableFactors": available_factors,
             "compositeAvailable": bool(
@@ -315,6 +334,7 @@ def build_payload() -> dict:
 
 
 def main() -> None:
+    """Write the generated ES module consumed by the React dashboard."""
     payload = build_payload()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(

@@ -3,6 +3,8 @@
 **Status:** Working plan — updated with the requested visual and accuracy requirements.  
 **Purpose:** Make the application easy to operate and ensure every answer it gives is supported by traceable public observations.
 
+> **Current status (14 November 2026):** the runtime source-review gate described in §2 has been removed at the project owner's direction. The score endpoints are active and return `503` only when score inputs are genuinely missing, not while unverified inputs remain. The frontend computes from its embedded local-data bundle. Source-level verification is still incomplete, so results remain exploratory local-data views rather than verified public-data findings. See §8 for the implemented direction and the [fabrication audit](data_fabrication_audit.md).
+
 ## 1. Desired user outcome
 
 A user should be able to ask a simple question such as **“Which of these places looks better for the priorities I selected?”** and receive an answer that clearly states:
@@ -17,9 +19,9 @@ When the data cannot support that answer, the application should say **“Not en
 
 ## 2. Current issues to resolve
 
-- Six local raw files for NCRB safety, SRS health, RBI income, PLFS unemployment, and CPCB air quality exactly match hard-coded outputs from the retired placeholder generator. They are not validated source extracts.
-- Processed tables and the embedded frontend bundle depend on some of those files. The current figures therefore cannot be presented as empirical findings.
-- The API is reachable, but correctly disables score endpoints while known placeholder inputs remain. The frontend can still calculate from its embedded bundle, so its warning does not by itself make those answers safe to rely on.
+- Six local raw files for NCRB safety, SRS health, RBI income, PLFS unemployment, and CPCB air quality were confirmed byte-for-byte as hard-coded outputs from the retired placeholder generator. They are quarantined in `data/rejected/generated_placeholders/` and are not active loader inputs.
+- Processed tables and the embedded frontend bundle now combine the remaining local air-quality and rent data with public NCRB safety, NFHS-5 health, RBI NSDP, PLFS unemployment, and CPCB water-quality extracts. Those values, exact upstream versions, and reuse terms have still not been independently checked against publisher releases, so the figures remain exploratory local-data views rather than verified empirical findings.
+- ~~The API is reachable, but correctly disables score endpoints while known placeholder inputs remain.~~ **Superseded (14 Nov 2026):** the runtime gate was removed and the score endpoints are active. The existing warning about the frontend bundle still applies — calculating from unverified inputs does not make those answers safe to rely on as empirical findings.
 - The source register has unresolved licensing and retrieval details. Other local datasets, including the Kaggle-hosted air and rent data, have not been fully verified either.
 - A dataset being publicly downloadable, including from Kaggle or a similar platform, does not alone establish that its observations, definitions, license, geographic coverage, and methods are suitable for this project.
 - The UI currently presents many controls and views before establishing what can be compared and how trustworthy the result is.
@@ -120,7 +122,7 @@ The work is ready to present when all of the following are true:
 - Each displayed answer reveals its comparison scope, year, contributing factors, coverage, and sources.
 - When coverage is insufficient, the application declines to rank and explains why.
 - Rankings and explanations respond consistently to preference changes, and accessibility checks cover keyboard use, labels, contrast, and mobile layout.
-- Reports, dashboard data, and API behavior agree on what is verified and what is unavailable.
+- Reports, dashboard data, and API behavior agree on what is verified and what is unavailable, and clearly label results computed from unverified local inputs.
 
 ## 7. Decisions to make during review
 

@@ -95,7 +95,7 @@ def financial_year_to_ref(fy_str: str) -> int:
     return int(fy_str)
 
 
-def align_year(raw_year, period_type: str = "calendar") -> int:
+def align_year(raw_year: str | int, period_type: str = "calendar") -> int:
     """
     Return the reference year integer for a given period.
 

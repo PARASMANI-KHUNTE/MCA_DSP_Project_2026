@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def run() -> None:
+    """Execute the scoring stage: composite scores and sensitivity draws."""
     setup_logging()
     logger.info("=== SCORING STAGE START ===")
 

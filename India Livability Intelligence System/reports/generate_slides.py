@@ -74,10 +74,10 @@ content = """# India Livability Intelligence System (ILIS)
 ---
 
 # Slide 6: Architecture & Implementation Demo
-- **Backend (FastAPI):** In-memory DataStore, async request handling, auto OpenAPI docs at `/docs`.
+- **Data bundle:** Processed tables exported to a static ES module with per-factor source years, series-break flags and gap flags.
 - **Frontend (React + Vite):** Interactive vector India map, dynamic weight recalculation in milliseconds, radar charts, and detail views.
-- **Automated Testing:** 59 pytest tests passed, 1 skipped, 0 failures.
-- **Local startup:** `start.ps1` launches the Vite dashboard; the API is optional and can be started separately.
+- **Automated Testing:** 91 pytest tests passed, 1 skipped, 0 failures.
+- **Local startup:** `start.ps1` launches the Vite dashboard; there is no server component.
 
 ---
 

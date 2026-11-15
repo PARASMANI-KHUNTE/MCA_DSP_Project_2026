@@ -23,7 +23,7 @@ content = """# India Livability Intelligence System
 ## Abstract
 Selecting an urban center or state to reside in within India is conventionally steered by anecdotal narratives, uncurated perceptions, or isolated cost indices. Public indicators concerning ambient air quality, public safety, infant healthcare outcomes, and macroeconomic opportunities are fragmented across disparate ministry repositories, varying measurement standards, and divergent spatial scales. This project establishes the **India Livability Intelligence System (ILIS)**: an end-to-end data science architecture and decision support system spanning 61 geographic entities (32 states/UTs and 29 metropolitan centers). 
 
-The platform aggregates official time series from the Central Pollution Control Board (CPCB), Kaggle NCAP air quality monitoring, National Crime Records Bureau (NCRB), Sample Registration System (SRS) of the Registrar General of India, Reserve Bank of India (RBI), and Ministry of Statistics & Programme Implementation (MoSPI). A transparent multi-criteria composite scoring engine was engineered using min-max normalization, direction inversion, and customizable user personas. Long-term trajectories are modelled through Ordinary Least Squares (OLS) linear trend projections with approximate 95% confidence intervals. An offline K-Means comparison ($k=5$, mean silhouette $= 0.647$) is documented but not used for interactive tier labels; the interface instead applies explicit score bands. The system is deployed through a FastAPI backend and a React/Vite geospatial dashboard with client-side sensitivity evaluation.
+The platform aggregates official time series from the Central Pollution Control Board (CPCB), Kaggle NCAP air quality monitoring, National Crime Records Bureau (NCRB), Sample Registration System (SRS) of the Registrar General of India, Reserve Bank of India (RBI), and Ministry of Statistics & Programme Implementation (MoSPI). A transparent multi-criteria composite scoring engine was engineered using min-max normalization, direction inversion, and customizable user personas. Long-term trajectories are modelled through Ordinary Least Squares (OLS) linear trend projections with approximate 95% confidence intervals. An offline K-Means comparison ($k=5$, mean silhouette $= 0.647$) is documented but not used for interactive tier labels; the interface instead applies explicit score bands. The system is delivered as a static React/Vite geospatial dashboard that computes every score and sensitivity result in the browser from a generated data bundle, with no server component.
 
 ---
 
@@ -138,13 +138,14 @@ The saved cluster profiles have mean composite scores ranging from 22.9 to 81.3.
 
 ## 6. System Architecture & Full-Stack Implementation (M7, M8, M9)
 
-### 6.1 Backend API (FastAPI)
-The backend architecture is structured around modular, asynchronous micro-services:
-- `backend/app/main.py`: Application lifespan management, CORS configuration, and route binding.
-- `backend/app/core/loader.py`: Singleton in-memory DataStore caching pre-processed datasets at startup.
-- `backend/app/api/routes_places.py`: Entity catalogue, spatial coordinates, and detailed factor histories.
-- `backend/app/api/routes_score.py`: Real-time composite scoring and custom weight computation engine.
-- Interactive documentation auto-generated via OpenAPI Specification at `/docs` and `/redoc`.
+### 6.1 Data Delivery Bundle
+The dashboard is fully static. Processed tables are converted into a single ES module, `frontend/src/data/realData.js`, by `src/export_frontend_data.py`:
+- **Place catalogue:** 61 states, UTs and metropolitan centers with coordinates and parent-state links.
+- **Factor rows:** raw values per place and year, each carrying its observation year, series-break flag and gap flag.
+- **Factor definitions:** bounds, direction, level and trend policy copied from `src/scoring/factors_config.yaml`.
+- **Metadata:** baseline year, observed years per factor, and the list of factors that have real observations.
+- The exporter never imputes or synthesizes a value; factors with no observations are omitted from the available-factor list.
+- Because the bundle is a static import, there is no API, CORS configuration or server process to operate.
 
 ### 6.2 Frontend Geospatial Interface (React + Vite)
 Built as a responsive single-page web application featuring:
@@ -161,9 +162,9 @@ A rigorous automated test suite was constructed using `pytest` (`tests/`):
 2. **Coverage Assertions:** Ensured every place retains valid core factor data and no negative physical quantities occur.
 3. **Scoring Engine Invariants:** Verified boundary behavior ($lo \\to 0$, $hi \\to 100$), direction consistency, and weight normalization determinism.
 4. **Model Safety Tests:** Checked that trend fitting uses only observed yearly scores, preserves missing years, and that offline K-Means metrics are reproducible.
-5. **API Integration Tests:** Automated HTTP request verification for schema conformance across all exposed endpoints.
+5. **Bundle Integrity Tests:** Verified the generated data bundle exposes the documented keys, contains one entry per place, and never invents a factor value.
 
-**Result:** 59 tests passed, 1 skipped, 0 failures.
+**Result:** 91 tests passed, 1 skipped, 0 failures.
 
 ---
 

@@ -4,21 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from backend.app.core.config import Settings
 from src.utils.helpers import flag_outliers
 from src.utils import provenance
 from src.cleaning.run_pipeline import stage_combine_air
 from src.models.trend import run_all_trends
-
-
-def test_debug_accepts_release_label_from_dotenv():
-    settings = Settings(_env_file=None, debug="release")
-    assert settings.debug is False
-
-
-def test_debug_accepts_true_label():
-    settings = Settings(_env_file=None, debug="debug")
-    assert settings.debug is True
 
 
 def test_domain_outlier_is_excluded_and_iqr_extreme_is_retained():

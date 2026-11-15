@@ -35,6 +35,19 @@ from src.utils.constants import (
 
 logger = logging.getLogger(__name__)
 
+TREND_COLUMNS = [
+    "place_id",
+    "factor",
+    "n_points",
+    "slope",
+    "p_value",
+    "r2",
+    "outlook",
+    "series_break_flag",
+    "gap_flag",
+    "with_covid",
+]
+
 
 class TrendResult(NamedTuple):
     place_id: str
@@ -221,7 +234,7 @@ def run_all_trends(
             proj["factor"]   = result.factor
             proj_rows.append(proj)
 
-    trends_df = pd.DataFrame(trend_rows)
+    trends_df = pd.DataFrame(trend_rows, columns=TREND_COLUMNS)
     projections_df = pd.concat(proj_rows, ignore_index=True) if proj_rows else pd.DataFrame()
 
     logger.info(

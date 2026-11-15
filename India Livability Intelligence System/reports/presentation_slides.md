@@ -1,6 +1,4 @@
-﻿# India Livability Intelligence System (ILIS)
-> **Withdrawn presentation (3 November 2026):** slides below contain historical findings from before six generated placeholder inputs were quarantined. Do not present these results. The current rebuild has no composite scores, and remaining local inputs are not independently source-verified. See `data_fabrication_audit.md`.
-
+# India Livability Intelligence System (ILIS)
 ## Data-Driven Livability Index with Interactive Map and Trend Projection
 
 **Course:** Data Science using Python (CAPCTD3 Elective-V)  
@@ -64,10 +62,10 @@
 ---
 
 # Slide 6: Architecture & Implementation Demo
-- **Backend (FastAPI):** In-memory DataStore, async request handling, auto OpenAPI docs at `/docs`.
+- **Data bundle:** Processed tables exported to a static ES module with per-factor source years, series-break flags and gap flags.
 - **Frontend (React + Vite):** Interactive vector India map, dynamic weight recalculation in milliseconds, radar charts, and detail views.
-- **Automated Testing:** 59 pytest tests passed, 1 skipped, 0 failures.
-- **Local startup:** `start.ps1` launches the Vite dashboard; the API is optional and can be started separately.
+- **Automated Testing:** 91 pytest tests passed, 1 skipped, 0 failures.
+- **Local startup:** `start.ps1` launches the Vite dashboard; there is no server component.
 
 ---
 

@@ -9,6 +9,7 @@ Executes the full Statistical and Exploratory Data Analysis (M4) pipeline:
 """
 
 from pathlib import Path
+from datetime import date
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -26,7 +27,8 @@ from src.utils.constants import (
     PLACES_CSV,
 )
 
-def run_eda():
+def run_eda() -> None:
+    """Regenerate analysis figures and ``reports/findings.md`` from processed tables."""
     FIGURES.mkdir(parents=True, exist_ok=True)
     sns.set_theme(style="whitegrid", palette="muted")
     plt.rcParams.update({"font.sans-serif": "DejaVu Sans", "font.family": "sans-serif"})
@@ -52,7 +54,10 @@ def run_eda():
         print("No composite scores available; empirical findings and figures withheld.")
         return
 
-    merged = scores_wide.merge(places, on="place_id", how="left")
+    # scores_wide already carries place metadata; use the place master as canonical
+    # so the merge does not create duplicate region_x/region_y columns.
+    duplicate_meta = [c for c in ("place_name", "place_type", "region") if c in scores_wide.columns]
+    merged = scores_wide.drop(columns=duplicate_meta).merge(places, on="place_id", how="left")
     scored_counts = merged.dropna(subset=["score"]).groupby("year").size()
     complete_years = scored_counts[scored_counts >= 50]
     if not complete_years.empty:
@@ -276,9 +281,37 @@ def run_eda():
         for region, row in region_summary.iterrows()
     )
 
-    air_significance = "statistically significant" if p_val < 0.05 else "not statistically significant"
     regional_significance = "statistically significant" if anova_p < 0.05 else "not statistically significant"
-    nsdp_significance = "statistically significant" if nsdp_p < 0.05 else "not statistically significant"
+
+    if len(valid_corr) > 5:
+        air_corr_summary = f"$r = {r_val:.2f}, p = {p_val:.4f}$"
+        air_corr_text = (
+            f"$r = {r_val:.2f}$ ($p = {p_val:.4f}$, n = {len(valid_corr)}). This is {air_significance}; "
+            "the limited overlap comes from city-level air observations and the state-level health snapshot."
+        )
+    else:
+        air_corr_summary = "Not computable"
+        air_corr_text = (
+            f"Not computed: only {len(valid_corr)} rows have both values (at least 6 are required). "
+            "City-level air observations and the state health snapshot do not overlap enough in this rebuild."
+        )
+
+    if len(nsdp_corr) > 5:
+        nsdp_corr_summary = f"$r = {nsdp_r:.2f}, p = {nsdp_p:.4e}$"
+        nsdp_corr_text = (
+            f"$r = {nsdp_r:.2f}$ ($p = {nsdp_p:.4e}$, n = {len(nsdp_corr)}). The direction is consistent with "
+            "higher state income accompanying better health outcomes, but remains an association rather than a causal estimate."
+        )
+    else:
+        nsdp_corr_summary = "Not computable"
+        nsdp_corr_text = (
+            f"Not computed: only {len(nsdp_corr)} rows have both values (at least 6 are required)."
+        )
+
+    place_count = len(places)
+    state_count = int((places["place_type"] == "state").sum())
+    city_count = int((places["place_type"] == "city").sum())
+    fitted_series = len(trends)
     cluster_metric_text = (
         f"k={best_k}, silhouette={best_silhouette:.3f}"
         if best_k is not None and best_silhouette is not None
@@ -295,19 +328,19 @@ def run_eda():
     findings_content = f"""# Key Findings and Statistical Analysis Report
 **India Livability Intelligence System (ILIS)**  
 *CAPCTD3 Elective-V: Data Science using Python*  
-*Date: 26 October 2026 | Author: Parasmani Khunte (MCA, 2026)*
+*Date: {date.today():%d %B %Y} | Author: Parasmani Khunte (MCA, 2026)*
 
 ---
 
 ## 1. Executive Summary
-This report synthesizes empirical findings from 61 Indian places (32 states/UTs and 29 metropolitan centers) and {len(factors_wide)} processed factor-year rows. The cross-section below uses **{latest_year}**, the latest year with at least 50 scored places. Composite scores use each place's latest observation at or before the selected year, so city scores can inherit state safety, health and economy values whose source years are older.
+This report synthesizes empirical findings from {place_count} Indian places ({state_count} states/UTs and {city_count} cities) and {len(factors_wide)} processed factor-year rows. The cross-section below uses **{latest_year}**, the latest year with at least 50 scored places. Composite scores use each place's latest observation at or before the selected year, so city scores can inherit state safety, health and economy values whose source years are older.
 
 | Metric | Result | Interpretation |
 |---|---|---|
 | **One-Way ANOVA (Regional Livability, {latest_year})** | $F = {anova_f:.2f}, p = {anova_p:.4e}$ | Regional differences are {regional_significance} at $\\alpha = 0.05$ across {len(regional_cross_section)} scored places. |
-| **Pearson Correlation (PM2.5 vs NFHS-5 health index)** | $r = {r_val:.2f}, p = {p_val:.4f}$ | Association is {air_significance}; only {len(valid_corr)} rows have both values. |
-| **Pearson Correlation (NSDP vs NFHS-5 health index)** | $r = {nsdp_r:.2f}, p = {nsdp_p:.4e}$ | Higher per-capita NSDP is {nsdp_significance} and {('positively' if nsdp_r > 0 else 'negatively')} associated with the health index. |
-| **Trend Outlook (place-factor series)** | Improving: {outlook_counts.get('Improving', 0)}, Declining: {outlook_counts.get('Declining', 0)}, Stable/uncertain: {outlook_counts.get('Stable or uncertain', 0)}, Insufficient: {trend_insufficient} | {trend_complete} series meet the minimum observation rule for an outlook. |
+| **Pearson Correlation (PM2.5 vs NFHS-5 health index)** | {air_corr_summary} | {air_corr_text} |
+| **Pearson Correlation (NSDP vs NFHS-5 health index)** | {nsdp_corr_summary} | {nsdp_corr_text} |
+| **Trend fitting (M6)** | Disabled — {fitted_series} series fitted | Every factor is configured `trend: never`, so no projections or outlooks are published. |
 | **K-Means Analysis (offline)** | {cluster_metric_text} | {cluster_text} |
 
 ---
@@ -320,11 +353,11 @@ This report synthesizes empirical findings from 61 Indian places (32 states/UTs 
 The null hypothesis of equal regional means is **{'rejected' if anova_p < 0.05 else 'not rejected'}** at $\\alpha = 0.05$ ($F = {anova_f:.2f}, p = {anova_p:.4e}$). This describes the latest broad cross-section, not a causal claim about any individual place.
 
 ### 2.2 Factor Correlations (M4.5)
-- **Air Quality and the NFHS-5 Health Index:** $r = {r_val:.2f}$ ($p = {p_val:.4f}$, n = {len(valid_corr)}). This is {air_significance}; the limited overlap comes from city-level air observations and the state-level health snapshot.
-- **Economic Output and the NFHS-5 Health Index:** $r = {nsdp_r:.2f}$ ($p = {nsdp_p:.4e}$, n = {len(nsdp_corr)}). The direction is consistent with higher state income accompanying better health outcomes, but remains an association rather than a causal estimate.
+- **Air Quality and the NFHS-5 Health Index:** {air_corr_text}
+- **Economic Output and the NFHS-5 Health Index:** {nsdp_corr_text}
 
 ### 2.3 Trends and Clustering (M6)
-- **OLS Projections:** Trends are fitted to observed 2015–2024 series and projected to 2034 only when at least five yearly points exist. Missing years stay missing; no synthetic interpolation is added for the web app.
+- **OLS Trends:** Disabled for every factor in `src/scoring/factors_config.yaml` (`trend: never`). {fitted_series} place-factor series were fitted, so no projections or outlooks are published. Missing years stay missing; no synthetic interpolation is added for the web app.
 - **Outlook Counts:** {outlook_counts.get('Improving', 0)} improving, {outlook_counts.get('Declining', 0)} declining, {outlook_counts.get('Stable or uncertain', 0)} stable/uncertain, and {trend_insufficient} insufficient-data place-factor series.
 - **K-Means:** {cluster_text}
 

@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   ChevronRight,
   Coins,
+  Droplets,
   HeartPulse,
   MapPin,
   Minus,
@@ -14,14 +15,22 @@ import {
   X
 } from "lucide-react";
 import Modal from "./Modal";
-import { BASELINE_YEAR, OBSERVED_YEARS, PROJECTION_END_YEAR, getScoreColor, getTierColor } from "../services/scoringService";
+import {
+  BASELINE_YEAR,
+  OBSERVED_YEARS,
+  PROJECTION_END_YEAR,
+  getFactorInheritance,
+  getScoreColor,
+  getTierColor
+} from "../services/scoringService";
 
 const FACTOR_CARDS = [
   { key: "air", label: "Air Quality", source: "CPCB Stations & Kaggle PM2.5 Dataset", icon: Wind, color: "#0284c7" },
   { key: "safety", label: "Public Safety", source: "NCRB Crime in India Table 1A.3", icon: ShieldAlert, color: "#e11d48" },
   { key: "health", label: "Healthcare", source: "MoHFW NFHS-5 District Factsheets", icon: HeartPulse, color: "#16a34a" },
   { key: "economy", label: "Economy", source: "RBI NSDP Table 20 & MoSPI PLFS 2023-24", icon: TrendingUp, color: "#d97706" },
-  { key: "col", label: "Cost of Living", source: "Longitudinal City Rent Index (2010–2024)", icon: Coins, color: "#9333ea" }
+  { key: "col", label: "Cost of Living", source: "Longitudinal City Rent Index (2010–2024)", icon: Coins, color: "#9333ea" },
+  { key: "water", label: "Water Quality", source: "CPCB Water-Body Snapshot (2021)", icon: Droplets, color: "#0891b2" }
 ];
 
 function OutlookBadge({ outlook }) {
@@ -135,11 +144,12 @@ export default function PlaceDetailModal({
   const baselineIndex = allPoints.findIndex(point => point.year === BASELINE_YEAR);
 
   const slopeAvailable = Number.isFinite(place.slope);
+  const pValueAvailable = Number.isFinite(place.trend?.pValue);
   const pValueText = Number.isFinite(place.trend?.pValue)
     ? place.trend.pValue < 0.001
       ? "< 0.001"
       : place.trend.pValue.toFixed(3)
-    : "—";
+    : null;
 
   return (
     <Modal onClose={onClose} label={`${place.name} details`} className="max-w-4xl">
@@ -185,7 +195,7 @@ export default function PlaceDetailModal({
                     pts/yr
                   </>
                 ) : (
-                  "Insufficient trend points"
+                  "No published trend"
                 )}
               </span>
             </div>
@@ -241,22 +251,26 @@ export default function PlaceDetailModal({
                 {selectedPoint?.score ?? "—"}
               </div>
             </div>
-            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
-              <span className="eyebrow text-[#888888]">{PROJECTION_END_YEAR ?? "10-year"} Projection</span>
-              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
-                {finalPoint?.score ?? "—"}
+            {hasProjection && (
+              <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+                <span className="eyebrow text-[#888888]">{PROJECTION_END_YEAR ?? "10-year"} Projection</span>
+                <div className="mt-1 font-mono text-xl font-black text-[#111111]">
+                  {finalPoint?.score ?? "—"}
+                </div>
               </div>
-            </div>
-            <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
-              <span className="eyebrow text-[#888888]">Trend p-value</span>
-              <div className="mt-1 font-mono text-xl font-black text-[#111111]">
-                {pValueText}
+            )}
+            {pValueAvailable && (
+              <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3">
+                <span className="eyebrow text-[#888888]">Trend p-value</span>
+                <div className="mt-1 font-mono text-xl font-black text-[#111111]">
+                  {pValueText}
+                </div>
               </div>
-            </div>
+            )}
             <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-3 col-span-2 sm:col-span-1">
               <span className="eyebrow text-[#888888]">Available Pillars</span>
               <div className="mt-1 font-mono text-xl font-black text-[#111111]">
-                {place.availablePillars ?? 0}/5
+                {place.availablePillars ?? 0}/6
               </div>
             </div>
           </div>
@@ -267,12 +281,27 @@ export default function PlaceDetailModal({
               <h3 className="eyebrow text-[#888888]">Pillar Breakdown & Ground-Truth Years</h3>
               <span className="text-xs text-[#888888]">Total Weight: {totalWeight}</span>
             </div>
+            {place.type === "city" && (
+              <p className="mb-2 rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] px-3 py-2 text-[11px] leading-relaxed text-[#666666]">
+                <strong className="font-bold text-[#111111]">State-level inheritance:</strong> public safety,
+                healthcare, economy and water quality are published for states, so this city reuses its parent state&apos;s
+                observation. The <span className="font-semibold">State</span> badge marks an inherited pillar and
+                the year label is the published source year, not the selected year.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
               {FACTOR_CARDS.map(card => {
                 const Icon = card.icon;
                 const value = place.factorScores?.[card.key];
                 const hasValue = value !== null && value !== undefined;
                 const sourceYear = place.factorYears?.[card.key];
+                const inheritance = getFactorInheritance(place, card.key, year);
+                const inheritanceTitle = inheritance
+                  ? `Inherited from ${place.state} state-level data published in ${inheritance.sourceYear}` +
+                    (inheritance.isCarriedForward
+                      ? `; carried forward ${inheritance.lagYears} year${inheritance.lagYears === 1 ? "" : "s"} to ${year}`
+                      : "")
+                  : undefined;
 
                 return (
                   <div key={card.key} className="rounded-xl border border-[#E5E5E5] bg-white p-3 flex flex-col justify-between gap-2">
@@ -281,8 +310,23 @@ export default function PlaceDetailModal({
                         <Icon size={12} />
                         {card.label}
                       </span>
-                      <span className="rounded bg-[#FAFAF8] border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-semibold text-[#666666]">
-                        {sourceYear ?? "No data"}
+                      <span className="flex items-center gap-1">
+                        {inheritance && (
+                          <span
+                            title={inheritanceTitle}
+                            className="cursor-help rounded border border-[#E5E5E5] bg-[#FAFAF8] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#B51F3B]"
+                          >
+                            State
+                          </span>
+                        )}
+                        <span
+                          title={inheritanceTitle}
+                          className={`rounded border border-[#E5E5E5] px-1.5 py-0.5 text-[9px] font-semibold text-[#666666] ${
+                            inheritance ? "bg-amber-50/70" : "bg-[#FAFAF8]"
+                          }`}
+                        >
+                          {sourceYear ?? "No data"}
+                        </span>
                       </span>
                     </div>
                     <div className="flex items-end justify-between">
@@ -351,17 +395,23 @@ export default function PlaceDetailModal({
           {/* Historical Trajectory & OLS Projection */}
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="eyebrow text-[#888888]">Temporal Trajectory & OLS Trend</h3>
+              <h3 className="eyebrow text-[#888888]">
+                {hasProjection ? "Temporal Trajectory & OLS Trend" : "Observed Temporal Trajectory"}
+              </h3>
               <div className="flex flex-wrap items-center gap-3 text-[10px] text-[#666666]">
                 <span className="flex items-center gap-1">
                   <span className="h-1 w-3 rounded-full bg-[#111111]" /> Eligible observed years
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-1 w-3 rounded-full bg-[#B51F3B]" /> Projected after the latest eligible observation
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-sm bg-[#B51F3B]/15" /> 95% Confidence Band
-                </span>
+                {hasProjection && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="h-1 w-3 rounded-full bg-[#B51F3B]" /> Projected after the latest eligible observation
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-sm bg-[#B51F3B]/15" /> 95% Confidence Band
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -505,7 +555,7 @@ export default function PlaceDetailModal({
               </div>
             ) : (
               <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] p-4 text-xs text-[#777777]">
-                Insufficient historical points to establish an OLS projection.
+                Insufficient observed history to plot a trajectory. Trend projection is disabled for every factor, so no forecast is shown.
               </div>
             )}
           </div>

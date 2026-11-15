@@ -2,12 +2,14 @@
 reports/generate_app_guide.py
 ──────────────────────────────
 Generates the Application Guide (Deliverable 11) in Markdown & PDF format.
-The guide describes the real-data implementation, including observed years,
-projection horizons, inherited indicators and explicit missing-data behavior.
+The guide describes the current implementation: 61 places, six factor
+families, calibrated bounds, inherited state indicators, and explicitly
+disabled trend projections.
 """
 
 from pathlib import Path
 from markdown_pdf import Section, MarkdownPdf
+
 GUIDE_MD = Path("reports/application_guide.md")
 GUIDE_PDF = Path("reports/application_guide.pdf")
 
@@ -16,7 +18,7 @@ content = """# India Livability Intelligence System (ILIS)
 
 **Author:** Parasmani Khunte (MCA, Batch 2024–2026)  
 **Course:** Data Science using Python (CAPCTD3 Elective-V)  
-**Date:** October 2026  
+**Date:** November 2026  
 **Application:** `http://localhost:5173` (development) or `http://localhost:4173` (production preview)
 
 ---
@@ -28,31 +30,34 @@ ILIS is a transparent, browser-based decision-support tool for exploring livabil
 - **32 states and Union Territories**
 - **29 major metropolitan cities**
 
-The application combines air quality, public safety, healthcare, economic conditions and an optional cost-of-living factor into a weighted composite score. Every score is derived from processed government or published source data.
+The dashboard combines air quality, public safety, healthcare and economic conditions into a weighted composite score, with optional cost-of-living and water-quality factors that can be added as priorities or used as single-factor views. Every score is computed from the processed local tables; missing factors are never replaced with invented values.
 
-Observed histories cover **2015–2024**. Composite trajectories are projected to **2034** with ordinary least squares (OLS) only when at least five observed yearly composite scores exist. Missing values are never replaced with fabricated fallback scores.
+Observed coverage differs by factor. The year selector runs from **2010 to 2026**, the baseline year of the exported bundle. Trend projection is **disabled for every factor**, so the application does not publish forecast years or projection intervals.
 
-The frontend runs as a React single-page application. A FastAPI backend is optional; when it is unavailable, the interface uses its embedded client scoring engine.
+The frontend is a static React single-page application with embedded data. All scoring runs in the browser; no backend service is required.
 
 ---
 
-## 2. Verified Data Sources and Coverage
+## 2. Data Sources and Coverage
 
-| Pillar | Geography | Processed Coverage | Source |
+| Pillar | Geography | Processed coverage | Source |
 |---|---|---|---|
-| Air quality (PM2.5) | City | 2015–2019 and 2023–2024 | Kaggle NCAP + CPCB |
-| Public safety (IPC crime rate) | State | 2015–2022 | NCRB *Crime in India* |
-| Healthcare (infant mortality) | State | 2015–2022 | SRS, Registrar General of India |
-| Economy: per-capita NSDP | State | 2018 and 2022 | RBI Handbook of Statistics |
-| Economy: unemployment | State | 2018 and 2022 | MoSPI PLFS |
-| Cost of living (rent) | Six metro cities | 2022 snapshot | Kaggle house-rent data |
+| Air quality (PM2.5) | City | 155 observations, 46 places, 2015–2019 and 2025–2026 | Kaggle/CBC historic series plus enriched station extract |
+| Public safety (IPC crime rate) | State | 183 observations, 61 places, 2020–2022 | NCRB Table 1A.3 |
+| Healthcare (NFHS-5 composite) | State | 61 observations, 61 places, 2021 | NFHS-5 district factsheets |
+| Economy: per-capita NSDP | State | 57 observations, 2023 | RBI NSDP constant-price series |
+| Economy: unemployment | State | 57 observations, 2023 | MoSPI PLFS 2023-24, ages 15+ |
+| Cost of living (1BHK rent) | City | 390 observations, 26 cities, 2010–2024 | Longitudinal rent estimates (modelled/reference) |
+| Water quality (0–100 index) | State | 54 observations, 2021 | CPCB water-body snapshot (selectable dashboard factor) |
 
 Important consequences:
 
-- Air quality has **no processed 2021 or 2022 observations**. The 2015–2019 and 2023–2024 series are not treated as one continuous trend.
-- State safety, health and economy data end in **2022**. Scores for 2023–2024 reuse the latest state observation and label its source year.
-- Cost of living applies only to the six cities with a 2022 rent snapshot and is never projected.
+- Air quality has **no processed observations for 2020–2024**. The historic and enriched segments are not treated as one continuous series.
+- State safety, health, economy, and water factors are inherited by cities; the interface shows the actual source year for each pillar.
+- Safety rates for 2020 and 2021 use the 2022 projected population denominator, so they are approximations.
+- Cost-of-living rows are modelled (`plfs_modeled`) or reference (`numbeo`) estimates and are never projected.
 - Population is not part of the processed dataset, so map markers use a fixed visual scale.
+- The local raw extracts have **not** been independently verified against their publishers. Treat results as exploratory local-data views.
 
 ---
 
@@ -60,38 +65,42 @@ Important consequences:
 
 ### 3.1 Normalization
 
-Each factor is clipped to a documented range and scaled to **0–100**:
+Each factor is clipped to a calibrated range and scaled to **0–100**:
 
 - **Higher is better:** `S = (value − lower) / (upper − lower) × 100`
 - **Lower is better:** `S = (upper − value) / (upper − lower) × 100`
 
-| Factor | Processed bounds | Direction |
+Bounds are the 5th and 95th percentiles of the latest observation per place at or before 2026, computed with `src/scoring/calibrate_bounds.py` and documented in `reports/bounds_calibration.md`.
+
+| Factor | Calibrated bounds | Direction |
 |---|---|---|
-| Air quality (PM2.5) | 10–150 µg/m³ | Lower is better |
-| Public safety (IPC crime rate) | 100–600 per lakh | Lower is better |
-| Healthcare (infant mortality) | 5–50 per 1,000 births | Lower is better |
-| Economy (per-capita NSDP) | ₹50,000–₹3,50,000 | Higher is better |
-| Economy (unemployment) | 2%–15% | Lower is better |
-| Cost of living (rent) | ₹5,000–₹80,000 per month | Lower is better |
+| Air quality (PM2.5) | 27.91–150.60 µg/m³ | Lower is better |
+| Public safety (IPC crime rate) | 119.70–1,274.80 per lakh | Lower is better |
+| Healthcare (NFHS-5 composite) | 44.33–72.33 | Higher is better |
+| Economy (per-capita NSDP) | ₹51,898–₹2,72,219.80 | Higher is better |
+| Economy (unemployment) | 1.24%–7.12% | Lower is better |
+| Cost of living (rent) | ₹5,731–₹27,366 per month | Lower is better |
+| Water quality (0–100 index) | 42.26–96.33 | Higher is better |
 
 ### 3.2 Weighted Composite
 
 `Composite = Σ(weightᵢ × scoreᵢ) / Σ(weightᵢ)`
 
 - Only factors with an observed score and a positive weight enter the denominator.
-- If every active factor is missing, the place is shown as **unranked** rather than assigned an invented score.
+- A place missing **one** weighted factor is reweighted from the remaining factors and marked **partial**.
+- A place missing **two or more** weighted factors is shown as **unranked** rather than assigned an invented score.
 - If every weight is zero, the composite is unavailable.
-- City safety, health and economy inherit their parent-state values; the factor card displays the actual source year.
+- City safety, health, and economy inherit their parent-state values; the factor card displays the source year.
 
 ### 3.3 Score Bands
 
 The interface colours the map and labels places using explicit score bands:
 
-- **High Livability:** score ≥ 70
-- **Moderate Livability:** score 50–69.9
-- **Developing Livability:** score < 50
+- **Tier 1 / High Livability:** score ≥ 70
+- **Tier 2 / Moderate Livability:** score 50–69.9
+- **Tier 3 / Developing Livability:** score < 50
 
-These bands are not K-Means clusters. Offline K-Means output is retained for analysis only because the saved cluster assignments are not consistent with the stored evaluation table.
+These bands are not K-Means clusters. Offline K-Means output is retained for analysis only (current run: k=2 over 60 places for 2026) and is not used for map colours.
 
 ---
 
@@ -106,7 +115,7 @@ npm install
 npm run dev
 ```
 
-Vite prints the local development URL, typically `http://localhost:5173`.
+Vite prints the local development URL, typically `http://localhost:5173`. You can also run `./start.ps1` from the project root.
 
 For a production build:
 
@@ -117,15 +126,7 @@ npm run preview
 
 The preview server typically runs at `http://localhost:4173`.
 
-### 4.2 Optional FastAPI Backend
-
-From the project root:
-
-```bash
-uvicorn backend.app.main:app --reload --port 8000
-```
-
-The application works without the backend. If the backend is offline, the navigation status shows the client engine and the browser console may report expected CORS/network errors for API requests.
+The frontend is fully static: the built `frontend/dist/` directory can be served by any static file host. No API, database, or server-side process is involved.
 
 ---
 
@@ -133,10 +134,10 @@ The application works without the backend. If the backend is offline, the naviga
 
 - **Map Explorer:** Interactive India map, priority controls and rankings.
 - **Insights & Analytics:** Live regional means, Pearson correlations and data diagnostics.
-- **Methodology & Data:** Formulas, bounds, sources, score bands and limitations.
-- **Year selector:** Observed years `2015–2024`; projected years `2025–2034`.
+- **Methodology & Data:** Formulas, calibrated bounds, sources, score bands and limitations.
+- **Year selector:** Observed years `2010–2026`; there are no projected years.
 - **Compare tray:** Stages two or three places for side-by-side inspection.
-- **Backend pill:** Indicates live API connectivity or standalone client evaluation.
+- **Engine badge:** Confirms the app is running its embedded client scoring engine.
 
 On smaller screens, the sidebar controls and rankings become vertically stacked to avoid horizontal overflow.
 
@@ -146,9 +147,9 @@ On smaller screens, the sidebar controls and rankings become vertically stacked 
 
 The quick-start banner appears above the workspace until dismissed:
 
-- Describes the real data coverage: 61 places, 2015–2024 observations and OLS projections to 2034.
+- Describes the current data coverage: 61 places and factor-specific observed years.
 - Offers one-click access to the Clean Air, Family, Career and Student/Budget presets.
-- Opens a three-step guided tour explaining priorities, map reading, projections and comparison.
+- Opens a three-step guided tour explaining priorities, map reading, inherited indicators and comparison.
 - The dismissal choice is stored locally with `livability-quickstart-dismissed`.
 
 The tour contains no sample or synthetic values.
@@ -161,11 +162,13 @@ The tour contains no sample or synthetic values.
 
 | Preset | Air | Safety | Health | Economy | Cost |
 |---|---:|---:|---:|---:|---:|
-| Balanced Baseline | 30 | 25 | 25 | 20 | 0 |
+| Balanced Baseline | 35 | 25 | 25 | 15 | 0 |
 | Clean Air & Greenery | 55 | 15 | 20 | 10 | 0 |
 | Family & Wellbeing | 20 | 40 | 30 | 10 | 0 |
 | Career & Economic Growth | 10 | 20 | 20 | 50 | 0 |
 | Student / Budget Living | 15 | 25 | 15 | 20 | 25 |
+
+Preset IDs and values match the `presets` block in `src/scoring/factors_config.yaml`.
 
 ### 7.2 Custom Weights
 
@@ -202,9 +205,9 @@ The map legend updates with the active mode.
 - Recalculates when weights, presets, filters or year change.
 - Search filters by place name, parent state or region.
 - Type filters switch between all places, cities and states/UTs.
-- Each row shows score, rank, score bar and outlook.
+- Each row shows score, rank, score bar, the source year of the underlying observations, and a marker when a state value is inherited.
 - Places without a composite score display `—` and are sorted after scored places.
-- Outlook values are **Improving**, **Declining**, **Stable** or **Insufficient data**.
+- With trend projection disabled, outlook is **Insufficient data** rather than a projected direction.
 - The compare checkbox stages a place for comparison.
 
 ---
@@ -224,18 +227,16 @@ For each active pillar:
 
 - Normalized 0–100 score.
 - Current weight contribution.
-- Source year badge.
+- Source year badge, plus a **State** badge when a city inherits a state-level value.
 - Explicit unavailable state when no observation exists.
 
 The detail view does not display an invented population value or a fallback raw metric.
 
 ### 10.3 Trajectory and Projection
 
-- Solid line: observed composite scores from 2015–2024.
-- Dashed line and shaded band: OLS projection for 2025–2034 with an approximate 95% interval.
-- Selected-year marker: highlights the year currently chosen in the global selector.
-- Summary values: selected-year score, 2034 projection and trend p-value.
-- If fewer than five observed composite points exist, the projection is hidden and the chart explains the limitation.
+- Solid line: observed composite scores where they exist.
+- No dashed projection line or interval band: trend projection is disabled for every factor in the current configuration.
+- The chart explains that projections are unavailable instead of extrapolating.
 
 ---
 
@@ -244,6 +245,7 @@ The detail view does not display an invented population value or a fallback raw 
 - Supports two or three places.
 - Shows selected-year composite scores and ranks.
 - Provides pillar-by-pillar bars with the leading place highlighted.
+- Marks inherited state-level values and shows their source year.
 - Hides the cost row when none of the selected places has rent data.
 - Displays an unavailable state rather than a fabricated score for missing pillars.
 
@@ -254,10 +256,10 @@ The detail view does not display an invented population value or a fallback raw 
 The Insights view computes diagnostics from the current weighted cross-section:
 
 - **Regional snapshot:** Average composite score by region for the latest usable year, with sample-count context.
-- **Correlation matrix:** Pearson correlations among normalized air, safety, health and economy scores.
+- **Correlation matrix:** Pearson correlations among available normalized factor scores.
 - **Strongest association:** The largest absolute pairwise correlation, reported with a correlation-is-not-causation caveat.
-- **Diagnostic cards:** Regional spread, air–health association and trend coverage.
-- **Provenance and coverage:** Shares of places with each factor, inherited values, missing cost data and available projections.
+- **Diagnostic cards:** Regional spread, air–health association and factor coverage.
+- **Provenance and coverage:** Shares of places with each factor, inherited values, missing cost data, and the fact that no projections are available.
 
 K-Means profiles are intentionally omitted from this view.
 
@@ -268,10 +270,10 @@ K-Means profiles are intentionally omitted from this view.
 The Methodology view documents:
 
 - The composite formula and direction-aware min-max normalization.
-- Exact bounds and source names for each factor.
+- Calibrated bounds, source names and observed years for each factor.
 - State-to-city inheritance and source-year labelling.
 - Score-band definitions.
-- Projection rules, including the five-point minimum.
+- That trend projection is disabled for every factor.
 - Known data gaps and ethical limitations.
 
 It does not claim that missing data is replaced by equal-weight fallbacks.
@@ -280,15 +282,17 @@ It does not claim that missing data is replaced by equal-weight fallbacks.
 
 ## 14. Known Limitations
 
-1. **Ecological fallacy:** City safety, health and economy inherit state aggregates.
-2. **Temporal mismatch:** State indicators end in 2022 while the selector extends to 2034.
-3. **Air-quality gap:** No processed PM2.5 values exist for 2021–2022.
-4. **Sparse economy:** NSDP and unemployment are available only for 2018 and 2022 in the processed factors.
-5. **Limited cost coverage:** Rent exists for six metros in 2022 only.
-6. **No population weighting:** Map pins use a fixed scale.
-7. **Naive projections:** OLS extrapolates historical composite scores; it does not model policy, climate or investment shocks.
-8. **Descriptive correlations:** Associations are not causal estimates.
-9. **Offline clustering:** K-Means tiers are not used in the interface.
+1. **Unverified inputs:** The local extracts have not been reconciled with their cited publishers.
+2. **Ecological fallacy:** City safety, health, economy, and water inherit state aggregates.
+3. **Temporal mismatch:** State indicators cover 2020–2023 while the selector extends to 2026.
+4. **Air-quality gap:** No processed PM2.5 values exist for 2020–2024.
+5. **Sparse economy:** NSDP and unemployment are available only for 2023 in the processed factors.
+6. **Limited cost coverage:** Rent survives matching for 26 cities over 2010–2024.
+7. **No population weighting:** Map pins use a fixed scale.
+8. **No projections:** Trend eligibility is disabled, so no outlook or forecast should be read from the app.
+9. **Descriptive correlations:** Associations are not causal estimates.
+10. **Offline clustering:** K-Means tiers are not used in the interface.
+11. **State-level water:** Water quality is a single 2021 CPCB state snapshot inherited by cities, so it cannot show intra-state or temporal variation.
 
 ---
 
@@ -303,19 +307,18 @@ It does not claim that missing data is replaced by equal-weight fallbacks.
 | Search | Leaderboard search field | Filters places |
 | Compare | Row checkbox | Adds a place to the tray (maximum three) |
 | Reset priorities | Reset button | Restores Balanced Baseline |
-| Change year | Year selector | Recomputes observed scores or projections |
+| Change year | Year selector | Recomputes observed factor and composite values |
 | Guided tour | Quick-start banner | Opens the three-step tour |
 
 ---
 
 ## 16. Troubleshooting
 
-- **Backend errors in the console:** The backend is optional. Start it on port 8000 or ignore the expected API/CORS messages.
 - **All places unranked:** Every weight is zero. Reset priorities or raise at least one weight.
 - **A factor shows unavailable:** That place has no observation at or before the selected year for that factor.
-- **No projection line:** Fewer than five observed composite points exist under the current weights.
-- **Cost factor unavailable:** Only six metros have the 2022 rent snapshot.
-- **2021 or 2022 air data missing:** This is a known source gap, not a rendering error.
+- **No projection line:** Expected. Trend projection is disabled for every factor.
+- **Cost factor unavailable:** Only 26 cities have matched rent observations.
+- **2020–2024 air data missing:** This is a known source gap, not a rendering error.
 
 ---
 
@@ -326,16 +329,23 @@ From the project root:
 ```bash
 python -m src.cleaning.run_pipeline
 python -m src.scoring.run_scoring
+python -m src.models.run_ml
 python -m src.analysis.run_eda
 python -m src.export_frontend_data
 ```
 
-Then rebuild the frontend:
+Or run `make analysis`. Then rebuild the frontend:
 
 ```bash
 cd frontend
 npm run lint
 npm run build
+```
+
+Recalibrate bounds after changing processed inputs (writes the report; review and copy the new values into the YAML):
+
+```bash
+python -m src.scoring.calibrate_bounds
 ```
 
 Regenerate this guide and the other PDFs:
@@ -351,13 +361,14 @@ python reports/generate_slides.py
 ## 18. Deliverable Files
 
 - `frontend/` — React/Vite application.
-- `backend/` — optional FastAPI service.
 - `src/` — cleaning, scoring, analysis and export pipeline.
 - `data/processed/` — processed datasets used by the app and reports.
 - `reports/findings.md` — EDA and statistical findings.
-- `reports/project_report.pdf` — full project report.
+- `reports/bounds_calibration.md` — percentile calibration evidence.
+- `reports/data_quality_report.md` — per-factor coverage and validation summary.
+- `reports/project_report.pdf` — withdrawn historical report.
 - `reports/application_guide.pdf` — this guide.
-- `reports/presentation_slides.pdf` — viva presentation slides.
+- `reports/presentation_slides.pdf` — withdrawn historical slides.
 - `reports/figures/` — eight generated analysis figures.
 """
 

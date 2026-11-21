@@ -197,15 +197,17 @@ function factorScoresAt(placeId, year) {
   };
 }
 
-function compositeScore(placeId, year, weights) {
-  const { factorScores, factorYears, seriesBreaks, gapFlags } = factorScoresAt(placeId, year);
-  const selectedFactors = FACTOR_KEYS.filter(key => Number(weights?.[key] || 0) > 0);
-  const missingFactors = selectedFactors.filter(key => factorScores[key] === null);
+export function calculateCompositeScoreFromFactors(factorScores, weights) {
+  const selectedFactors = Object.keys(weights).filter(key => Number(weights?.[key] || 0) > 0);
+  const missingFactors = selectedFactors.filter(
+    key => factorScores[key] === null || factorScores[key] === undefined || !Number.isFinite(Number(factorScores[key]))
+  );
   let weightedSum = 0;
   let activeWeight = 0;
 
-  FACTOR_KEYS.forEach(key => {
-    const score = factorScores[key];
+  selectedFactors.forEach(key => {
+    const rawVal = factorScores[key];
+    const score = (rawVal !== null && rawVal !== undefined && Number.isFinite(Number(rawVal))) ? Number(rawVal) : null;
     const weight = Number(weights?.[key] || 0);
     if (score !== null && weight > 0) {
       weightedSum += score * weight;
@@ -213,8 +215,22 @@ function compositeScore(placeId, year, weights) {
     }
   });
 
-  const hasScore = activeWeight > 0;
+  const hasScore = activeWeight > 0 && missingFactors.length <= 1;
   const isPartial = missingFactors.length > 0;
+
+  return {
+    score: hasScore ? Number((weightedSum / activeWeight).toFixed(1)) : null,
+    partialData: isPartial,
+    missingFactors,
+    hasScore
+  };
+}
+
+export function compositeScore(placeId, year, weights) {
+  const { factorScores, factorYears, seriesBreaks, gapFlags } = factorScoresAt(placeId, year);
+  const selectedFactors = FACTOR_KEYS.filter(key => Number(weights?.[key] || 0) > 0);
+  const { score, hasScore, isPartial, missingFactors } = calculateCompositeScoreFromFactors(factorScores, weights);
+
   // A factor that is present but observed before the selected year is carried
   // forward. Record the lag so the UI can say "air as of 2019" rather than
   // implying a 2026 measurement.
@@ -231,8 +247,8 @@ function compositeScore(placeId, year, weights) {
 
   return {
     year,
-    score: hasScore ? Number((weightedSum / activeWeight).toFixed(1)) : null,
-    partialData: isPartial && hasScore,
+    score,
+    partialData: isPartial,
     missingFactors,
     staleFactors,
     stalenessYears,

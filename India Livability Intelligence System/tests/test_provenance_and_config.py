@@ -132,3 +132,29 @@ def test_trend_fits_only_latest_segment_after_series_break():
     assert trends.loc[0, "n_points"] == 5
     assert trends.loc[0, "series_break_flag"]
     assert abs(trends.loc[0, "slope"] - 2.0) < 1e-9
+
+
+def test_stage_validate_catches_missing_core_factors():
+    from src.cleaning.run_pipeline import stage_validate
+    places = pd.DataFrame([{"place_id": "IN-DL", "place_type": "state"}])
+    tidy = pd.DataFrame([
+        {"place_id": "IN-DL", "year": 2023, "factor": "air_quality", "value_raw": 50.0},
+    ])
+    issues = stage_validate(tidy, places)
+    assert any("MISSING CORE INDICATORS" in issue for issue in issues)
+
+
+def test_stage_validate_catches_load_errors():
+    from src.cleaning.run_pipeline import stage_validate
+    places = pd.DataFrame([{"place_id": "IN-DL", "place_type": "state"}])
+    tidy = pd.DataFrame([
+        {"place_id": "IN-DL", "year": 2023, "factor": "air_quality", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "safety", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "health", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "per_capita_nsdp_constant", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "unemployment_rate", "value_raw": 5.0},
+    ])
+    load_errors = ["Failed to load safety data: openpyxl missing"]
+    issues = stage_validate(tidy, places, load_errors=load_errors)
+    assert any("SOURCE LOAD FAILURE" in issue for issue in issues)
+

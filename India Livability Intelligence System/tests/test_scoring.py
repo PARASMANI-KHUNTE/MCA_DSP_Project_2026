@@ -213,3 +213,19 @@ class TestComputeScores:
         cfg = _make_config()
         result = compute_scores(df, cfg, {"air_quality": 1.0}, year=2023)
         assert result["rank"].min() == 1
+
+
+class TestSensitivityAnalysis:
+    def test_sensitivity_columns_schema_parity(self):
+        from src.scoring.scoring import SENSITIVITY_COLUMNS, sensitivity_analysis
+        cfg = _make_config()
+        # Empty input
+        empty_df = pd.DataFrame(columns=["place_id", "year", "pm25_mean", "crime_rate_per_lakh", "health", "economy"])
+        empty_res = sensitivity_analysis(empty_df, cfg, year=2023, n_draws=2)
+        assert list(empty_res.columns) == SENSITIVITY_COLUMNS
+
+        # Populated input
+        df = _make_factors_wide()
+        res = sensitivity_analysis(df, cfg, year=2023, n_draws=5)
+        assert list(res.columns) == SENSITIVITY_COLUMNS
+

@@ -23,7 +23,12 @@ from src.utils.constants import (
     CORE_FACTORS,
 )
 from src.utils.helpers import setup_logging
-from src.scoring.scoring import compute_scores, load_config, sensitivity_analysis
+from src.scoring.scoring import (
+    SENSITIVITY_COLUMNS,
+    compute_scores,
+    load_config,
+    sensitivity_analysis,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +99,7 @@ def run() -> None:
     # no complete composite scores.
     sensitivity_path = DATA_PROCESSED / "sensitivity.csv"
     if not scores_wide.get("score", pd.Series(dtype=float)).notna().any():
-        pd.DataFrame(columns=["place_id", "rank_mean", "rank_std"]).to_csv(sensitivity_path, index=False)
+        pd.DataFrame(columns=SENSITIVITY_COLUMNS).to_csv(sensitivity_path, index=False)
 
     # Sensitivity analysis on latest year
     latest_year = int(scores_wide["year"].max())

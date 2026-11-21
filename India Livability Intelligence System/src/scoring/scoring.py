@@ -269,6 +269,16 @@ def compute_scores(
 
 # ── Sensitivity analysis ───────────────────────────────────────────────────
 
+SENSITIVITY_COLUMNS = [
+    "place_id",
+    "median_rank",
+    "min_rank",
+    "max_rank",
+    "rank_range",
+    "robust",
+]
+
+
 def sensitivity_analysis(
     factors_wide: pd.DataFrame,
     config: dict,
@@ -325,7 +335,6 @@ def sensitivity_analysis(
             "robust": bool(int(arr.max() - arr.min()) <= 3),
         })
 
-    columns = ["place_id", "median_rank", "min_rank", "max_rank", "rank_range", "robust"]
     if not rows:
-        return pd.DataFrame(columns=columns)
+        return pd.DataFrame(columns=SENSITIVITY_COLUMNS)
     return pd.DataFrame(rows).sort_values("median_rank").reset_index(drop=True)

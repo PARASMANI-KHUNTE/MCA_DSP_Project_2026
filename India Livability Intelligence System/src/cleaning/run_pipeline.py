@@ -59,10 +59,15 @@ logger = logging.getLogger(__name__)
 
 # ── Stage 1: Load ──────────────────────────────────────────────────────────
 
-def stage_load() -> dict[str, pd.DataFrame]:
+def stage_load(load_errors: list[str] | None = None) -> dict[str, pd.DataFrame]:
     """Load all raw sources. Returns a dict keyed by factor name."""
     logger.info("=== STAGE 1: LOAD ===")
     raw: dict[str, pd.DataFrame] = {}
+
+    def _record_error(msg: str, exc: Exception) -> None:
+        logger.error("%s: %s", msg, exc)
+        if load_errors is not None:
+            load_errors.append(f"{msg}: {exc}")
 
     # Air — Kaggle (daily → annual)
     try:
@@ -70,14 +75,14 @@ def stage_load() -> dict[str, pd.DataFrame]:
         raw["air_kaggle_daily_audit"] = city_day
         raw[FACTOR_AIR + "_kaggle"] = aggregate_to_city_year(city_day)
     except Exception as e:
-        logger.error("Failed to load Kaggle air data: %s", e)
+        _record_error("Failed to load Kaggle air data", e)
         raw[FACTOR_AIR + "_kaggle"] = pd.DataFrame()
 
     # Air — CPCB (annual)
     try:
         raw[FACTOR_AIR + "_cpcb"] = load_all_cpcb()
     except Exception as e:
-        logger.error("Failed to load CPCB air data: %s", e)
+        _record_error("Failed to load CPCB air data", e)
         raw[FACTOR_AIR + "_cpcb"] = pd.DataFrame()
 
     # Air — enriched 2025-2026 station data (annual aggregation)
@@ -86,28 +91,28 @@ def stage_load() -> dict[str, pd.DataFrame]:
         raw["air_kaggle_2025_daily_audit"] = enriched
         raw[FACTOR_AIR + "_enriched"] = aggregate_enriched_to_city_year(enriched)
     except Exception as e:
-        logger.error("Failed to load enriched air data: %s", e)
+        _record_error("Failed to load enriched air data", e)
         raw[FACTOR_AIR + "_enriched"] = pd.DataFrame()
 
     # Safety
     try:
         raw[FACTOR_SAFETY] = load_safety()
     except Exception as e:
-        logger.error("Failed to load safety data: %s", e)
+        _record_error("Failed to load safety data", e)
         raw[FACTOR_SAFETY] = pd.DataFrame()
 
     # Health — NFHS-5 district factsheet aggregated to states
     try:
         raw[FACTOR_HEALTH] = load_nfhs_health()
     except Exception as e:
-        logger.error("Failed to load NFHS-5 health data: %s", e)
+        _record_error("Failed to load NFHS-5 health data", e)
         raw[FACTOR_HEALTH] = pd.DataFrame()
 
     # Economy
     try:
         raw[FACTOR_ECONOMY] = load_economy()
     except Exception as e:
-        logger.error("Failed to load economy data: %s", e)
+        _record_error("Failed to load economy data", e)
         raw[FACTOR_ECONOMY] = pd.DataFrame()
 
     # National macro context (not assigned to states/cities)
@@ -512,10 +517,19 @@ def stage_wide(tidy: pd.DataFrame) -> pd.DataFrame:
 
 # ── Stage 6: Validate ──────────────────────────────────────────────────────
 
-def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
+def stage_validate(
+    tidy: pd.DataFrame,
+    places: pd.DataFrame,
+    load_errors: list[str] | None = None,
+) -> list[str]:
     """Run assertions on the merged output. Returns list of issues found."""
     logger.info("=== STAGE 6: VALIDATE ===")
     issues = []
+
+    if load_errors:
+        for err in load_errors:
+            issues.append(f"SOURCE LOAD FAILURE: {err}")
+            logger.error(issues[-1])
 
     if tidy.empty:
         issues.append("EMPTY OUTPUT: no factor observations were assembled.")
@@ -533,10 +547,11 @@ def stage_validate(tidy: pd.DataFrame, places: pd.DataFrame) -> list[str]:
     }
     missing_core = required_factors - present_factors
     if missing_core:
-        logger.warning(
-            "Core indicators unavailable: %s. Composite scores using the configured core weights will remain unavailable.",
-            sorted(missing_core),
+        issues.append(
+            f"MISSING CORE INDICATORS: {sorted(missing_core)}. "
+            "Composite scores using the configured core weights cannot be computed."
         )
+        logger.error(issues[-1])
 
     # 1. No duplicate (place_id, year, factor) triplets
     dupes = tidy.duplicated(subset=["place_id", "year", "factor"])
@@ -811,7 +826,8 @@ def run(places_path: Path = PLACES_CSV) -> None:
     logger.info("Place master: %d places loaded.", len(places))
 
     # Stage 1: Load
-    raw = stage_load()
+    load_errors: list[str] = []
+    raw = stage_load(load_errors)
 
     # Stage 2: Combine air
     air = stage_combine_air(
@@ -848,7 +864,7 @@ def run(places_path: Path = PLACES_CSV) -> None:
     wide = stage_wide(tidy)
 
     # Stage 6: Validate
-    issues = stage_validate(tidy, places)
+    issues = stage_validate(tidy, places, load_errors=load_errors)
     if issues:
         raise RuntimeError(
             "Pipeline validation failed; no processed outputs were written:\n- "

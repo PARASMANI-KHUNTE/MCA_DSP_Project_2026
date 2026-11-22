@@ -86,11 +86,11 @@ def stage_load(
         _record_error("Failed to load Kaggle air data", e)
         raw[FACTOR_AIR + "_kaggle"] = pd.DataFrame()
 
-    # Air — CPCB (annual)
+    # Air — CPCB (annual, optional)
     try:
         raw[FACTOR_AIR + "_cpcb"] = load_all_cpcb()
     except Exception as e:
-        _record_error("Failed to load CPCB air data", e)
+        _record_optional_warning("Failed to load CPCB air data", e)
         raw[FACTOR_AIR + "_cpcb"] = pd.DataFrame()
 
     # Air — enriched 2025-2026 station data (annual aggregation)

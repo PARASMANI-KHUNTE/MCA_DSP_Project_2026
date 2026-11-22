@@ -105,5 +105,13 @@ raw_name,standard_name,type,notes
 "Varanasi","Varanasi",city,""
 "Benaras","Varanasi",city,old name
 "Gurgaon","Gurugram",city,alternate/old name
+"Gurugram","Gurugram",city,"official name of Gurgaon, Haryana"
+"Aizawl","Aizawl",city,"capital of Mizoram"
+"Amaravati","Amaravati",city,"capital city of Andhra Pradesh"
+"Brajrajnagar","Brajrajnagar",city,"industrial town in Jharsuguda district, Odisha"
+"Ernakulam","Ernakulam",city,"commercial district of Kochi agglomeration"
+"Jorapokhar","Jorapokhar",city,"mining town in Dhanbad district, Jharkhand"
+"Shillong","Shillong",city,"capital of Meghalaya"
+"Talcher","Talcher",city,"industrial coal city in Angul district, Odisha"
 "Maharastra","Maharashtra",state,alternate spelling
 "Dadra and Nagar Haveli & Daman and Diu","Dadra and Nagar Haveli and Daman and Diu",state,NFHS combined UT label

@@ -403,5 +403,11 @@ All visual outputs conform to the M4.6 Matplotlib & Seaborn checklist and are st
     findings_path.write_text(findings_content, encoding="utf-8")
     logger.info("Saved: %s", findings_path)
 
+    try:
+        from src.export_frontend_data import sync_public_data
+        sync_public_data()
+    except Exception as exc:
+        logger.warning("Could not synchronize public frontend data: %s", exc)
+
 if __name__ == "__main__":
     run_eda()

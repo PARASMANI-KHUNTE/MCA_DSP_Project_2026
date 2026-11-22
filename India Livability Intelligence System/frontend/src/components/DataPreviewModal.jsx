@@ -74,7 +74,7 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
   const [sortDirection, setSortDirection] = useState("asc"); // "asc" | "desc"
   const [copied, setCopied] = useState(false);
 
-  const isMarkdown = fileName?.toLowerCase().endsWith(".md");
+  const isMarkdown = Boolean(fileName?.toLowerCase().endsWith(".md") || fileUrl?.toLowerCase().endsWith(".md"));
 
   // Fetch file content
   useEffect(() => {
@@ -147,12 +147,6 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
     const start = (safeCurrentPage - 1) * rowsPerPage;
     return sortedRows.slice(start, start + rowsPerPage);
   }, [sortedRows, safeCurrentPage, rowsPerPage]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   const handleSort = useCallback(column => {
     setSortColumn(prev => {
@@ -281,8 +275,8 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
                   </select>
                 </label>
                 <span className="font-semibold text-[#111111]">
-                  Showing {sortedRows.length ? (currentPage - 1) * rowsPerPage + 1 : 0}–
-                  {Math.min(currentPage * rowsPerPage, sortedRows.length)} of {sortedRows.length}
+                  Showing {sortedRows.length ? (safeCurrentPage - 1) * rowsPerPage + 1 : 0}–
+                  {Math.min(safeCurrentPage * rowsPerPage, sortedRows.length)} of {sortedRows.length}
                 </span>
               </div>
             </div>

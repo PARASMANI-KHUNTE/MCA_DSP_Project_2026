@@ -111,6 +111,12 @@ def run() -> None:
     except Exception as e:
         logger.warning("Sensitivity analysis skipped: %s", e)
 
+    try:
+        from src.export_frontend_data import sync_public_data
+        sync_public_data()
+    except Exception as exc:
+        logger.warning("Could not synchronize public frontend data: %s", exc)
+
     logger.info("=== SCORING STAGE COMPLETE ===")
 
 

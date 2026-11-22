@@ -54,9 +54,9 @@ const PIPELINE_STEPS = [
       { name: "Historical City-Day Observations (2015–2020)", source: "Kaggle CPCB Archive" },
     ],
     keyOutputs: [
-      { label: "Station inclusion flags", icon: CheckCircle, file: null, desc: "Binary filter for cities meeting coverage criteria" },
-      { label: "Year coverage matrix", icon: Database, file: null, desc: "City × Year day-observation percentages" },
-      { label: "CPCB source summary", icon: FileText, file: null, desc: "Provenance verification of ambient station feeds" },
+      { label: "Data quality & coverage report", icon: FileText, file: "/data/data_quality_report.md", desc: "Provenance verification and coverage summary across monitoring feeds" },
+      { label: "Verified place master", icon: CheckCircle, file: "/data/places.csv", desc: "61 master places meeting observational coverage criteria" },
+      { label: "Year coverage matrix", icon: Database, file: null, desc: "City × Year day-observation percentages (≥75% valid days)" },
     ],
     methodology: {
       title: "Threshold Verification Formula",
@@ -82,9 +82,9 @@ const PIPELINE_STEPS = [
       { name: "CPCB Water Quality Snapshot", source: "CPCB Water Bodies Report (2021)" },
     ],
     keyOutputs: [
+      { label: "Outlier detection log (outlier_log.csv)", icon: Table, file: "/data/outlier_log.csv", desc: "1.5× IQR boundary violations flagged with zero deletion (1,998 real observations)" },
+      { label: "Data quality report (data_quality_report.md)", icon: AlertCircle, file: "/data/data_quality_report.md", desc: "Missingness assessment and descriptive statistics across all 61 jurisdictions" },
       { label: "Per-factor statistics", icon: BarChart2, file: null, desc: "Mean, median, IQR, skewness, and kurtosis per pillar" },
-      { label: "Missingness reports", icon: AlertCircle, file: null, desc: "Null pattern assessment across all 61 jurisdictions" },
-      { label: "Outlier detection log", icon: Table, file: null, desc: "1.5× IQR boundary violations flagged with zero deletion" },
       { label: "Source-level summaries", icon: FileText, file: null, desc: "Record counts and schema definitions per published table" },
     ],
     methodology: {
@@ -113,7 +113,7 @@ const PIPELINE_STEPS = [
     keyOutputs: [
       { label: "places.csv", icon: FileText, file: "/data/places.csv", desc: "61 master places (32 states/UTs, 29 major cities) with lat/lng" },
       { label: "factors_wide.csv", icon: Database, file: "/data/factors_wide.csv", desc: "Longitudinal matrix of indicator observations (643 rows)" },
-      { label: "Name alias register", icon: Layers, file: null, desc: "Deterministic mapping resolving spelling variations" },
+      { label: "national_economy.csv", icon: Database, file: "/data/national_economy.csv", desc: "National macroeconomic context (GDP growth, CPI, Repo rate, Inflation)" },
       { label: "Merge lineage logs", icon: FileCode, file: null, desc: "Audit trace connecting every row to its published agency source" },
     ],
     methodology: {
@@ -141,8 +141,8 @@ const PIPELINE_STEPS = [
     ],
     keyOutputs: [
       { label: "findings.md", icon: FileText, file: "/data/findings.md", desc: "Complete statistical report with ANOVA and correlation results" },
+      { label: "Regional ANOVA test", icon: BarChart2, file: null, desc: "F = 0.60, p = 0.701 across 60 scored jurisdictions (no regional bias)" },
       { label: "Correlation matrices", icon: GitBranch, file: null, desc: "Cross-pillar Pearson r correlation coefficients" },
-      { label: "Regional ANOVA test", icon: BarChart2, file: null, desc: "F = 0.90, p = 0.489 across 60 scored jurisdictions" },
       { label: "Distribution curve fits", icon: Sparkles, file: null, desc: "Log-normal and Gaussian fits for particulate air quality" },
     ],
     methodology: {
@@ -169,10 +169,10 @@ const PIPELINE_STEPS = [
       { name: "Indicator Calibration Bounds", source: "config/scoring_config.yaml" },
     ],
     keyOutputs: [
-      { label: "scores_wide.csv", icon: Database, file: "/data/scores_wide.csv", desc: "Computed 0-100 scores across all places and observed years" },
+      { label: "scores_wide.csv", icon: Database, file: "/data/scores_wide.csv", desc: "Computed 0-100 scores across all places and observed years (730 scores)" },
+      { label: "Sensitivity analysis (sensitivity.csv)", icon: Sparkles, file: "/data/sensitivity.csv", desc: "500 Monte Carlo draws assessing rank confidence intervals across 60 jurisdictions" },
       { label: "Factor breakdowns", icon: BarChart2, file: null, desc: "Pillar-by-pillar normalized values for every state and city" },
       { label: "Preset comparisons", icon: Layers, file: null, desc: "Composite score stability under alternative persona weights" },
-      { label: "Sensitivity analysis", icon: Sparkles, file: null, desc: "1,000 Monte Carlo draws assessing rank confidence intervals" },
     ],
     methodology: {
       title: "Min-Max Directional Rescaling & Proportional Reweighting",
@@ -198,15 +198,15 @@ const PIPELINE_STEPS = [
       { name: "Jurisdictional Metadata", source: "places.csv" },
     ],
     keyOutputs: [
-      { label: "clusters.csv", icon: Layers, file: "/data/clusters.csv", desc: "K-Means cluster assignments (k=2, mean silhouette = 0.581)" },
-      { label: "trends.csv", icon: Brain, file: null, desc: "OLS slope rates (pts/yr) and p-value statistical significance" },
-      { label: "Tier assignments", icon: CheckCircle, file: null, desc: "Categorical tier mappings based on multi-dimensional performance" },
-      { label: "Cluster profile metrics", icon: Sparkles, file: null, desc: "Centroid coordinates across each evaluation dimension" },
+      { label: "clusters.csv", icon: Layers, file: "/data/clusters.csv", desc: "K-Means cluster assignments (k=2, mean silhouette = 0.599)" },
+      { label: "Cluster profile metrics (cluster_profiles.csv)", icon: Sparkles, file: "/data/cluster_profiles.csv", desc: "Centroid coordinates across each evaluation dimension" },
+      { label: "K-Means evaluation metrics (kmeans_metrics.csv)", icon: BarChart2, file: "/data/kmeans_metrics.csv", desc: "Evaluations across k=2..7 with inertia and silhouette scores" },
+      { label: "trends.csv", icon: Brain, file: "/data/trends.csv", desc: "OLS slope rates (pts/yr) and p-value statistical significance" },
     ],
     methodology: {
       title: "OLS Slope & K-Means Optimization",
       formula: "β = Σ(t - t̄)(St - S̄) / Σ(t - t̄)²,  min Σ ||x - μk||²",
-      explanation: "OLS fits annual improvement or decline trajectories. K-Means (evaluated across k=2..6) identified k=2 as the optimal silhouette partition (score 0.581), cleanly grouping high-infrastructure vs developing centers."
+      explanation: "OLS fits annual improvement or decline trajectories. K-Means (evaluated across k=2..7) identified k=2 as the optimal silhouette partition (score 0.599), cleanly grouping high-infrastructure vs developing centers."
     }
   },
 ];
@@ -225,37 +225,37 @@ const PIPELINE_STAGE_LOGS = {
     "Scanning Kaggle city_day.csv and CPCB ambient air telemetry feeds...",
     "Validating station daily PM2.5 readings (≥75% day coverage rule)...",
     "Filtering 29 monitoring stations across target observation years...",
-    "Coverage check passed. Inclusion flags generated."
+    "Coverage check passed. Provenance registered in data_quality_report.md."
   ],
   "01_data_profiling": [
     "Profiling NCRB safety, NFHS-5 health, and RBI/MoSPI economic tables...",
     "Computing missingness ratios and distribution skewness...",
     "Calculating 1.5× IQR outlier thresholds for all indicators...",
-    "Logged 67 real-world peaks to outlier_log.csv with zero imputation."
+    "Logged 1,998 real-world observations to outlier_log.csv with zero deletion."
   ],
   "02_cleaning_merging": [
     "Standardizing city and state spellings with name_aliases.csv...",
     "Generating master places.csv (32 states/UTs, 29 major cities)...",
     "Joining indicators to factors_tidy.parquet and factors_wide.csv...",
-    "Canonical dataset assembled: 643 place-year rows verified."
+    "Assembled national_economy.csv context and 643 place-year rows."
   ],
   "03_statistics_eda": [
     "Computing Pearson correlation coefficients across available indicators...",
     "Running One-Way Regional ANOVA test across 6 geographical zones...",
-    "Regional ANOVA result: F = 0.90, p = 0.489 (no geographic bias)...",
+    "Regional ANOVA result: F = 0.60, p = 0.701 (no geographic bias)...",
     "Summary findings written to reports/findings.md."
   ],
   "04_scoring": [
     "Applying directional min-max normalization to indicator bounds...",
     "Calibrating polarity: higher crime/PM2.5 yields lower score...",
     "Executing proportional reweighting for places with partial observations...",
-    "Scoring matrix generated: scores_wide.csv (0-100 scales)."
+    "Scoring matrix generated: scores_wide.csv and sensitivity.csv (500 draws)."
   ],
   "05_ml_trend_clustering": [
     "Fitting Ordinary Least Squares (OLS) slope trajectories...",
-    "Evaluating K-Means cluster models across k = 2..6...",
-    "Optimal silhouette score 0.581 verified at k = 2 clusters...",
-    "Cluster profiles and livability tiers assigned to clusters.csv."
+    "Evaluating K-Means cluster models across k = 2..7...",
+    "Optimal silhouette score 0.599 verified at k = 2 clusters...",
+    "Cluster profiles, kmeans_metrics.csv, and tiers synced to public data."
   ]
 };
 
@@ -826,6 +826,16 @@ export default function PipelineView() {
               <Terminal size={13} className="text-[#B51F3B]" />
               <span className="hidden sm:inline">Console</span>
             </button>
+
+            <a
+              href="/data/project_report.pdf"
+              download="India_Livability_Project_Report.pdf"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E5E5] bg-white px-3 py-2 text-xs font-semibold text-[#555555] transition-colors hover:border-[#D4D4D4] hover:text-[#111111]"
+              title="Download Academic Project Report (PDF)"
+            >
+              <FileText size={13} className="text-[#B51F3B]" />
+              <span className="hidden sm:inline">Report PDF</span>
+            </a>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 # Key Findings and Statistical Analysis Report
 **India Livability Intelligence System (ILIS)**  
 *CAPCTD3 Elective-V: Data Science using Python*  
-*Date: 15 November 2026 | Author: Parasmani Khunte (MCA, 2026)*
+*Date: 22 November 2026 | Author: Parasmani Khunte (MCA, 2026)*
 
 ---
 
@@ -10,25 +10,25 @@ This report synthesizes empirical findings from 61 Indian places (32 states/UTs 
 
 | Metric | Result | Interpretation |
 |---|---|---|
-| **One-Way ANOVA (Regional Livability, 2026)** | $F = 0.90, p = 4.8896e-01$ | Regional differences are not statistically significant at $\alpha = 0.05$ across 60 scored places. |
+| **One-Way ANOVA (Regional Livability, 2026)** | $F = 0.60, p = 7.0123e-01$ | Regional differences are not statistically significant at $\alpha = 0.05$ across 61 scored places. |
 | **Pearson Correlation (PM2.5 vs NFHS-5 health index)** | Not computable | Not computed: only 0 rows have both values (at least 6 are required). City-level air observations and the state health snapshot do not overlap enough in this rebuild. |
 | **Pearson Correlation (NSDP vs NFHS-5 health index)** | Not computable | Not computed: only 0 rows have both values (at least 6 are required). |
 | **Trend fitting (M6)** | Disabled — 0 series fitted | Every factor is configured `trend: never`, so no projections or outlooks are published. |
-| **K-Means Analysis (offline)** | k=2, silhouette=0.581 | Offline K-Means analysis selected $k=2$ (mean silhouette 0.581); cluster profile scores span 45.9 to 68.7. The interactive interface uses explicit score bands instead of cluster labels. |
+| **K-Means Analysis (offline)** | k=2, silhouette=0.599 | Offline K-Means analysis selected $k=2$ (mean silhouette 0.599); cluster profile scores span 46.7 to 68.4. The interactive interface uses explicit score bands instead of cluster labels. |
 
 ---
 
 ## 2. Key Statistical Insights
 
 ### 2.1 Regional Disparities (M4.3 & M4.4)
-- **South:** 11 scored places, mean 65.8, median 75.1.
-- **Northeast:** 9 scored places, mean 62.6, median 62.5.
-- **West:** 8 scored places, mean 61.6, median 65.1.
-- **Central:** 5 scored places, mean 59.2, median 55.0.
-- **North:** 18 scored places, mean 59.1, median 59.7.
-- **East:** 9 scored places, mean 53.4, median 57.6.
+- **South:** 11 scored places, mean 64.5, median 66.3.
+- **Northeast:** 9 scored places, mean 61.0, median 62.5.
+- **West:** 8 scored places, mean 60.5, median 62.4.
+- **North:** 19 scored places, mean 59.7, median 62.5.
+- **Central:** 5 scored places, mean 56.4, median 55.0.
+- **East:** 9 scored places, mean 54.9, median 57.6.
 
-The null hypothesis of equal regional means is **not rejected** at $\alpha = 0.05$ ($F = 0.90, p = 4.8896e-01$). This describes the latest broad cross-section, not a causal claim about any individual place.
+The null hypothesis of equal regional means is **not rejected** at $\alpha = 0.05$ ($F = 0.60, p = 7.0123e-01$). This describes the latest broad cross-section, not a causal claim about any individual place.
 
 ### 2.2 Factor Correlations (M4.5)
 - **Air Quality and the NFHS-5 Health Index:** Not computed: only 0 rows have both values (at least 6 are required). City-level air observations and the state health snapshot do not overlap enough in this rebuild.
@@ -37,7 +37,7 @@ The null hypothesis of equal regional means is **not rejected** at $\alpha = 0.0
 ### 2.3 Trends and Clustering (M6)
 - **OLS Trends:** Disabled for every factor in `src/scoring/factors_config.yaml` (`trend: never`). 0 place-factor series were fitted, so no projections or outlooks are published. Missing years stay missing; no synthetic interpolation is added for the web app.
 - **Outlook Counts:** 0 improving, 0 declining, 0 stable/uncertain, and 0 insufficient-data place-factor series.
-- **K-Means:** Offline K-Means analysis selected $k=2$ (mean silhouette 0.581); cluster profile scores span 45.9 to 68.7. The interactive interface uses explicit score bands instead of cluster labels.
+- **K-Means:** Offline K-Means analysis selected $k=2$ (mean silhouette 0.599); cluster profile scores span 46.7 to 68.4. The interactive interface uses explicit score bands instead of cluster labels.
 
 ---
 

@@ -12,21 +12,25 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 
 import pandas as pd
 import yaml
 
 from src.utils.constants import (
+    CLUSTERS_CSV,
     DATA_PROCESSED,
     FACTORS_TIDY,
     FACTORS_WIDE,
     PLACES_CSV,
     RAW_COL,
+    REPORTS,
     SCORES_WIDE,
     SCORING_CONFIG,
 )
 
 OUTPUT = Path(__file__).resolve().parents[1] / "frontend" / "src" / "data" / "realData.js"
+PUBLIC_DATA_DIR = Path(__file__).resolve().parents[1] / "frontend" / "public" / "data"
 
 
 def _number(value) -> float | None:
@@ -333,6 +337,25 @@ def build_payload() -> dict:
     }
 
 
+def sync_public_data(public_dir: Path = PUBLIC_DATA_DIR) -> list[Path]:
+    """Copy processed CSVs and findings markdown into frontend/public/data/ for direct download and preview."""
+    public_dir.mkdir(parents=True, exist_ok=True)
+    synced = []
+    sync_targets = [
+        (PLACES_CSV, public_dir / "places.csv"),
+        (FACTORS_WIDE, public_dir / "factors_wide.csv"),
+        (SCORES_WIDE, public_dir / "scores_wide.csv"),
+        (CLUSTERS_CSV, public_dir / "clusters.csv"),
+        (REPORTS / "findings.md", public_dir / "findings.md"),
+    ]
+    for src, dst in sync_targets:
+        if src.exists():
+            shutil.copy2(src, dst)
+            synced.append(dst)
+            print(f"Synced {src.name} -> {dst}")
+    return synced
+
+
 def main() -> None:
     """Write the generated ES module consumed by the React dashboard."""
     payload = build_payload()
@@ -347,6 +370,7 @@ def main() -> None:
         f"Places: {len(payload['places'])}, factor rows: {len(payload['rows'])}, "
         f"cost snapshots: {len(payload['costSnapshots'])}"
     )
+    sync_public_data()
 
 
 if __name__ == "__main__":

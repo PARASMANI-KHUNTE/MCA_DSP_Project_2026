@@ -187,3 +187,77 @@ class TestConfigPresetIntegrity:
         assert balanced["safety"] == 25
         assert balanced["health"] == 25
         assert balanced["economy"] == 15
+
+
+class TestFrontendServiceHelpers:
+    """Verify auxiliary scoring and styling methods exported by scoringService.js."""
+
+    @staticmethod
+    def _eval_js(expression: str):
+        js_code = (
+            "import('./India Livability Intelligence System/frontend/src/services/scoringService.js')"
+            f".then(m => console.log(JSON.stringify({expression})))"
+            ".catch(e => { console.error(e); process.exit(1); });"
+        )
+        res = subprocess.run(
+            ["node", "-e", js_code],
+            cwd=ROOT_DIR,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return json.loads(res.stdout.strip())
+
+    def test_get_score_color(self):
+        # High scores -> green
+        assert self._eval_js("m.getScoreColor(85)") == "#15803d"
+        assert self._eval_js("m.getScoreColor(72)") == "#22c55e"
+        assert self._eval_js("m.getScoreColor(62)") == "#737373"
+        assert self._eval_js("m.getScoreColor(52)") == "#ca8a04"
+        assert self._eval_js("m.getScoreColor(42)") == "#ea580c"
+        assert self._eval_js("m.getScoreColor(20)") == "#b91c1c"
+        # Null / invalid -> fallback
+        assert self._eval_js("m.getScoreColor(null)") == "#64748b"
+
+    def test_get_continuous_score_color(self):
+        assert self._eval_js("m.getContinuousScoreColor(0)") == "#b91c1c"
+        assert self._eval_js("m.getContinuousScoreColor(100)") == "#14532d"
+        assert self._eval_js("m.getContinuousScoreColor(null)") == "#64748b"
+
+    def test_get_score_label(self):
+        assert self._eval_js("m.getScoreLabel(85)") == "Very high"
+        assert self._eval_js("m.getScoreLabel(75)") == "High"
+        assert self._eval_js("m.getScoreLabel(65)") == "Moderate"
+        assert self._eval_js("m.getScoreLabel(55)") == "Watch"
+        assert self._eval_js("m.getScoreLabel(45)") == "Low"
+        assert self._eval_js("m.getScoreLabel(35)") == "Very low"
+        assert self._eval_js("m.getScoreLabel(null)") == "No data"
+
+    def test_get_tier_color(self):
+        assert self._eval_js("m.getTierColor('Tier 1: High Livability')") == "#22c55e"
+        assert self._eval_js("m.getTierColor('Tier 2: Moderate Livability')") == "#eab308"
+        assert self._eval_js("m.getTierColor('Tier 3: Developing Livability')") == "#f97316"
+        assert self._eval_js("m.getTierColor('Unclassified')") == "#94a3b8"
+        assert self._eval_js("m.getTierColor(null)") == "#94a3b8"
+
+    def test_get_factor_inheritance(self):
+        # State place -> returns null
+        state_place = json.dumps({"type": "state", "factorYears": {"safety": 2022}})
+        assert self._eval_js(f"m.getFactorInheritance({state_place}, 'safety', 2026)") is None
+
+        # City place with state-level factor -> returns lag and inheritance info
+        city_place = json.dumps({"type": "city", "factorYears": {"safety": 2022}})
+        res = self._eval_js(f"m.getFactorInheritance({city_place}, 'safety', 2026)")
+        assert res["level"] == "state"
+        assert res["sourceYear"] == 2022
+        assert res["lagYears"] == 4
+        assert res["isCarriedForward"] is True
+
+        # Non-state factor for city -> returns null
+        city_air = json.dumps({"type": "city", "factorYears": {"air": 2020}})
+        assert self._eval_js(f"m.getFactorInheritance({city_air}, 'air', 2026)") is None
+
+    def test_get_state_level_factor_keys(self):
+        keys = set(self._eval_js("m.getStateLevelFactorKeys()"))
+        assert {"safety", "health", "water"}.issubset(keys)
+

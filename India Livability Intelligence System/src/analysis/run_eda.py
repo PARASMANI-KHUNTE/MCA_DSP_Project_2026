@@ -10,6 +10,7 @@ Executes the full Statistical and Exploratory Data Analysis (M4) pipeline:
 
 from pathlib import Path
 from datetime import date
+import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -26,6 +27,8 @@ from src.utils.constants import (
     CLUSTERS_CSV,
     PLACES_CSV,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _read_csv_if_present(path: Path) -> pd.DataFrame:
@@ -44,12 +47,12 @@ def run_eda() -> None:
     sns.set_theme(style="whitegrid", palette="muted")
     plt.rcParams.update({"font.sans-serif": "DejaVu Sans", "font.family": "sans-serif"})
 
-    print("Loading analytical tables...")
+    logger.info("Loading analytical tables...")
     places = pd.read_csv(PLACES_CSV)
     factors_wide = pd.read_csv(FACTORS_WIDE)
     scores_wide = pd.read_csv(SCORES_WIDE)
-    trends = pd.read_csv(TRENDS_CSV)
-    clusters = pd.read_csv(CLUSTERS_CSV)
+    trends = _read_csv_if_present(TRENDS_CSV)
+    clusters = _read_csv_if_present(CLUSTERS_CSV)
 
     if "score" not in scores_wide or not scores_wide["score"].notna().any():
         REPORTS.mkdir(parents=True, exist_ok=True)
@@ -62,7 +65,7 @@ def run_eda() -> None:
             "are supplied from traceable source releases.\n",
             encoding="utf-8",
         )
-        print("No composite scores available; empirical findings and figures withheld.")
+        logger.warning("No composite scores available; empirical findings and figures withheld.")
         return
 
     # scores_wide already carries place metadata; use the place master as canonical
@@ -101,7 +104,7 @@ def run_eda() -> None:
     fig1_path = FIGURES / "01_univariate_distributions.png"
     plt.savefig(fig1_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig1_path}")
+    logger.info("Saved: %s", fig1_path)
 
     # 2. Figure 2: Regional Livability Boxplots
     plt.figure(figsize=(10, 6))
@@ -117,7 +120,7 @@ def run_eda() -> None:
     fig2_path = FIGURES / "02_regional_boxplots.png"
     plt.savefig(fig2_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig2_path}")
+    logger.info("Saved: %s", fig2_path)
 
     # 3. Figure 3: Correlation Heatmap
     plt.figure(figsize=(8, 6))
@@ -130,7 +133,7 @@ def run_eda() -> None:
     fig3_path = FIGURES / "03_correlation_heatmap.png"
     plt.savefig(fig3_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig3_path}")
+    logger.info("Saved: %s", fig3_path)
 
     # 4. Figure 4: Air Quality Time-Series Trends for Key Metropolitan Cities
     plt.figure(figsize=(12, 6))
@@ -149,7 +152,7 @@ def run_eda() -> None:
     fig4_path = FIGURES / "04_air_quality_trends.png"
     plt.savefig(fig4_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig4_path}")
+    logger.info("Saved: %s", fig4_path)
 
     # 5. Figure 5: K-Means Clustering Silhouette Curve & Profiles
     kmeans_metrics_path = DATA_PROCESSED / "kmeans_metrics.csv"
@@ -174,7 +177,7 @@ def run_eda() -> None:
     fig5_path = FIGURES / "05_kmeans_clusters.png"
     plt.savefig(fig5_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig5_path}")
+    logger.info("Saved: %s", fig5_path)
 
     # 6. Figure 6: Scatter Relationship - PM2.5 vs Health
     plt.figure(figsize=(9, 6))
@@ -189,7 +192,7 @@ def run_eda() -> None:
     fig6_path = FIGURES / "06_scatter_relationships.png"
     plt.savefig(fig6_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig6_path}")
+    logger.info("Saved: %s", fig6_path)
 
     # 7. Figure 7: Top 10 and Bottom 10 Places
     top_bot = latest_scores.dropna(subset=["score"]).sort_values("score", ascending=False)
@@ -211,7 +214,7 @@ def run_eda() -> None:
         fig7_path = FIGURES / "07_top_bottom_rankings.png"
         plt.savefig(fig7_path, dpi=200, bbox_inches="tight")
         plt.close()
-        print(f"Saved: {fig7_path}")
+        logger.info("Saved: %s", fig7_path)
 
     # 8. Figure 8: Factor Data Coverage Matrix
     plt.figure(figsize=(10, 6))
@@ -226,10 +229,10 @@ def run_eda() -> None:
     fig8_path = FIGURES / "08_coverage_matrix.png"
     plt.savefig(fig8_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Saved: {fig8_path}")
+    logger.info("Saved: %s", fig8_path)
 
     # ── Statistical Hypothesis Testing ─────────────────────────────────────
-    print("Computing statistical hypothesis tests...")
+    logger.info("Computing statistical hypothesis tests...")
     regional_cross_section = latest_scores.dropna(subset=["score", "region"])
     region_groups = [
         group["score"].dropna().values
@@ -252,13 +255,18 @@ def run_eda() -> None:
             nsdp_corr["per_capita_nsdp_constant"], nsdp_corr["health"]
         )
 
-    outlook_counts = trends["outlook"].value_counts().to_dict()
-    trend_complete = int(
-        outlook_counts.get("Improving", 0)
-        + outlook_counts.get("Declining", 0)
-        + outlook_counts.get("Stable or uncertain", 0)
-    )
-    trend_insufficient = int(outlook_counts.get("Insufficient data", 0))
+    if not trends.empty and "outlook" in trends.columns:
+        outlook_counts = trends["outlook"].value_counts().to_dict()
+        trend_complete = int(
+            outlook_counts.get("Improving", 0)
+            + outlook_counts.get("Declining", 0)
+            + outlook_counts.get("Stable or uncertain", 0)
+        )
+        trend_insufficient = int(outlook_counts.get("Insufficient data", 0))
+    else:
+        outlook_counts = {}
+        trend_complete = 0
+        trend_insufficient = 0
 
     metrics_path = DATA_PROCESSED / "kmeans_metrics.csv"
     cluster_path = DATA_PROCESSED / "cluster_profiles.csv"
@@ -393,7 +401,7 @@ All visual outputs conform to the M4.6 Matplotlib & Seaborn checklist and are st
 """
     findings_path = REPORTS / "findings.md"
     findings_path.write_text(findings_content, encoding="utf-8")
-    print(f"Saved: {findings_path}")
+    logger.info("Saved: %s", findings_path)
 
 if __name__ == "__main__":
     run_eda()

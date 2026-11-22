@@ -317,3 +317,18 @@ class TestExportFrontendData:
             assert not df.empty
             assert pd.isna(df["health"].iloc[0])
             assert any("have NaN health composite due to missing sub-indicators" in rec.message for rec in caplog.records)
+
+    def test_run_eda_handles_missing_trends_and_clusters(self, monkeypatch, tmp_path):
+        from src.analysis import run_eda as eda_module
+        from src.utils.constants import PLACES_CSV, FACTORS_WIDE, SCORES_WIDE
+
+        if not (PLACES_CSV.exists() and FACTORS_WIDE.exists() and SCORES_WIDE.exists()):
+            pytest.skip("Processed analytical tables not found.")
+
+        monkeypatch.setattr(eda_module, "TRENDS_CSV", tmp_path / "nonexistent_trends.csv")
+        monkeypatch.setattr(eda_module, "CLUSTERS_CSV", tmp_path / "nonexistent_clusters.csv")
+        monkeypatch.setattr(eda_module, "REPORTS", tmp_path / "reports")
+        monkeypatch.setattr(eda_module, "FIGURES", tmp_path / "reports" / "figures")
+
+        eda_module.run_eda()
+        assert (tmp_path / "reports" / "findings.md").exists()

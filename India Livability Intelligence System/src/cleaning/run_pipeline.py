@@ -317,7 +317,7 @@ def stage_build_tidy(
             )
             return
 
-        for _, row in merged.iterrows():
+        for row in merged.to_dict(orient="records"):
             entry = {
                 "place_id":     row["place_id"],
                 "year":         int(row["year"]) if pd.notna(row.get("year")) else None,
@@ -327,10 +327,10 @@ def stage_build_tidy(
                 "is_imputed":   bool(row.get("is_imputed", False)),
                 "is_inherited": False,      # set below for city-level inherited values
                 "series_break": bool(row.get("series_break", False)),
-                "gap_flag":     str(row.get("gap_flag", "")),
+                "gap_flag":     str(row.get("gap_flag") or ""),
                 "source_id":    (
                     str(row.get("source_id"))
-                    if pd.notna(row.get("source_id"))
+                    if pd.notna(row.get("source_id")) and str(row.get("source_id")).strip()
                     else source_id
                 ),
             }
@@ -411,49 +411,20 @@ def stage_build_tidy(
 
     # ── Economy (state-level) ──────────────────────────────────────────────
     # Economy has two indicators; store each as a separate factor sub-column
-    if not economy.empty:
-        for _, row in economy.iterrows():
-            state_match = places[
-                (places["place_type"] == "state") &
-                (places["place_name"] == row["state_name"])
-            ]
-            if state_match.empty:
-                continue
-            pid = state_match.iloc[0]["place_id"]
-            base = {
-                "place_id": pid,
-                "year": int(row["year"]) if pd.notna(row.get("year")) else None,
-                "is_imputed": bool(row.get("is_imputed", False)),
-                "is_inherited": False,
-                "series_break": False,
-                "gap_flag": "",
-                "source_id": "economy_rbi_nsdp|economy_plfs",
-            }
-            rows.append({**base, "factor": "per_capita_nsdp_constant",
-                         "value_raw": row.get("per_capita_nsdp_constant"), "value_norm": None})
-            rows.append({**base, "factor": "unemployment_rate",
-                         "value_raw": row.get("unemployment_rate"), "value_norm": None})
+    _add_rows(
+        economy, "per_capita_nsdp_constant", "state_name", "per_capita_nsdp_constant",
+        "economy_rbi_nsdp|economy_plfs", place_type="state"
+    )
+    _add_rows(
+        economy, "unemployment_rate", "state_name", "unemployment_rate",
+        "economy_rbi_nsdp|economy_plfs", place_type="state"
+    )
 
     # ── Cost of living (city-level, longitudinal or legacy snapshot) ───────
-    if not col.empty:
-        for _, row in col.iterrows():
-            city_match = places[
-                (places["place_type"] == "city") &
-                (places["place_name"] == row["city"])
-            ]
-            if city_match.empty:
-                continue
-            pid = city_match.iloc[0]["place_id"]
-            rows.append({
-                "place_id": pid,
-                "year": int(row["year"]) if pd.notna(row.get("year")) else None,
-                "factor": FACTOR_COL,
-                "value_raw": row.get("avg_rent"), "value_norm": None,
-                "is_imputed": False, "is_inherited": False,
-                "series_break": bool(row.get("series_break", False)),
-                "gap_flag": str(row.get("gap_flag") or ""),
-                "source_id": str(row.get("source_id") or "cost_of_living_longitudinal"),
-            })
+    _add_rows(
+        col, FACTOR_COL, "city", "avg_rent",
+        "cost_of_living_longitudinal", is_city_level=True, place_type="city"
+    )
 
     # ── Water quality (state-level optional factor) ────────────────────────
     _add_rows(water, FACTOR_WATER, "state_name", "water_quality",

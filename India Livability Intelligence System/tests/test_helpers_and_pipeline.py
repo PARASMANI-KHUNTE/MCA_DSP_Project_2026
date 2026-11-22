@@ -198,6 +198,28 @@ class TestPipelineStages:
         assert wide.loc[wide["place_id"] == "CT-01", "air_quality_series_break"].iloc[0] == True
         assert wide.loc[wide["place_id"] == "CT-01", "air_quality_gap_flag"].iloc[0] == "method_change"
 
+    def test_stage_missing_col(self):
+        col_df = pd.DataFrame({
+            "city": ["Delhi", "Mumbai"],
+            "year": [2022, 2022],
+            "avg_rent": [25000.0, np.nan],
+        })
+        res = stage_missing(col_df, "city", "avg_rent")
+        assert "is_imputed" in res.columns
+        assert (res["is_imputed"] == False).all()
+
+    def test_stage_build_tidy_place_col_override(self):
+        places = pd.DataFrame([
+            {"place_id": "CT-01", "place_name": "City One", "place_type": "city", "state_name": "State One"},
+        ])
+        air = pd.DataFrame([
+            {"city": "City One", "year": 2022, "pm25_mean": 45.0, "air_source": "kaggle"},
+        ])
+        tidy = stage_build_tidy(places, air, pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
+        assert len(tidy) == 1
+        assert tidy.iloc[0]["place_id"] == "CT-01"
+        assert tidy.iloc[0]["value_raw"] == 45.0
+
 
 # ── Exporter Tests ─────────────────────────────────────────────────────────
 

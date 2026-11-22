@@ -199,7 +199,10 @@ def load_all_cpcb(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
         logger.error("Excluding known generated placeholder from CPCB inputs: %s", path)
 
     if not pdfs and not csvs:
-        logger.error("No PDF or CSV files found in %s", raw_dir)
+        logger.info(
+            "No PDF or CSV files found in %s (optional CPCB NAMP annual report directory).",
+            raw_dir,
+        )
         return pd.DataFrame()
 
     frames = []
@@ -235,7 +238,7 @@ def load_all_cpcb(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
             frames.append(df)
 
     if not frames:
-        logger.error("No CPCB data could be extracted.")
+        logger.info("No CPCB data could be extracted from %s.", raw_dir)
         return pd.DataFrame()
 
     combined = pd.concat(frames, ignore_index=True)
@@ -261,7 +264,7 @@ def run_coverage_check(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
 
     combined = load_all_cpcb(raw_dir)
     if combined.empty:
-        logger.error("Cannot run CPCB coverage check — no data extracted.")
+        logger.info("Cannot run CPCB coverage check — no data extracted from %s.", raw_dir)
         return pd.DataFrame()
 
     valid = combined.dropna(subset=["pm25_annual"])

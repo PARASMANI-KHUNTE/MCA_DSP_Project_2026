@@ -401,3 +401,28 @@ class TestExportFrontendData:
 
         # stale_dst should be unlinked because its source does not exist
         assert not stale_dst.exists()
+
+    def test_load_cpcb_empty_dir_logs_info_not_error(self, tmp_path, caplog):
+        import logging
+        from src.loaders.load_air_cpcb import load_all_cpcb, run_coverage_check
+
+        with caplog.at_level(logging.INFO):
+            df = load_all_cpcb(raw_dir=tmp_path)
+            assert df.empty
+            cov = run_coverage_check(raw_dir=tmp_path)
+            assert cov.empty
+
+        errors = [r for r in caplog.records if r.levelno >= logging.ERROR]
+        assert len(errors) == 0, f"Expected 0 ERROR logs on empty CPCB dir, got: {errors}"
+
+    def test_all_city_day_cities_mapped_in_alias_map(self):
+        from src.utils.helpers import load_alias_map, standardize_name
+
+        alias_map = load_alias_map()
+        for city in [
+            "Aizawl", "Amaravati", "Brajrajnagar", "Ernakulam",
+            "Gurugram", "Jorapokhar", "Shillong", "Talcher",
+        ]:
+            assert city.lower() in alias_map
+            standardized = standardize_name(city, alias_map, warn=False)
+            assert isinstance(standardized, str) and len(standardized) > 0

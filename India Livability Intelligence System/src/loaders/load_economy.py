@@ -409,6 +409,14 @@ def load_economy(raw_dir: Path = RAW_ECONOMY) -> pd.DataFrame:
     merged = nsdp.merge(plfs[["state_name", "year", "unemployment_rate"]],
                         on=["state_name", "year"], how="inner")
 
+    nsdp_count = len(nsdp.dropna(subset=["state_name", "year"]))
+    dropped_nsdp = nsdp_count - len(merged)
+    if dropped_nsdp > 0:
+        logger.warning(
+            "Economy merge (inner join) dropped %d NSDP state-year observations not covered by PLFS.",
+            dropped_nsdp,
+        )
+
     logger.info(
         "Economy merged (inner join): %d state-years across %d states",
         len(merged),

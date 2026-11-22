@@ -259,3 +259,24 @@ class TestExportFrontendData:
         assert len(payload["places"]) > 0
         assert len(payload["rows"]) > 0
         assert payload["meta"]["sourceStatus"] == "local_pipeline_data"
+
+    def test_load_economy_logs_warning_on_dropped_rows(self, caplog):
+        import logging
+        from unittest.mock import patch
+        from src.loaders.load_economy import load_economy
+
+        sample_nsdp = pd.DataFrame([
+            {"state_name": "State A", "year": 2021, "per_capita_nsdp_constant": 100000.0},
+            {"state_name": "State A", "year": 2022, "per_capita_nsdp_constant": 110000.0},
+            {"state_name": "State B", "year": 2022, "per_capita_nsdp_constant": 120000.0},
+        ])
+        sample_plfs = pd.DataFrame([
+            {"state_name": "State A", "year": 2022, "unemployment_rate": 4.5},
+        ])
+
+        with patch("src.loaders.load_economy.load_rbi_nsdp", return_value=sample_nsdp), \
+             patch("src.loaders.load_economy.load_plfs_unemployment", return_value=sample_plfs), \
+             caplog.at_level(logging.WARNING):
+            merged = load_economy()
+            assert len(merged) == 1
+            assert any("dropped 2 NSDP state-year observations" in rec.message for rec in caplog.records)

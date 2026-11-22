@@ -71,6 +71,10 @@ desktop.ini
 *.tmp
 mso*.tmp
 
+# Office documents & binary reports
+*.docx
+*.doc
+
 # Logs
 *.log
 logs/

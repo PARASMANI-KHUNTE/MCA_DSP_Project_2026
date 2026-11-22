@@ -304,7 +304,7 @@ def stage_build_tidy(
 
         # Merge with places to get place_id
         place_lookup = places[places["place_type"] == place_type][["place_name", "place_id"]]
-        name_col = "city" if is_city_level else "state_name"
+        name_col = place_col if place_col and place_col in df.columns else ("city" if is_city_level else "state_name")
         merged = df.merge(
             place_lookup.rename(columns={"place_name": name_col}),
             on=name_col, how="inner"
@@ -755,7 +755,7 @@ def stage_export(
         if source_df.empty or "outlier_flag" not in source_df.columns:
             continue
         flagged = source_df[source_df["outlier_flag"].fillna(False).astype(bool)]
-        for row_index, row in flagged.iterrows():
+        for row_index, row in zip(flagged.index, flagged.to_dict(orient="records")):
             context = {
                 key: row.get(key)
                 for key in ("place_id", "place_name", "state_name", "city", "year", "date")
@@ -839,6 +839,8 @@ def run(places_path: Path = PLACES_CSV) -> None:
         economy = stage_missing(economy, "state_name", "per_capita_nsdp_constant")
     if not economy.empty and "unemployment_rate" in economy.columns:
         economy = stage_missing(economy, "state_name", "unemployment_rate")
+    if not col.empty and "avg_rent" in col.columns:
+        col = stage_missing(col, "city", "avg_rent")
     if not water.empty and "water_quality" in water.columns:
         water = stage_missing(water, "state_name", "water_quality")
 

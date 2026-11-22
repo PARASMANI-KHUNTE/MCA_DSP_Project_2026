@@ -1,6 +1,6 @@
 # Data Quality Report
 
-**Generated (UTC):** 2026-11-22T06:10:40+00:00  
+**Generated (UTC):** 2026-11-22T06:15:26+00:00  
 **Place master:** 61 places (32 states/UTs, 29 cities)  
 **Tidy rows:** 957  
 **Wide rows:** 643  

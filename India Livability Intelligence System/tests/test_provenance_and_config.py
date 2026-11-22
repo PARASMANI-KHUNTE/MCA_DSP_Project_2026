@@ -158,3 +158,20 @@ def test_stage_validate_catches_load_errors():
     issues = stage_validate(tidy, places, load_errors=load_errors)
     assert any("SOURCE LOAD FAILURE" in issue for issue in issues)
 
+
+def test_stage_validate_allows_optional_load_errors():
+    from src.cleaning.run_pipeline import stage_validate
+    places = pd.DataFrame([{"place_id": "IN-DL", "place_type": "state"}])
+    tidy = pd.DataFrame([
+        {"place_id": "IN-DL", "year": 2023, "factor": "air_quality", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "safety", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "health", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "per_capita_nsdp_constant", "value_raw": 50.0},
+        {"place_id": "IN-DL", "year": 2023, "factor": "unemployment_rate", "value_raw": 5.0},
+    ])
+    optional_errors = ["Failed to load cost-of-living data: missing file"]
+    issues = stage_validate(tidy, places, optional_load_errors=optional_errors)
+    # Optional load errors must not produce fatal issues
+    assert not any("SOURCE LOAD FAILURE" in issue for issue in issues)
+    assert issues == []
+

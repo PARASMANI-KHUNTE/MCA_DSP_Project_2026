@@ -59,7 +59,10 @@ logger = logging.getLogger(__name__)
 
 # ── Stage 1: Load ──────────────────────────────────────────────────────────
 
-def stage_load(load_errors: list[str] | None = None) -> dict[str, pd.DataFrame]:
+def stage_load(
+    load_errors: list[str] | None = None,
+    optional_load_errors: list[str] | None = None,
+) -> dict[str, pd.DataFrame]:
     """Load all raw sources. Returns a dict keyed by factor name."""
     logger.info("=== STAGE 1: LOAD ===")
     raw: dict[str, pd.DataFrame] = {}
@@ -68,6 +71,11 @@ def stage_load(load_errors: list[str] | None = None) -> dict[str, pd.DataFrame]:
         logger.error("%s: %s", msg, exc)
         if load_errors is not None:
             load_errors.append(f"{msg}: {exc}")
+
+    def _record_optional_warning(msg: str, exc: Exception) -> None:
+        logger.warning("%s (optional): %s", msg, exc)
+        if optional_load_errors is not None:
+            optional_load_errors.append(f"{msg}: {exc}")
 
     # Air — Kaggle (daily → annual)
     try:
@@ -119,21 +127,21 @@ def stage_load(load_errors: list[str] | None = None) -> dict[str, pd.DataFrame]:
     try:
         raw["national_economy"] = load_national_economy()
     except Exception as e:
-        logger.warning("Failed to load national economy context: %s", e)
+        _record_optional_warning("Failed to load national economy context", e)
         raw["national_economy"] = pd.DataFrame()
 
     # Cost of living (optional)
     try:
         raw[FACTOR_COL] = load_cost_of_living()
     except Exception as e:
-        logger.warning("Failed to load cost-of-living data (optional): %s", e)
+        _record_optional_warning("Failed to load cost-of-living data", e)
         raw[FACTOR_COL] = pd.DataFrame()
 
     # Water quality (optional)
     try:
         raw[FACTOR_WATER] = load_water_quality()
     except Exception as e:
-        logger.warning("Failed to load water quality data (optional): %s", e)
+        _record_optional_warning("Failed to load water quality data", e)
         raw[FACTOR_WATER] = pd.DataFrame()
 
     for k, df in raw.items():
@@ -521,10 +529,15 @@ def stage_validate(
     tidy: pd.DataFrame,
     places: pd.DataFrame,
     load_errors: list[str] | None = None,
+    optional_load_errors: list[str] | None = None,
 ) -> list[str]:
     """Run assertions on the merged output. Returns list of issues found."""
     logger.info("=== STAGE 6: VALIDATE ===")
     issues = []
+
+    if optional_load_errors:
+        for warn in optional_load_errors:
+            logger.warning("OPTIONAL SOURCE LOAD WARNING: %s", warn)
 
     if load_errors:
         for err in load_errors:
@@ -827,7 +840,8 @@ def run(places_path: Path = PLACES_CSV) -> None:
 
     # Stage 1: Load
     load_errors: list[str] = []
-    raw = stage_load(load_errors)
+    optional_load_errors: list[str] = []
+    raw = stage_load(load_errors, optional_load_errors=optional_load_errors)
 
     # Stage 2: Combine air
     air = stage_combine_air(
@@ -864,7 +878,9 @@ def run(places_path: Path = PLACES_CSV) -> None:
     wide = stage_wide(tidy)
 
     # Stage 6: Validate
-    issues = stage_validate(tidy, places, load_errors=load_errors)
+    issues = stage_validate(
+        tidy, places, load_errors=load_errors, optional_load_errors=optional_load_errors
+    )
     if issues:
         raise RuntimeError(
             "Pipeline validation failed; no processed outputs were written:\n- "

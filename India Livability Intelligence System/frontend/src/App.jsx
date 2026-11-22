@@ -50,6 +50,9 @@ export default function App() {
           water: 0
         }
   );
+  const [customWeights, setCustomWeights] = useState(() => ({
+    ...COMPOSITE_DEFAULT.weights
+  }));
   const [selectedPresetId, setSelectedPresetId] = useState(() => {
     if (DATA_COVERAGE.compositeAvailable) return COMPOSITE_DEFAULT.id;
     return DATA_COVERAGE.availableFactors?.includes("air") ? "air_only" : "col_only";
@@ -97,12 +100,20 @@ export default function App() {
 
   const handleWeightChange = (factor, value) => {
     setSelectedPresetId("custom");
-    setWeights(previous => ({ ...previous, [factor]: value }));
+    setWeights(previous => {
+      const next = { ...previous, [factor]: value };
+      setCustomWeights(next);
+      return next;
+    });
   };
 
   const handleSelectPreset = preset => {
     setSelectedPresetId(preset.id);
-    setWeights(preset.weights);
+    if (preset.id === "custom") {
+      setWeights({ ...customWeights });
+    } else {
+      setWeights(preset.weights);
+    }
   };
 
   const handleChangeActiveFactor = factor => {
@@ -111,6 +122,7 @@ export default function App() {
 
   const handleReset = () => {
     setSelectedYear(BASELINE_YEAR);
+    setCustomWeights({ ...COMPOSITE_DEFAULT.weights });
     if (DATA_COVERAGE.compositeAvailable) {
       setSelectedPresetId(COMPOSITE_DEFAULT.id);
       setWeights({ ...COMPOSITE_DEFAULT.weights });
@@ -280,6 +292,7 @@ export default function App() {
                       activeFactor={activeFactor}
                       onChangeActiveFactor={handleChangeActiveFactor}
                       selectedPresetId={selectedPresetId}
+                      customWeights={customWeights}
                       availableFactors={DATA_COVERAGE.availableFactors || []}
                       compositeAvailable={DATA_COVERAGE.compositeAvailable}
                     />

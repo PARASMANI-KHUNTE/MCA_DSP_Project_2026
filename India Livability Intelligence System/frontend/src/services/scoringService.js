@@ -227,9 +227,15 @@ export function calculateCompositeScoreFromFactors(factorScores, weights) {
 }
 
 export function compositeScore(placeId, year, weights) {
+  const place = PLACES.find(item => item.id === placeId);
+  const applicableWeights = { ...weights };
+  if (place && place.type === "state") {
+    // Cost of living is published only for cities (level: city); exclude from state composite evaluation
+    applicableWeights.col = 0;
+  }
   const { factorScores, factorYears, seriesBreaks, gapFlags } = factorScoresAt(placeId, year);
-  const selectedFactors = FACTOR_KEYS.filter(key => Number(weights?.[key] || 0) > 0);
-  const { score, hasScore, isPartial, missingFactors } = calculateCompositeScoreFromFactors(factorScores, weights);
+  const selectedFactors = FACTOR_KEYS.filter(key => Number(applicableWeights?.[key] || 0) > 0);
+  const { score, hasScore, isPartial, missingFactors } = calculateCompositeScoreFromFactors(factorScores, applicableWeights);
 
   // A factor that is present but observed before the selected year is carried
   // forward. Record the lag so the UI can say "air as of 2019" rather than

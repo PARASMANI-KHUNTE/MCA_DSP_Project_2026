@@ -105,3 +105,16 @@ presets:
     health: 15
     economy: 20
     cost_of_living: 25
+  eco_water:
+    air_quality: 35
+    safety: 15
+    health: 15
+    economy: 10
+    water_quality: 25
+  all_pillars:
+    air_quality: 25
+    safety: 20
+    health: 20
+    economy: 15
+    cost_of_living: 10
+    water_quality: 10

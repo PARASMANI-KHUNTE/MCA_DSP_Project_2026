@@ -65,6 +65,7 @@ export default function WeightControls({
   activeFactor,
   onChangeActiveFactor,
   selectedPresetId,
+  customWeights,
   availableFactors = [],
   compositeAvailable = false
 }) {
@@ -172,6 +173,33 @@ export default function WeightControls({
                 </button>
               );
             })}
+            <button
+              key="custom"
+              onClick={() => compositeAvailable && onSelectPreset({ id: "custom", weights: customWeights || weights })}
+              disabled={!compositeAvailable}
+              aria-pressed={selectedPresetId === "custom"}
+              className={`group relative flex items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition-all ${
+                selectedPresetId === "custom"
+                  ? "border-[#B51F3B] bg-white shadow-sm ring-1 ring-[#B51F3B]/30"
+                  : "border-[#E5E5E5] bg-[#FAFAF8] hover:border-[#D4D4D4] hover:bg-white"
+              }`}
+            >
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
+                {selectedPresetId === "custom" ? (
+                  <Check size={12} className="text-[#B51F3B]" />
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#CCCCCC] group-hover:bg-[#888888]" />
+                )}
+              </span>
+              <span className="min-w-0">
+                <span className={`block text-xs font-semibold ${selectedPresetId === "custom" ? "text-[#111111]" : "text-[#333333]"}`}>
+                  Custom Priorities
+                </span>
+                <span className="mt-0.5 block truncate text-[10px] text-[#666666]">
+                  {selectedPresetId === "custom" ? "Active user weights tuned below" : "User-defined pillar weights tailored to your goals"}
+                </span>
+              </span>
+            </button>
           </div>
         )}
       </div>
@@ -206,13 +234,16 @@ export default function WeightControls({
               })}
             </div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-[#666666]">
-              {FACTORS.filter(f => availableFactors.includes(f.key) && Number(weights[f.key] || 0) > 0).map(f => (
-                <span key={f.key} className="inline-flex items-center gap-1 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: f.color }} />
-                  <span>{f.label.split(" ")[0]}</span>
-                  <span className="font-mono font-bold text-[#111111]">{normalizedPct(weights[f.key])}%</span>
-                </span>
-              ))}
+              {FACTORS.filter(f => availableFactors.includes(f.key) && Number(weights[f.key] || 0) > 0).map(f => {
+                const SHORT_FACTOR_NAMES = { air: "Air", safety: "Safety", health: "Health", economy: "Economy", col: "Cost", water: "Water" };
+                return (
+                  <span key={f.key} className="inline-flex items-center gap-1 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: f.color }} />
+                    <span>{SHORT_FACTOR_NAMES[f.key] || f.label.split(" ")[0]}</span>
+                    <span className="font-mono font-bold text-[#111111]">{normalizedPct(weights[f.key])}%</span>
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

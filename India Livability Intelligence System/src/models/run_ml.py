@@ -210,25 +210,33 @@ def run() -> None:
 
     # Embed projections as columns in trends_df for easy API consumption
     if not projections_df.empty and not trends_df.empty:
-        proj_pivot = {}
-        for (pid, factor), grp in projections_df.groupby(["place_id", "factor"]):
-            grp = grp.sort_values("year").reset_index(drop=True)
-            for i, row in grp.iterrows():
-                proj_pivot.setdefault((pid, factor), {})[f"proj_yr_{i+1}"]  = row["yhat"]
-                proj_pivot.setdefault((pid, factor), {})[f"lower_yr_{i+1}"] = row["lower"]
-                proj_pivot.setdefault((pid, factor), {})[f"upper_yr_{i+1}"] = row["upper"]
+        proj_sorted = projections_df.sort_values(["place_id", "factor", "year"]).copy()
+        proj_sorted["rank"] = proj_sorted.groupby(["place_id", "factor"]).cumcount() + 1
+        pivoted = proj_sorted.pivot(
+            index=["place_id", "factor"],
+            columns="rank",
+            values=["yhat", "lower", "upper"],
+        )
+        pivoted.columns = [
+            f"proj_yr_{rank}" if metric == "yhat"
+            else f"lower_yr_{rank}" if metric == "lower"
+            else f"upper_yr_{rank}"
+            for metric, rank in pivoted.columns
+        ]
+        proj_meta_df = pivoted.reset_index()
 
         # Also store last_year for projections offset
-        for (pid, factor), grp in scores_long.groupby(["place_id", "factor"]):
-            valid = grp.dropna(subset=["score"])
-            if not valid.empty:
-                proj_pivot.setdefault((pid, factor), {})["last_year"] = int(valid["year"].max())
+        valid_scores = scores_long.dropna(subset=["score"])
+        if not valid_scores.empty:
+            last_years = (
+                valid_scores.groupby(["place_id", "factor"])["year"]
+                .max()
+                .astype(int)
+                .reset_index()
+                .rename(columns={"year": "last_year"})
+            )
+            proj_meta_df = proj_meta_df.merge(last_years, on=["place_id", "factor"], how="outer")
 
-        proj_rows = []
-        for (pid, factor), cols_dict in proj_pivot.items():
-            proj_rows.append({"place_id": pid, "factor": factor, **cols_dict})
-
-        proj_meta_df = pd.DataFrame(proj_rows)
         trends_df = trends_df.merge(proj_meta_df, on=["place_id", "factor"], how="left")
 
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)

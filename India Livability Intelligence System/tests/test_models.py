@@ -186,3 +186,55 @@ class TestClustering:
         )
         assert len(clusters_df) == 40
         assert not metrics_df.empty
+
+
+def test_projection_embedding_vectorized():
+    projections_df = pd.DataFrame([
+        {"place_id": "P1", "factor": "air", "year": 2024, "yhat": 55.0, "lower": 50.0, "upper": 60.0},
+        {"place_id": "P1", "factor": "air", "year": 2025, "yhat": 57.0, "lower": 51.0, "upper": 63.0},
+        {"place_id": "P2", "factor": "air", "year": 2024, "yhat": 40.0, "lower": 35.0, "upper": 45.0},
+    ])
+    trends_df = pd.DataFrame([
+        {"place_id": "P1", "factor": "air", "slope": 2.0},
+        {"place_id": "P2", "factor": "air", "slope": 1.0},
+    ])
+    scores_long = pd.DataFrame([
+        {"place_id": "P1", "factor": "air", "year": 2023, "score": 53.0},
+        {"place_id": "P2", "factor": "air", "year": 2023, "score": 39.0},
+    ])
+
+    proj_sorted = projections_df.sort_values(["place_id", "factor", "year"]).copy()
+    proj_sorted["rank"] = proj_sorted.groupby(["place_id", "factor"]).cumcount() + 1
+    pivoted = proj_sorted.pivot(
+        index=["place_id", "factor"],
+        columns="rank",
+        values=["yhat", "lower", "upper"],
+    )
+    pivoted.columns = [
+        f"proj_yr_{rank}" if metric == "yhat"
+        else f"lower_yr_{rank}" if metric == "lower"
+        else f"upper_yr_{rank}"
+        for metric, rank in pivoted.columns
+    ]
+    proj_meta_df = pivoted.reset_index()
+
+    valid_scores = scores_long.dropna(subset=["score"])
+    last_years = (
+        valid_scores.groupby(["place_id", "factor"])["year"]
+        .max()
+        .astype(int)
+        .reset_index()
+        .rename(columns={"year": "last_year"})
+    )
+    proj_meta_df = proj_meta_df.merge(last_years, on=["place_id", "factor"], how="outer")
+    merged_trends = trends_df.merge(proj_meta_df, on=["place_id", "factor"], how="left")
+
+    assert "proj_yr_1" in merged_trends.columns
+    assert "proj_yr_2" in merged_trends.columns
+    assert "lower_yr_1" in merged_trends.columns
+    assert "upper_yr_1" in merged_trends.columns
+    assert "last_year" in merged_trends.columns
+    p1_row = merged_trends[merged_trends["place_id"] == "P1"].iloc[0]
+    assert p1_row["proj_yr_1"] == 55.0
+    assert p1_row["proj_yr_2"] == 57.0
+    assert p1_row["last_year"] == 2023

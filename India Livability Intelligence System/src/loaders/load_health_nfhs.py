@@ -225,6 +225,15 @@ def load_nfhs_health(raw_dir: Path = RAW_HEALTH) -> pd.DataFrame:
     scores = pd.concat(sub_scores, axis=1)
     aggregated["health"] = scores.mean(axis=1).where(scores.notna().all(axis=1))
 
+    n_missing_health = int(aggregated["health"].isna().sum())
+    if n_missing_health:
+        missing_states = aggregated.loc[aggregated["health"].isna(), "state_name"].tolist()
+        logger.warning(
+            "NFHS-5: %d state(s) have NaN health composite due to missing sub-indicators: %s",
+            n_missing_health,
+            missing_states,
+        )
+
     aggregated["gap_flag"] = "nfhs5_2019_21_survey"
     aggregated["source_id"] = SOURCE_ID
 

@@ -107,7 +107,7 @@ def run_eda() -> None:
     plt.figure(figsize=(10, 6))
     regional_cross_section = latest_scores.dropna(subset=["region", "score"])
     order = regional_cross_section.groupby("region")["score"].median().sort_values(ascending=False).index
-    sns.boxplot(data=regional_cross_section, x="region", y="score", order=order, palette="Set2")
+    sns.boxplot(data=regional_cross_section, x="region", y="score", hue="region", order=order, palette="Set2", legend=False)
     sns.stripplot(data=regional_cross_section, x="region", y="score", order=order, color="black", alpha=0.3, jitter=0.2)
     plt.title(f"Composite Livability Score Distribution by Region ({latest_year})", fontsize=14, fontweight="bold")
     plt.xlabel("Geographic Region", fontsize=12)
@@ -166,7 +166,7 @@ def run_eda() -> None:
     c_prof = _read_csv_if_present(cluster_profiles_path)
     if not c_prof.empty and "score" in c_prof.columns and "cluster_id" in c_prof.columns:
         c_prof = c_prof.sort_values("score", ascending=False)
-        sns.barplot(data=c_prof, x="cluster_id", y="score", ax=ax2, palette="viridis")
+        sns.barplot(data=c_prof, x="cluster_id", y="score", hue="cluster_id", ax=ax2, palette="viridis", legend=False)
         ax2.set_title("Mean Composite Score by K-Means Cluster", fontsize=12, fontweight="bold")
         ax2.set_xlabel("Cluster ID")
         ax2.set_ylabel("Mean Score")
@@ -216,7 +216,7 @@ def run_eda() -> None:
     # 8. Figure 8: Factor Data Coverage Matrix
     plt.figure(figsize=(10, 6))
     coverage = factors_wide.drop(columns=["place_id", "year"], errors="ignore").notna().mean() * 100
-    sns.barplot(x=coverage.values, y=coverage.index, palette="Blues_r")
+    sns.barplot(x=coverage.values, y=coverage.index, hue=coverage.index, palette="Blues_r", legend=False)
     plt.title("Data Completeness Rate across Monitored Factors (%)", fontsize=13, fontweight="bold")
     plt.xlabel("Completeness Percentage (%)")
     plt.xlim(0, 100)

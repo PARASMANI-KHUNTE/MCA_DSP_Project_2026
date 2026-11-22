@@ -260,6 +260,14 @@ class TestExportFrontendData:
         assert len(payload["rows"]) > 0
         assert payload["meta"]["sourceStatus"] == "local_pipeline_data"
 
+    def test_sync_public_data(self, tmp_path):
+        from src.export_frontend_data import sync_public_data
+
+        synced = sync_public_data(public_dir=tmp_path)
+        assert len(synced) >= 3
+        assert any(p.name == "places.csv" for p in synced)
+        assert any(p.name == "factors_wide.csv" for p in synced)
+
     def test_load_economy_logs_warning_on_dropped_rows(self, caplog):
         import logging
         from unittest.mock import patch

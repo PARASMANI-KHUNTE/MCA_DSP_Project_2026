@@ -280,3 +280,16 @@ class TestExportFrontendData:
             merged = load_economy()
             assert len(merged) == 1
             assert any("dropped 2 NSDP state-year observations" in rec.message for rec in caplog.records)
+
+    def test_load_cpcb_csv_year_inference_warning(self, tmp_path, caplog):
+        import logging
+        from src.loaders.load_air_cpcb import load_all_cpcb
+
+        csv_file = tmp_path / "cpcb_data.csv"
+        csv_file.write_text("City,PM2.5\nDelhi,75.0\n", encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            df = load_all_cpcb(raw_dir=tmp_path)
+            assert not df.empty
+            assert df["year"].iloc[0] == 2023
+            assert any("Cannot determine year from CPCB CSV filename" in rec.message for rec in caplog.records)

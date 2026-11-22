@@ -112,7 +112,6 @@ def _clean_extracted(df: pd.DataFrame, year: int) -> pd.DataFrame | None:
     """Standardize column names, extract PM2.5/PM10, coerce to numeric."""
     # Normalize column names
     df.columns = [_normalize_col_name(str(c)) for c in df.columns]
-    df = df.rename(columns={c: c for c in df.columns})  # no-op, already normalized
 
     city_col = _find_col(df, _EXPECTED_COLS["city"])
     pm25_col = _find_col(df, _EXPECTED_COLS["pm25"])
@@ -209,6 +208,11 @@ def load_all_cpcb(raw_dir: Path = RAW_AIR_CPCB) -> pd.DataFrame:
     alias_map = load_alias_map()
     for csv_path in csvs:
         match = re.search(r"(20\d{2})", csv_path.stem)
+        if not match:
+            logger.warning(
+                "Cannot determine year from CPCB CSV filename %s — defaulting to 2023.",
+                csv_path.name,
+            )
         year = int(match.group(1)) if match else 2023
         try:
             df = pd.read_csv(csv_path)

@@ -193,6 +193,24 @@ class TestComputeScores:
         assert result["score"].isna().all()
         assert result["rank"].isna().all()
 
+    def test_city_level_factor_not_penalized_on_state(self):
+        """A state place is not penalized as missing for city-level indicators like cost of living."""
+        df = pd.DataFrame([
+            {"place_id": "ST-01", "year": 2023, "pm25_mean": 30.0, "crime_rate_per_lakh": 200.0, "health": 60.0},
+        ])
+        cfg = _make_config()
+        cfg["factors"]["cost_of_living"] = {
+            "column": "cost_of_living",
+            "direction": "lower_is_better",
+            "level": "city",
+            "bounds": [5000.0, 30000.0],
+        }
+        weights = {"air_quality": 0.3, "safety": 0.3, "health": 0.2, "cost_of_living": 0.2}
+        result = compute_scores(df, cfg, weights, year=2023, state_ids={"ST-01"})
+        assert result.iloc[0]["score"] is not None
+        assert not pd.isna(result.iloc[0]["score"])
+        assert "cost_of_living" not in result.iloc[0]["missing_factors"]
+
     def test_determinism(self):
         """Same inputs always produce same outputs."""
         df = _make_factors_wide()

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Compass, Sparkles, X } from "lucide-react";
 import { PRESETS } from "../data/methodologyData";
 
-const QUICK_PRESETS = ["environmental", "family", "career", "student"];
+const QUICK_PRESETS = ["environmental", "family", "career", "student", "all_pillars"];
 
 export default function QuickStartBanner({
   onOpenTour,
@@ -63,9 +63,9 @@ export default function QuickStartBanner({
             const isActive = selectedPresetId === presetId;
             const preset = {
               id: presetId,
-              weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, [factor]: 100 }
+              weights: { air: 0, safety: 0, health: 0, economy: 0, col: 0, water: 0, [factor]: 100 }
             };
-            const label = factor === "air" ? "Air ranking" : factor === "col" ? "Cost of living" : factor;
+            const label = factor === "air" ? "Air ranking" : factor === "col" ? "Cost of living" : factor === "water" ? "Water quality" : factor;
             return (
               <button
                 key={factor}

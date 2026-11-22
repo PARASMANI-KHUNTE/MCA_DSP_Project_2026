@@ -188,6 +188,19 @@ class TestConfigPresetIntegrity:
         assert balanced["health"] == 25
         assert balanced["economy"] == 15
 
+    def test_all_presets_sum_to_100(self):
+        config = load_config(SCORING_CONFIG)
+        for preset_name, weights in config["presets"].items():
+            assert sum(weights.values()) == 100, f"Preset {preset_name} weights must sum to 100"
+
+    def test_water_and_all_pillars_presets_exist(self):
+        config = load_config(SCORING_CONFIG)
+        assert "eco_water" in config["presets"]
+        assert "all_pillars" in config["presets"]
+        assert config["presets"]["eco_water"]["water_quality"] == 25
+        assert config["presets"]["all_pillars"]["cost_of_living"] == 10
+        assert config["presets"]["all_pillars"]["water_quality"] == 10
+
 
 class TestFrontendServiceHelpers:
     """Verify auxiliary scoring and styling methods exported by scoringService.js."""

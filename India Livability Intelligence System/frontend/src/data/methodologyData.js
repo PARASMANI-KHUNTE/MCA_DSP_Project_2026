@@ -28,5 +28,17 @@ export const PRESETS = [
     name: "Student / Budget Living",
     desc: "Adds city cost-of-living affordability to jobs, safety and health",
     weights: { air: 15, safety: 25, health: 15, economy: 20, col: 25, water: 0 }
+  },
+  {
+    id: "eco_water",
+    name: "Clean Air & Water Quality",
+    desc: "Focuses on ambient air quality and surface water environmental health",
+    weights: { air: 35, safety: 15, health: 15, economy: 10, col: 0, water: 25 }
+  },
+  {
+    id: "all_pillars",
+    name: "Comprehensive (All 6 Pillars)",
+    desc: "Balanced evaluation across air, safety, health, economy, cost of living, and water quality",
+    weights: { air: 25, safety: 20, health: 20, economy: 15, col: 10, water: 10 }
   }
 ];

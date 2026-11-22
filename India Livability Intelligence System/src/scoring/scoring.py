@@ -134,6 +134,7 @@ def compute_scores(
     config: dict,
     weights: dict[str, float],
     year: int | None = None,
+    state_ids: set[str] | None = None,
 ) -> pd.DataFrame:
     """
     Compute livability scores for all places (M5.7 function contract).
@@ -218,11 +219,34 @@ def compute_scores(
     missing_factors_list = []
 
     for idx, row in results.iterrows():
-        available = [
+        p_id = str(row.get("place_id", ""))
+        is_state_place = (
+            (p_id in state_ids)
+            if state_ids is not None
+            else (
+                p_id.startswith("ST-")
+                or (p_id.startswith("IN-") and len(p_id.split("-")) == 2)
+            )
+        )
+        row_factor_cols = [
             (f, col) for f, col in factor_score_cols
+            if not (is_state_place and factors_cfg.get(f, {}).get("level") == "city")
+        ]
+        if not row_factor_cols:
+            scores.append(np.nan)
+            partial_data_flags.append(True)
+            missing_factors_list.append([])
+            continue
+
+        available = [
+            (f, col) for f, col in row_factor_cols
             if not pd.isna(row[col])
         ]
-        missing = [f for f, col in factor_score_cols if pd.isna(row[col])]
+        missing = [f for f, col in row_factor_cols if pd.isna(row[col])]
+
+        row_weights = {f: norm_weights[f] for f, _ in row_factor_cols}
+        row_total_w = sum(row_weights.values())
+        norm_row_weights = {f: w / row_total_w for f, w in row_weights.items()} if row_total_w > 0 else {}
 
         if len(missing) > 1:
             # Missing two or more factors — cannot reliably score
@@ -234,7 +258,7 @@ def compute_scores(
         if missing:
             # Missing exactly one factor — reweight remaining factors to sum to 1.0
             remaining_weights = {
-                f: norm_weights[f] for f, _ in available
+                f: norm_row_weights[f] for f, _ in available
             }
             total_w = sum(remaining_weights.values())
             reweighted = {f: w / total_w for f, w in remaining_weights.items()}
@@ -249,7 +273,7 @@ def compute_scores(
             continue
 
         local_score = sum(
-            norm_weights[f] * row[col]
+            norm_row_weights[f] * row[col]
             for f, col in available
         )
         scores.append(local_score)

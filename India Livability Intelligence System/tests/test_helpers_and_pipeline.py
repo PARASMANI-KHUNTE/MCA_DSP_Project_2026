@@ -293,3 +293,27 @@ class TestExportFrontendData:
             assert not df.empty
             assert df["year"].iloc[0] == 2023
             assert any("Cannot determine year from CPCB CSV filename" in rec.message for rec in caplog.records)
+
+    def test_load_nfhs_health_warning_on_missing_subindicator(self, tmp_path, caplog):
+        import logging
+        from src.loaders.load_health_nfhs import load_nfhs_health, NFHS_HEALTH_FILENAME
+
+        sample_factsheet = pd.DataFrame([
+            {
+                "State/UT": "State Incomplete",
+                "District Names": "District 1",
+                "Number of households surveyed": 1000,
+                "institutional births (in the 5 years before the survey)": 95.0,
+                "fully vaccinated (either vaccination card)": 90.0,
+                "children under 5 years who are stunted": 20.0,
+                "all women age 15-49 years who are anaemic": "NA",  # missing subindicator
+            }
+        ])
+        csv_path = tmp_path / NFHS_HEALTH_FILENAME
+        sample_factsheet.to_csv(csv_path, index=False)
+
+        with caplog.at_level(logging.WARNING):
+            df = load_nfhs_health(raw_dir=tmp_path)
+            assert not df.empty
+            assert pd.isna(df["health"].iloc[0])
+            assert any("have NaN health composite due to missing sub-indicators" in rec.message for rec in caplog.records)

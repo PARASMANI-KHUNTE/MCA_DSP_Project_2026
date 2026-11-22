@@ -142,10 +142,17 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
 
   // Paginated rows
   const totalPages = Math.max(1, Math.ceil(sortedRows.length / rowsPerPage));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const paginatedRows = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
+    const start = (safeCurrentPage - 1) * rowsPerPage;
     return sortedRows.slice(start, start + rowsPerPage);
-  }, [sortedRows, currentPage, rowsPerPage]);
+  }, [sortedRows, safeCurrentPage, rowsPerPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleSort = useCallback(column => {
     setSortColumn(prev => {
@@ -336,12 +343,12 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
             {/* Pagination Controls */}
             <div className="flex items-center justify-between border-t border-[#E5E5E5] pt-3 text-xs">
               <span className="text-[#777777]">
-                Page {currentPage} of {totalPages}
+                Page {safeCurrentPage} of {totalPages}
               </span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1}
+                  disabled={safeCurrentPage <= 1}
                   className="inline-flex items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-semibold text-[#111111] hover:bg-[#FAFAF8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft size={13} />
@@ -349,7 +356,7 @@ export default function DataPreviewModal({ fileUrl, fileName, onClose }) {
                 </button>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
+                  disabled={safeCurrentPage >= totalPages}
                   className="inline-flex items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-semibold text-[#111111] hover:bg-[#FAFAF8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <span>Next</span>

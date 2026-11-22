@@ -362,3 +362,42 @@ class TestExportFrontendData:
 
         eda_module.run_eda()
         assert (tmp_path / "reports" / "findings.md").exists()
+
+    def test_sync_public_data_copies_targets_and_prunes_obsolete(self, tmp_path):
+        from src.export_frontend_data import sync_public_data
+
+        # Place an obsolete file and a .gitkeep in tmp_path
+        obsolete_file = tmp_path / "stale_old_file.csv"
+        obsolete_file.write_text("old,data\n1,2\n", encoding="utf-8")
+        gitkeep = tmp_path / ".gitkeep"
+        gitkeep.write_text("", encoding="utf-8")
+
+        synced = sync_public_data(public_dir=tmp_path)
+
+        assert len(synced) > 0
+        # Obsolete file should be removed
+        assert not obsolete_file.exists()
+        # .gitkeep must be preserved
+        assert gitkeep.exists()
+
+        # Check key public files copied
+        assert (tmp_path / "places.csv").exists()
+        assert (tmp_path / "factors_wide.csv").exists()
+        assert (tmp_path / "scores_wide.csv").exists()
+        assert (tmp_path / "clusters.csv").exists()
+        assert (tmp_path / "findings.md").exists()
+
+    def test_sync_public_data_removes_stale_destination_when_source_missing(self, monkeypatch, tmp_path):
+        from src.export_frontend_data import sync_public_data
+        from src import export_frontend_data as exp_mod
+
+        # Simulate destination having a file whose source is absent
+        fake_missing = tmp_path / "nonexistent_source.csv"
+        stale_dst = tmp_path / "places.csv"
+        stale_dst.write_text("stale", encoding="utf-8")
+
+        monkeypatch.setattr(exp_mod, "PLACES_CSV", fake_missing)
+        sync_public_data(public_dir=tmp_path)
+
+        # stale_dst should be unlinked because its source does not exist
+        assert not stale_dst.exists()

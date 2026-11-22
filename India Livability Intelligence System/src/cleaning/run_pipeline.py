@@ -863,7 +863,26 @@ def run(places_path: Path = PLACES_CSV) -> None:
     # Stage 7: Export
     stage_export(tidy, wide, issues, raw_sources=raw, places=places)
 
+    try:
+        from src.export_frontend_data import sync_public_data
+        sync_public_data()
+    except Exception as exc:
+        logger.warning("Could not synchronize public frontend data: %s", exc)
+
     logger.info("=== PIPELINE COMPLETE ===")
+
+    if "--all" in sys.argv:
+        logger.info("=== RUNNING ALL DOWNSTREAM PIPELINE STAGES (--all) ===")
+        from src.scoring.run_scoring import run as run_scoring_stage
+        from src.models.run_ml import run as run_ml_stage
+        from src.analysis.run_eda import run_eda as run_eda_stage
+        from src.export_frontend_data import main as run_export_stage
+
+        run_scoring_stage()
+        run_ml_stage()
+        run_eda_stage()
+        run_export_stage()
+        logger.info("=== ALL DOWNSTREAM PIPELINE STAGES COMPLETE ===")
 
 
 if __name__ == "__main__":

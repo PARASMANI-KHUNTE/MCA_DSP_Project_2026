@@ -338,21 +338,48 @@ def build_payload() -> dict:
 
 
 def sync_public_data(public_dir: Path = PUBLIC_DATA_DIR) -> list[Path]:
-    """Copy processed CSVs and findings markdown into frontend/public/data/ for direct download and preview."""
+    """Copy processed CSVs, models, and analytical reports into frontend/public/data/ for direct download and preview.
+
+    Deletes obsolete or stale files from public/data/ so the frontend always reflects
+    the latest rerun outputs.
+    """
     public_dir.mkdir(parents=True, exist_ok=True)
-    synced = []
+    synced: list[Path] = []
     sync_targets = [
         (PLACES_CSV, public_dir / "places.csv"),
         (FACTORS_WIDE, public_dir / "factors_wide.csv"),
+        (DATA_PROCESSED / "national_economy.csv", public_dir / "national_economy.csv"),
         (SCORES_WIDE, public_dir / "scores_wide.csv"),
+        (DATA_PROCESSED / "sensitivity.csv", public_dir / "sensitivity.csv"),
         (CLUSTERS_CSV, public_dir / "clusters.csv"),
+        (DATA_PROCESSED / "cluster_profiles.csv", public_dir / "cluster_profiles.csv"),
+        (DATA_PROCESSED / "kmeans_metrics.csv", public_dir / "kmeans_metrics.csv"),
+        (DATA_PROCESSED / "trends.csv", public_dir / "trends.csv"),
+        (REPORTS / "outlier_log.csv", public_dir / "outlier_log.csv"),
+        (REPORTS / "data_quality_report.md", public_dir / "data_quality_report.md"),
         (REPORTS / "findings.md", public_dir / "findings.md"),
+        (REPORTS / "project_report.pdf", public_dir / "project_report.pdf"),
     ]
+
+    active_dest_names: set[str] = set()
     for src, dst in sync_targets:
         if src.exists():
             shutil.copy2(src, dst)
             synced.append(dst)
+            active_dest_names.add(dst.name)
             print(f"Synced {src.name} -> {dst}")
+        else:
+            # If the source file no longer exists or was removed in a rerun, clean up destination
+            if dst.exists():
+                dst.unlink()
+                print(f"Removed stale file: {dst}")
+
+    # Automatically prune any untracked / obsolete file in public/data/
+    for existing in public_dir.iterdir():
+        if existing.is_file() and existing.name not in active_dest_names and existing.name != ".gitkeep":
+            existing.unlink()
+            print(f"Pruned obsolete public artifact: {existing.name}")
+
     return synced
 
 
